@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WhaleTrack 🐋 — Smart Money on Polymarket</title>
+  <style>
+    /* ===== VARIABLES ===== */
+    :root[data-theme="dark"] {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #d29922;
+      --purple: #bc8cff;
+      --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    :root[data-theme="light"] {
+      --bg: #f6f8fa;
+      --bg2: #ffffff;
+      --bg3: #f0f2f4;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --text2: #656d76;
+      --accent: #0969da;
+      --green: #1a7f37;
+      --red: #cf222e;
+      --yellow: #9a6700;
+      --purple: #8250df;
+      --card-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ===== NAVBAR ===== */
+    nav {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .last-updated { font-size: 12px; color: var(--text2); }
+
+    /* Theme toggle */
+    .theme-toggle {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover { background: var(--border); }
+
+    /* Refresh button */
+    .refresh-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      padding: 7px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      transition: opacity 0.2s;
+    }
+    .refresh-btn:hover { opacity: 0.85; }
+    .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ===== MAIN LAYOUT ===== */
+    .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+    /* ===== STATS BAR ===== */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: var(--card-shadow);
+    }
+    .stat-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 700; color: var(--text); }
+    .stat-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+    /* ===== SECTION HEADERS ===== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      margin-top: 32px;
+    }
+    .section-header h2 { font-size: 18px; font-weight: 600; }
+    .badge {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    /* ===== TABLES ===== */
+    .table-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--bg3); }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 14px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+
+    /* ===== PRICE CHANGE BADGES ===== */
+    .up { color: var(--green); font-weight: 600; }
+    .down { color: var(--red); font-weight: 600; }
+    .neutral { color: var(--text2); }
+
+    .change-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .change-badge.up { background: rgba(63,185,80,0.15); color: var(--green); }
+    .change-badge.down { background: rgba(248,81,73,0.15); color: var(--red); }
+
+    /* ===== WHALE CARDS ===== */
+    .whale-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .whale-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+      transition: border-color 0.2s;
+    }
+    .whale-card:hover { border-color: var(--accent); }
+    .whale-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .whale-name { font-size: 15px; font-weight: 700; color: var(--accent); }
+    .whale-pnl {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 8px;
+    }
+    .whale-pnl.positive { background: rgba(63,185,80,0.15); color: var(--green); }
+    .whale-pnl.negative { background: rgba(248,81,73,0.15); color: var(--red); }
+    .whale-stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .whale-stat-label { color: var(--text2); }
+    .whale-stat-val { font-weight: 600; }
+    .whale-address {
+      font-size: 11px;
+      color: var(--text2);
+      font-family: monospace;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ===== LIVE INDICATOR ===== */
+    .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ===== LOADING ===== */
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: var(--text2);
+      font-size: 14px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== EMPTY STATE ===== */
+    .empty { text-align: center; padding: 48px; color: var(--text2); font-size: 14px; }
+
+    /* ===== VOLUME BAR ===== */
+    .vol-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; width: 120px; overflow: hidden; }
+    .vol-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.5s; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      text-align: center;
+      padding: 32px;
+      color: var(--text2);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: 48px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+      th, td { padding: 10px 12px; font-size: 13px; }
+      .whale-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="logo">🐋 Whale<span>Track</span></div>
+  <div class="nav-right">
+    <span class="last-updated"><span class="live-dot"></span><span id="lastUpdated">Loading...</span></span>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
+    <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Markets Tracked</div>
+      <div class="stat-value" id="statMarkets">—</div>
+      <div class="stat-sub">Active on Polymarket</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Volume Spikes</div>
+      <div class="stat-value" id="statSpikes">—</div>
+      <div class="stat-sub">Last 24h</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Whales Tracked</div>
+      <div class="stat-value" id="statWhales">—</div>
+      <div class="stat-sub">Smart money wallets</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Top Mover</div>
+      <div class="stat-value" id="statTopMover" style="font-size:14px;">—</div>
+      <div class="stat-sub" id="statTopMoverSub">Biggest price change</div>
+    </div>
+  </div>
+
+  <!-- WHALE WALLETS -->
+  <div class="section-header">
+    <h2>🐋 Whale Wallets</h2>
+    <span class="badge" id="whaleBadge">Loading...</span>
+  </div>
+  <div class="whale-grid" id="whaleGrid">
+    <div class="loading"><div class="spinner"></div>Fetching whale data...</div>
+  </div>
+
+  <!-- TOP MOVERS -->
+  <div class="section-header">
+    <h2>🔥 Top Movers</h2>
+    <span class="badge" id="moversBadge">Loading...</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Market</th>
+          <th>Outcome</th>
+          <th>Current Price</th>
+          <th>24h Change</th>
+          <th>Volume</th>
+          <th>Liquidity</th>
+        </tr>
+      </thead>
+      <tbody id="moversTable">
+        <tr><td colspan="6"><div class="loading"><div class="spinner"></div>Scanning markets...</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- VOLUME SPIKES -->
+  <div class="section-header">
+    <h2>⚡ Volume Spikes</h2>
+    <span class="badge" id="spikesBadge">Loading...</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Market</th>
+          <th>Price</th>
+          <th>24h Volume</th>
+          <th>Volume Bar</th>
+          <th>Liquidity</th>
+          <th>Signal</th>
+        </tr>
+      </thead>
+      <tbody id="spikesTable">
+        <tr><td colspan="6"><div class="loading"><div class="spinner"></div>Detecting spikes...</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>🐋 WhaleTrack — Smart Money Intelligence for Polymarket</p>
+  <p style="margin-top:6px;">Data refreshed every 5 minutes. Not financial advice.</p>
+</footer>
+
+<script>
+// ===== THEME =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const btn = document.getElementById('themeBtn');
+  if (html.getAttribute('data-theme') === 'dark') {
+    html.setAttribute('data-theme', 'light');
+    btn.textContent = '🌙 Dark';
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    btn.textContent = '☀️ Light';
+  }
+  localStorage.setItem('theme', html.getAttribute('data-theme'));
+}
+
+// Load saved theme
+const savedTheme = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('themeBtn').textContent = savedTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+
+// ===== HELPERS =====
+function fmt(n) { return parseFloat(n).toFixed(2); }
+function fmtUSD(n) {
+  n = parseFloat(n);
+  if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
+  return '$' + n.toFixed(0);
+}
+function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '…' : str; }
+function addrShort(addr) { return addr ? addr.slice(0,6) + '…' + addr.slice(-4) : ''; }
+
+// ===== FETCH VIA BULLPEN BACKEND =====
+async function fetchMarkets() {
+  const res = await fetch('/api/markets');
+  if (!res.ok) throw new Error('markets fetch failed');
+  return res.json();
+}
+async function fetchWhales() {
+  const res = await fetch('/api/whales');
+  if (!res.ok) throw new Error('whales fetch failed');
+  return res.json();
+}
+
+// ===== RENDER WHALES =====
+function renderWhales(whales) {
+  const grid = document.getElementById('whaleGrid');
+  document.getElementById('whaleBadge').textContent = whales.length + ' wallets';
+  document.getElementById('statWhales').textContent = whales.length;
+
+  if (!whales.length) {
+    grid.innerHTML = '<div class="empty">No whale data available</div>';
+    return;
+  }
+
+  grid.innerHTML = whales.map(w => {
+    const pnlClass = w.pnl >= 0 ? 'positive' : 'negative';
+    const pnlSign = w.pnl >= 0 ? '+' : '';
+    return `
+      <div class="whale-card">
+        <div class="whale-card-header">
+          <span class="whale-name">${w.name}</span>
+          <span class="whale-pnl ${pnlClass}">${pnlSign}$${Math.abs(w.pnl).toLocaleString()}</span>
+        </div>
+        <div class="whale-stat-row">
+          <span class="whale-stat-label">30d P&L</span>
+          <span class="whale-stat-val ${pnlClass}">${pnlSign}$${Math.abs(w.pnl).toLocaleString()}</span>
+        </div>
+        <div class="whale-stat-row">
+          <span class="whale-stat-label">Win Rate</span>
+          <span class="whale-stat-val">${w.winRate}%</span>
+        </div>
+        <div class="whale-stat-row">
+          <span class="whale-stat-label">Total Trades</span>
+          <span class="whale-stat-val">${w.trades}</span>
+        </div>
+        <div class="whale-stat-row">
+          <span class="whale-stat-label">Volume Traded</span>
+          <span class="whale-stat-val">${w.volume ? '$' + (w.volume/1000000).toFixed(1) + 'M' : '—'}</span>
+        </div>
+        <div class="whale-stat-row">
+          <span class="whale-stat-label">Leaderboard Rank</span>
+          <span class="whale-stat-val">${w.rank ? '#' + w.rank : '—'}</span>
+        </div>
+        <div class="whale-address">📍 ${w.address}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== RENDER MOVERS =====
+function renderMovers(markets) {
+  const tbody = document.getElementById('moversTable');
+  const movers = markets
+    .filter(m => Math.abs(m.change24h) > 0.001)
+    .sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h))
+    .slice(0, 15);
+
+  document.getElementById('moversBadge').textContent = movers.length + ' markets';
+
+  if (!movers.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty">No significant movers right now</div></td></tr>';
+    return;
+  }
+
+  // Top mover stat
+  if (movers[0]) {
+    const m = movers[0];
+    const pct = (m.change24h * 100).toFixed(1);
+    document.getElementById('statTopMover').textContent = truncate(m.question, 30);
+    document.getElementById('statTopMoverSub').textContent = (m.change24h > 0 ? '▲ +' : '▼ ') + pct + '%';
+  }
+
+  tbody.innerHTML = movers.map(m => {
+    const price = (m.price * 100).toFixed(1);
+    const chg = (m.change24h * 100).toFixed(1);
+    const chgClass = m.change24h > 0 ? 'up' : 'down';
+    const chgSign = m.change24h > 0 ? '+' : '';
+    return `
+      <tr>
+        <td>${truncate(m.question, 50)}</td>
+        <td><span style="font-size:12px;color:var(--text2)">${m.outcome}</span></td>
+        <td><strong>${price}¢</strong></td>
+        <td><span class="change-badge ${chgClass}">${chgSign}${chg}%</span></td>
+        <td>${fmtUSD(m.volume)}</td>
+        <td>${fmtUSD(m.liquidity)}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ===== RENDER SPIKES =====
+function renderSpikes(markets) {
+  const tbody = document.getElementById('spikesTable');
+  const maxVol = Math.max(...markets.map(m => m.volume || 0));
+
+  const spikes = markets
+    .filter(m => m.volume > 5000)
+    .sort((a, b) => b.volume - a.volume)
+    .slice(0, 15);
+
+  document.getElementById('spikesBadge').textContent = spikes.length + ' detected';
+  document.getElementById('statSpikes').textContent = spikes.length;
+
+  if (!spikes.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty">No volume spikes detected</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = spikes.map(m => {
+    const price = (m.price * 100).toFixed(1);
+    const barPct = Math.min((m.volume / maxVol) * 100, 100).toFixed(0);
+    const signal = m.volume > 500000 ? '🔥 HOT' : m.volume > 100000 ? '⚡ SPIKE' : '📈 ACTIVE';
+    return `
+      <tr>
+        <td>${truncate(m.question, 50)}</td>
+        <td><strong>${price}¢</strong></td>
+        <td>${fmtUSD(m.volume)}</td>
+        <td>
+          <div class="vol-bar-wrap">
+            <div class="vol-bar" style="width:${barPct}%"></div>
+          </div>
+        </td>
+        <td>${fmtUSD(m.liquidity)}</td>
+        <td>${signal}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ===== LOAD ALL =====
+async function loadAll() {
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  btn.textContent = '↻ Loading...';
+
+  try {
+    const [markets, whales] = await Promise.all([fetchMarkets(), fetchWhales()]);
+    document.getElementById('statMarkets').textContent = markets.length;
+    renderWhales(whales);
+    renderMovers(markets);
+    renderSpikes(markets);
+    document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('lastUpdated').textContent = 'Error loading data';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '↻ Refresh';
+}
+
+// Auto refresh every 5 minutes
+loadAll();
+setInterval(loadAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>
