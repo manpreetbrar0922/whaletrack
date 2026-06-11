@@ -3,6 +3,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
+  // Known tracked wallets (may not be in top 50 leaderboard)
   const knownNames = {
     '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': 'somalianKing',
     '0xd9eee545c64c3f5c3acc088259289677858a89a4': 'somalianKing #2',
@@ -14,57 +15,49 @@ export default async function handler(req, res) {
   }
 
   let leaderboard = [];
-  const urls = [
-    'https://data-api.polymarket.com/leaderboard?window=1m&limit=10',
-    'https://data-api.polymarket.com/leaderboard?window=monthly&limit=10',
-    'https://data-api.polymarket.com/leaderboard',
-  ];
-  for (const url of urls) {
-    try {
-      const r = await fetch(url);
-      if (r.ok) {
-        const data = await r.json();
-        leaderboard = Array.isArray(data) ? data : (data.leaderboard || []);
-        if (leaderboard.length > 0) break;
-      }
-    } catch (e) {}
-  }
+  try {
+    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=20');
+    if (r.ok) {
+      leaderboard = await r.json();
+    }
+  } catch (e) {}
 
   const seen = new Set();
   const whales = [];
 
   // Top leaderboard traders
-  for (const t of leaderboard.slice(0, 8)) {
-    const addr = (t.proxyWallet || t.address || '').toLowerCase();
+  for (const t of leaderboard.slice(0, 10)) {
+    const addr = (t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
-    const displayAddr = t.proxyWallet || t.address || '';
+    const displayName = knownNames[addr]
+      || t.userName
+      || t.xUsername
+      || addrShort(t.proxyWallet);
     whales.push({
-      name:    knownNames[addr] || t.name || t.username || addrShort(displayAddr),
-      address: displayAddr,
-      pnl:     Math.round(parseFloat(t.pnl || t.profitAndLoss || 0)),
-      winRate: t.percentPositive != null
-               ? (parseFloat(t.percentPositive) * 100).toFixed(0) : '—',
-      trades:  t.tradesCount || '—',
-      volume:  parseFloat(t.volume || 0),
+      name:    displayName,
+      address: t.proxyWallet || '',
+      pnl:     Math.round(parseFloat(t.pnl || 0)),
+      winRate: '—',
+      trades:  '—',
+      volume:  parseFloat(t.vol || 0),
       rank:    t.rank || '—',
     });
   }
 
-  // Add known wallets not already included
+  // Add known wallets not already in leaderboard top
   for (const [addr, name] of Object.entries(knownNames)) {
     if (seen.has(addr.toLowerCase())) continue;
     const e = leaderboard.find(t =>
-      (t.proxyWallet || t.address || '').toLowerCase() === addr.toLowerCase()
+      (t.proxyWallet || '').toLowerCase() === addr.toLowerCase()
     );
     whales.push({
       name,
       address: addr,
-      pnl:     e ? Math.round(parseFloat(e.pnl || e.profitAndLoss || 0)) : 0,
-      winRate: e?.percentPositive != null
-               ? (parseFloat(e.percentPositive) * 100).toFixed(0) : '—',
-      trades:  e?.tradesCount || '—',
-      volume:  parseFloat(e?.volume || 0),
+      pnl:     e ? Math.round(parseFloat(e.pnl || 0)) : 0,
+      winRate: '—',
+      trades:  '—',
+      volume:  parseFloat(e?.vol || 0),
       rank:    e?.rank || '—',
     });
   }
