@@ -416,16 +416,106 @@ function fmtUSD(n) {
 function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '…' : str; }
 function addrShort(addr) { return addr ? addr.slice(0,6) + '…' + addr.slice(-4) : ''; }
 
-// ===== FETCH VIA BULLPEN BACKEND =====
+// ===== FETCH FROM POLYMARKET PUBLIC API =====
 async function fetchMarkets() {
-  const res = await fetch('/api/markets');
+  const res = await fetch(
+    'https://gamma-api.polymarket.com/events?active=true&closed=false&limit=50&order=volume&ascending=false'
+  );
   if (!res.ok) throw new Error('markets fetch failed');
-  return res.json();
+  const data = await res.json();
+
+  const markets = [];
+  for (const event of data || []) {
+    for (const market of event.markets || []) {
+      if (!market.active || market.closed) continue;
+
+      const liquidity = parseFloat(market.liquidity || 0);
+      if (liquidity < 5000) continue;
+
+      // Parse outcomes and prices (they come as JSON strings)
+      let outcomes, prices;
+      try {
+        outcomes = typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : (market.outcomes || []);
+        prices   = typeof market.outcomePrices === 'string' ? JSON.parse(market.outcomePrices) : (market.outcomePrices || []);
+      } catch (e) { continue; }
+
+      const yesIdx = outcomes.findIndex(o => o === 'Yes');
+      if (yesIdx === -1) continue;
+
+      const price = parseFloat(prices[yesIdx] || 0);
+      if (price < 0.02 || price > 0.98) continue;
+
+      const volume = parseFloat(market.volume || 0);
+
+      markets.push({
+        slug: market.slug || market.id,
+        question: market.question || event.title || market.slug,
+        outcome: 'Yes',
+        price,
+        change24h: 0, // not available from public API without candle fetch
+        volume,
+        liquidity,
+      });
+    }
+  }
+  return markets;
 }
+
 async function fetchWhales() {
-  const res = await fetch('/api/whales');
-  if (!res.ok) throw new Error('whales fetch failed');
-  return res.json();
+  // Known tracked wallets
+  const knownNames = {
+    '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': 'somalianKing',
+    '0xd9eee545c64c3f5c3acc088259289677858a89a4': 'somalianKing #2',
+    '0xeccf1ecfcf3ffe049d48f60b4697ca91e8256603': 'Whale #3',
+  };
+
+  let leaderboard = [];
+  try {
+    const res = await fetch('https://data-api.polymarket.com/leaderboard?window=1m&limit=10');
+    if (res.ok) {
+      const data = await res.json();
+      leaderboard = Array.isArray(data) ? data : (data.leaderboard || []);
+    }
+  } catch (e) {}
+
+  const seen = new Set();
+  const whales = [];
+
+  for (const t of leaderboard.slice(0, 8)) {
+    const addr = (t.proxyWallet || t.address || '').toLowerCase();
+    if (!addr || seen.has(addr)) continue;
+    seen.add(addr);
+    whales.push({
+      name:     t.name || t.username || addrShort(t.proxyWallet || t.address),
+      address:  t.proxyWallet || t.address || '',
+      pnl:      Math.round(parseFloat(t.pnl || t.profitAndLoss || 0)),
+      winRate:  t.percentPositive != null
+                  ? (parseFloat(t.percentPositive) * 100).toFixed(0)
+                  : (t.win_rate != null ? (parseFloat(t.win_rate) * 100).toFixed(0) : '—'),
+      trades:   t.tradesCount || t.trades_count || '—',
+      volume:   parseFloat(t.volume || 0),
+      rank:     t.rank || '—',
+    });
+  }
+
+  // Add known wallets not already in list
+  for (const [addr, name] of Object.entries(knownNames)) {
+    if (seen.has(addr.toLowerCase())) continue;
+    const e = leaderboard.find(t => (t.proxyWallet || t.address || '').toLowerCase() === addr.toLowerCase());
+    whales.push({
+      name,
+      address: addr,
+      pnl:     e ? Math.round(parseFloat(e.pnl || e.profitAndLoss || 0)) : 0,
+      winRate: e?.percentPositive != null
+                 ? (parseFloat(e.percentPositive) * 100).toFixed(0)
+                 : '—',
+      trades:  e?.tradesCount || '—',
+      volume:  parseFloat(e?.volume || 0),
+      rank:    e?.rank || '—',
+    });
+  }
+
+  return whales;
 }
 
 // ===== RENDER WHALES =====
@@ -477,37 +567,32 @@ function renderWhales(whales) {
 // ===== RENDER MOVERS =====
 function renderMovers(markets) {
   const tbody = document.getElementById('moversTable');
-  const movers = markets
-    .filter(m => Math.abs(m.change24h) > 0.001)
-    .sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h))
+
+  // Use top markets by volume (public API doesn't provide 24h candle data)
+  const movers = [...markets]
+    .sort((a, b) => b.volume - a.volume)
     .slice(0, 15);
 
   document.getElementById('moversBadge').textContent = movers.length + ' markets';
 
   if (!movers.length) {
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty">No significant movers right now</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty">No market data available</div></td></tr>';
     return;
   }
 
-  // Top mover stat
-  if (movers[0]) {
-    const m = movers[0];
-    const pct = (m.change24h * 100).toFixed(1);
-    document.getElementById('statTopMover').textContent = truncate(m.question, 30);
-    document.getElementById('statTopMoverSub').textContent = (m.change24h > 0 ? '▲ +' : '▼ ') + pct + '%';
-  }
+  // Top mover stat — highest volume market
+  const m0 = movers[0];
+  document.getElementById('statTopMover').textContent = truncate(m0.question, 30);
+  document.getElementById('statTopMoverSub').textContent = fmtUSD(m0.volume) + ' volume';
 
   tbody.innerHTML = movers.map(m => {
     const price = (m.price * 100).toFixed(1);
-    const chg = (m.change24h * 100).toFixed(1);
-    const chgClass = m.change24h > 0 ? 'up' : 'down';
-    const chgSign = m.change24h > 0 ? '+' : '';
     return `
       <tr>
         <td>${truncate(m.question, 50)}</td>
         <td><span style="font-size:12px;color:var(--text2)">${m.outcome}</span></td>
         <td><strong>${price}¢</strong></td>
-        <td><span class="change-badge ${chgClass}">${chgSign}${chg}%</span></td>
+        <td><span class="neutral" style="font-size:12px;">—</span></td>
         <td>${fmtUSD(m.volume)}</td>
         <td>${fmtUSD(m.liquidity)}</td>
       </tr>
