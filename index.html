@@ -297,6 +297,88 @@
       margin-top: 48px;
     }
 
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 760px;
+      max-height: 82vh;
+      overflow-y: auto;
+      box-shadow: 0 12px 60px rgba(0,0,0,0.6);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .modal-title span { color: var(--accent); }
+    .modal-close {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: var(--border); }
+    .pos-table { width: 100%; border-collapse: collapse; }
+    .pos-table th {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 11px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    .pos-table th.r { text-align: right; }
+    .pos-table td {
+      padding: 12px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .pos-table td.r { text-align: right; }
+    .pos-table tr:last-child td { border-bottom: none; }
+    .pos-table tr:hover td { background: var(--bg3); }
+    .whale-card { cursor: pointer; }
+    .view-positions {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      padding: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--accent);
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .view-positions:hover { background: var(--border); }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
       .container { padding: 16px; }
@@ -403,6 +485,19 @@
 
 </div>
 
+<!-- POSITIONS MODAL -->
+<div class="modal-overlay" id="positionsModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🐋 <span id="modalWhaleName">Whale</span> — Open Positions</div>
+      <button class="modal-close" onclick="closeModal()">✕ Close</button>
+    </div>
+    <div id="modalBody">
+      <div class="loading"><div class="spinner"></div>Loading positions...</div>
+    </div>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <footer>
   <p>🐋 WhaleTrack — Smart Money Intelligence for Polymarket</p>
@@ -506,8 +601,9 @@ function renderWhales(whales) {
   grid.innerHTML = whales.map(w => {
     const pnlClass = w.pnl >= 0 ? 'positive' : 'negative';
     const pnlSign = w.pnl >= 0 ? '+' : '';
+    const safeName = w.name.replace(/'/g, "\\'");
     return `
-      <div class="whale-card">
+      <div class="whale-card" onclick="showPositions('${w.address}', '${safeName}')">
         <div class="whale-card-header">
           <span class="whale-name">${w.name}</span>
           <span class="whale-pnl ${pnlClass}">${pnlSign}$${Math.abs(w.pnl).toLocaleString()}</span>
@@ -533,6 +629,7 @@ function renderWhales(whales) {
           <span class="whale-stat-val">${w.rank ? '#' + w.rank : '—'}</span>
         </div>
         <div class="whale-address">📍 ${w.address}</div>
+        <div class="view-positions">👁 View Open Positions</div>
       </div>
     `;
   }).join('');
@@ -697,6 +794,78 @@ function checkWhaleAlerts(whales) {
     }
   }
   prevWhales = whales;
+}
+
+// ===== POSITIONS MODAL =====
+async function showPositions(address, name) {
+  document.getElementById('modalWhaleName').textContent = name;
+  document.getElementById('modalBody').innerHTML = '<div class="loading"><div class="spinner"></div>Loading positions...</div>';
+  document.getElementById('positionsModal').classList.add('open');
+
+  try {
+    const res = await fetch(`/api/positions?address=${encodeURIComponent(address)}`);
+    const positions = await res.json();
+    renderPositions(positions);
+  } catch(e) {
+    document.getElementById('modalBody').innerHTML = '<div class="empty">Failed to load positions. Try again.</div>';
+  }
+}
+
+function closeModal() {
+  document.getElementById('positionsModal').classList.remove('open');
+}
+
+// Close on Escape key
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function renderPositions(positions) {
+  const body = document.getElementById('modalBody');
+
+  if (!positions || !positions.length) {
+    body.innerHTML = '<div class="empty">No open positions found for this whale.</div>';
+    return;
+  }
+
+  // Sort by current value descending
+  positions.sort((a, b) => parseFloat(b.currentValue || b.size || 0) - parseFloat(a.currentValue || a.size || 0));
+
+  body.innerHTML = `
+    <table class="pos-table">
+      <thead>
+        <tr>
+          <th>Market</th>
+          <th>Side</th>
+          <th class="r">Size</th>
+          <th class="r">Avg Price</th>
+          <th class="r">Current</th>
+          <th class="r">Unrealized P&L</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${positions.map(p => {
+          const pnl = parseFloat(p.unrealizedPnl || p.curValue - p.initValue || 0);
+          const pnlColor = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--text2)';
+          const pnlSign = pnl >= 0 ? '+' : '';
+          const outcome = p.outcome || p.side || '—';
+          const outcomeColor = outcome === 'Yes' ? 'var(--green)' : outcome === 'No' ? 'var(--red)' : 'var(--text2)';
+          const avgPrice = parseFloat(p.avgPrice || p.averagePrice || 0);
+          const curPrice = parseFloat(p.currentPrice || p.curPrice || 0);
+          const size = parseFloat(p.currentValue || p.size || 0);
+          const title = p.title || p.market || p.question || 'Unknown Market';
+          return `
+            <tr>
+              <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${title}">${truncate(title, 48)}</td>
+              <td style="font-weight:600;color:${outcomeColor}">${outcome}</td>
+              <td class="r">${size > 0 ? fmtUSD(size) : '—'}</td>
+              <td class="r">${avgPrice > 0 ? (avgPrice * 100).toFixed(1) + '¢' : '—'}</td>
+              <td class="r" style="font-weight:600">${curPrice > 0 ? (curPrice * 100).toFixed(1) + '¢' : '—'}</td>
+              <td class="r" style="font-weight:600;color:${pnlColor}">${pnl !== 0 ? pnlSign + '$' + Math.abs(pnl).toFixed(0) : '—'}</td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
 }
 
 // Auto refresh every 5 minutes
