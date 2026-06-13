@@ -283,6 +283,43 @@
     /* ===== EMPTY STATE ===== */
     .empty { text-align: center; padding: 48px; color: var(--text2); font-size: 14px; }
 
+    /* ===== ACTIVITY FEED ===== */
+    .feed-list { display: flex; flex-direction: column; gap: 0; }
+    .feed-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      transition: background 0.15s;
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-item:hover { background: var(--bg3); }
+    .feed-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--bg3);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: var(--accent);
+      flex-shrink: 0;
+    }
+    .feed-body { flex: 1; min-width: 0; }
+    .feed-top { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+    .feed-whale { font-size: 13px; font-weight: 700; color: var(--accent); }
+    .feed-action { font-size: 13px; color: var(--text2); }
+    .feed-outcome {
+      font-size: 12px; font-weight: 700;
+      padding: 2px 8px; border-radius: 6px;
+    }
+    .feed-outcome.yes { background: rgba(63,185,80,0.15); color: var(--green); }
+    .feed-outcome.no  { background: rgba(248,81,73,0.15);  color: var(--red); }
+    .feed-outcome.other { background: rgba(88,166,255,0.15); color: var(--accent); }
+    .feed-size { font-size: 13px; font-weight: 700; color: var(--text); }
+    .feed-market { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-time { font-size: 11px; color: var(--text2); flex-shrink: 0; white-space: nowrap; }
+
     /* ===== VOLUME BAR ===== */
     .vol-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; width: 120px; overflow: hidden; }
     .vol-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.5s; }
@@ -437,6 +474,17 @@
     <div class="loading"><div class="spinner"></div>Fetching whale data...</div>
   </div>
 
+  <!-- ACTIVITY FEED -->
+  <div class="section-header">
+    <h2>⚡ Live Whale Activity</h2>
+    <span class="badge" id="activityBadge">Loading...</span>
+  </div>
+  <div class="table-wrap">
+    <div class="feed-list" id="activityFeed">
+      <div class="loading"><div class="spinner"></div>Loading activity...</div>
+    </div>
+  </div>
+
   <!-- TOP MOVERS -->
   <div class="section-header">
     <h2>🔥 Top Movers</h2>
@@ -580,11 +628,61 @@ async function fetchMarkets() {
   return markets;
 }
 
+async function fetchActivity() {
+  const res = await fetch('/api/activity');
+  if (!res.ok) throw new Error('activity fetch failed');
+  return res.json();
+}
+
 async function fetchWhales() {
   // Calls our Vercel serverless function (server-side, no CORS issues)
   const res = await fetch('/api/whales');
   if (!res.ok) throw new Error('whales fetch failed');
   return res.json();
+}
+
+// ===== RENDER ACTIVITY =====
+function timeAgo(ts) {
+  const diff = Math.floor(Date.now() / 1000) - ts;
+  if (diff < 60)   return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+function renderActivity(items) {
+  const feed = document.getElementById('activityFeed');
+  document.getElementById('activityBadge').textContent = items.length + ' recent trades';
+
+  if (!items.length) {
+    feed.innerHTML = '<div class="empty">No recent activity found</div>';
+    return;
+  }
+
+  feed.innerHTML = items.map(t => {
+    const outcome = t.outcome || '—';
+    const outcomeClass = outcome === 'Yes' ? 'yes' : outcome === 'No' ? 'no' : 'other';
+    const sideEmoji = t.side === 'BUY' ? '🟢' : '🔴';
+    const sideText = t.side === 'BUY' ? 'bought' : 'sold';
+    const initial = (t.whale || '?')[0].toUpperCase();
+    const usd = t.usdcSize >= 1000 ? '$' + (t.usdcSize/1000).toFixed(1) + 'K' : '$' + t.usdcSize;
+    return `
+      <div class="feed-item">
+        <div class="feed-avatar">${initial}</div>
+        <div class="feed-body">
+          <div class="feed-top">
+            <span class="feed-whale">${t.whale}</span>
+            <span class="feed-action">${sideEmoji} ${sideText}</span>
+            <span class="feed-outcome ${outcomeClass}">${outcome}</span>
+            <span class="feed-size">${usd}</span>
+            <span class="feed-action">@ ${(t.price * 100).toFixed(0)}¢</span>
+          </div>
+          <div class="feed-market">${truncate(t.title, 70)}</div>
+        </div>
+        <div class="feed-time">${timeAgo(t.timestamp)}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ===== RENDER WHALES =====
@@ -717,10 +815,11 @@ async function loadAll() {
   btn.textContent = '↻ Loading...';
 
   try {
-    const [markets, whales] = await Promise.all([fetchMarkets(), fetchWhales()]);
+    const [markets, whales, activity] = await Promise.all([fetchMarkets(), fetchWhales(), fetchActivity()]);
     document.getElementById('statMarkets').textContent = markets.length;
     checkWhaleAlerts(whales);
     renderWhales(whales);
+    renderActivity(activity);
     renderMovers(markets);
     renderSpikes(markets);
     document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
