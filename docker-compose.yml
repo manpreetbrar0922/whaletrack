@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  whaletrack-bot:
+    build: ./bot
+    restart: unless-stopped
+    volumes:
+      - bot_data:/data
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - POLL_INTERVAL=${POLL_INTERVAL:-300000}   # ms between whale refreshes (default: 5 min)
+      - PNL_THRESHOLD=${PNL_THRESHOLD:-1000}      # alert when P&L moves by this $ amount
+
+volumes:
+  bot_data:
