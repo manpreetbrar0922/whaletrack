@@ -96,6 +96,21 @@
     .refresh-btn:hover { opacity: 0.85; }
     .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    /* Alert button */
+    .alert-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .alert-btn:hover { background: var(--border); }
+    .alert-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+
     /* ===== MAIN LAYOUT ===== */
     .container { max-width: 1280px; margin: 0 auto; padding: 24px; }
 
@@ -291,6 +306,7 @@
   <div class="nav-right">
     <span class="last-updated"><span class="live-dot"></span><span id="lastUpdated">Loading...</span></span>
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
+    <button class="alert-btn" onclick="toggleAlerts()" id="alertBtn">🔔 Alerts Off</button>
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
   </div>
 </nav>
@@ -598,6 +614,7 @@ async function loadAll() {
   try {
     const [markets, whales] = await Promise.all([fetchMarkets(), fetchWhales()]);
     document.getElementById('statMarkets').textContent = markets.length;
+    checkWhaleAlerts(whales);
     renderWhales(whales);
     renderMovers(markets);
     renderSpikes(markets);
@@ -609,6 +626,69 @@ async function loadAll() {
 
   btn.disabled = false;
   btn.textContent = '↻ Refresh';
+}
+
+// ===== PUSH NOTIFICATIONS =====
+let alertsEnabled = false;
+let prevWhales = [];
+
+async function toggleAlerts() {
+  if (alertsEnabled) {
+    alertsEnabled = false;
+    updateAlertBtn();
+    return;
+  }
+
+  if (!('Notification' in window)) {
+    alert('Your browser does not support notifications.');
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    alertsEnabled = true;
+    updateAlertBtn();
+    new Notification('🐋 WhaleTrack Alerts On', {
+      body: 'You\'ll be notified when whale P&L changes significantly.',
+      icon: 'https://whaletrack-lyart.vercel.app/favicon.ico'
+    });
+  } else {
+    alert('Please allow notifications in your browser to enable alerts.');
+  }
+}
+
+function updateAlertBtn() {
+  const btn = document.getElementById('alertBtn');
+  if (alertsEnabled) {
+    btn.textContent = '🔔 Alerts On';
+    btn.classList.add('active');
+  } else {
+    btn.textContent = '🔔 Alerts Off';
+    btn.classList.remove('active');
+  }
+}
+
+function checkWhaleAlerts(whales) {
+  if (!alertsEnabled || prevWhales.length === 0) {
+    prevWhales = whales;
+    return;
+  }
+
+  for (const whale of whales) {
+    const prev = prevWhales.find(w => w.address === whale.address);
+    if (!prev) continue;
+
+    const pnlDiff = whale.pnl - prev.pnl;
+    // Alert if P&L changed by more than $1000
+    if (Math.abs(pnlDiff) >= 1000) {
+      const dir = pnlDiff > 0 ? '📈 +' : '📉 ';
+      new Notification(`🐋 ${whale.name} P&L Update`, {
+        body: `${dir}$${Math.abs(pnlDiff).toLocaleString()} change detected`,
+        icon: 'https://whaletrack-lyart.vercel.app/favicon.ico'
+      });
+    }
+  }
+  prevWhales = whales;
 }
 
 // Auto refresh every 5 minutes
