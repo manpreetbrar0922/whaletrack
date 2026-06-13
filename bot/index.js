@@ -190,7 +190,7 @@ async function handleCommand(chatId, text) {
         '',
         'Example: <code>/positions GoalLineGhost</code>',
         '',
-        '🌐 Web: https://whaletrack-lyart.vercel.app',
+        '🌐 Web: https://whaletrack.app',
       ].join('\n'));
       break;
 

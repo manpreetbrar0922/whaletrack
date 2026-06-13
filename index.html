@@ -755,7 +755,7 @@ async function toggleAlerts() {
     updateAlertBtn();
     new Notification('🐋 WhaleTrack Alerts On', {
       body: 'You\'ll be notified when whale P&L changes significantly.',
-      icon: 'https://whaletrack-lyart.vercel.app/favicon.ico'
+      icon: 'https://whaletrack.app/favicon.ico'
     });
   } else {
     alert('Please allow notifications in your browser to enable alerts.');
@@ -789,7 +789,7 @@ function checkWhaleAlerts(whales) {
       const dir = pnlDiff > 0 ? '📈 +' : '📉 ';
       new Notification(`🐋 ${whale.name} P&L Update`, {
         body: `${dir}$${Math.abs(pnlDiff).toLocaleString()} change detected`,
-        icon: 'https://whaletrack-lyart.vercel.app/favicon.ico'
+        icon: 'https://whaletrack.app/favicon.ico'
       });
     }
   }
