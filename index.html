@@ -468,10 +468,26 @@
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
-      .container { padding: 16px; }
-      .stats-bar { grid-template-columns: 1fr 1fr; }
-      th, td { padding: 10px 12px; font-size: 13px; }
+      .container { padding: 12px; }
+      .stats-bar { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-value { font-size: 20px; }
+      th, td { padding: 10px 10px; font-size: 12px; }
       .whale-grid { grid-template-columns: 1fr; }
+      .nav-right { gap: 8px; }
+      .nav-trade-btn { display: none; }
+      .last-updated { display: none; }
+      .feed-item { padding: 10px 12px; gap: 10px; }
+      .feed-whale { font-size: 12px; }
+      .feed-market { font-size: 11px; }
+      .feed-size { font-size: 12px; }
+      .modal { padding: 16px; }
+      .pos-table th, .pos-table td { padding: 8px 8px; font-size: 12px; }
+      .modal-footer { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 480px) {
+      .stats-bar { grid-template-columns: 1fr; }
+      .section-header h2 { font-size: 15px; }
     }
   </style>
 </head>
@@ -529,6 +545,17 @@
   <div class="section-header">
     <h2>⚡ Live Whale Activity</h2>
     <span class="badge" id="activityBadge">Loading...</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)">
+      Min size:
+      <select id="minSizeFilter" onchange="applyActivityFilter()" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:13px;cursor:pointer">
+        <option value="0">All</option>
+        <option value="100">$100+</option>
+        <option value="500">$500+</option>
+        <option value="1000" selected>$1K+</option>
+        <option value="5000">$5K+</option>
+        <option value="10000">$10K+</option>
+      </select>
+    </div>
   </div>
   <div class="table-wrap">
     <div class="feed-list" id="activityFeed">
@@ -701,6 +728,15 @@ async function fetchWhales() {
   const res = await fetch('/api/whales');
   if (!res.ok) throw new Error('whales fetch failed');
   return res.json();
+}
+
+// ===== ACTIVITY FILTER =====
+let cachedActivity = [];
+
+function applyActivityFilter() {
+  const min = parseInt(document.getElementById('minSizeFilter').value) || 0;
+  const filtered = cachedActivity.filter(t => t.usdcSize >= min);
+  renderActivity(filtered);
 }
 
 // ===== RENDER ACTIVITY =====
@@ -884,7 +920,8 @@ async function loadAll() {
     document.getElementById('statMarkets').textContent = markets.length;
     checkWhaleAlerts(whales);
     renderWhales(whales);
-    renderActivity(activity);
+    cachedActivity = activity;
+    applyActivityFilter();
     renderMovers(markets);
     renderSpikes(markets);
     document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
@@ -1036,9 +1073,19 @@ function renderPositions(positions) {
   `;
 }
 
-// Auto refresh every 5 minutes
+// Auto refresh activity feed every 60 seconds
+async function refreshActivity() {
+  try {
+    const activity = await fetchActivity();
+    cachedActivity = activity;
+    applyActivityFilter();
+  } catch(e) {}
+}
+
+// Full refresh every 5 minutes, activity feed every 60 seconds
 loadAll();
 setInterval(loadAll, 5 * 60 * 1000);
+setInterval(refreshActivity, 60 * 1000);
 </script>
 </body>
 </html>
