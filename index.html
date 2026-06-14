@@ -416,6 +416,56 @@
     }
     .view-positions:hover { background: var(--border); }
 
+    /* ===== AFFILIATE CTA ===== */
+    .trade-btn {
+      display: inline-block;
+      background: var(--green);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .trade-btn:hover { opacity: 0.85; }
+    .modal-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modal-footer-note { font-size: 12px; color: var(--text2); }
+    .feed-trade-link {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--green);
+      text-decoration: none;
+      padding: 3px 8px;
+      border: 1px solid var(--green);
+      border-radius: 5px;
+      white-space: nowrap;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+    .feed-trade-link:hover { opacity: 1; }
+    .nav-trade-btn {
+      background: var(--green);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .nav-trade-btn:hover { opacity: 0.85; }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 768px) {
       .container { padding: 16px; }
@@ -435,6 +485,7 @@
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
     <button class="alert-btn" onclick="toggleAlerts()" id="alertBtn">🔔 Alerts Off</button>
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
+    <a href="https://polymarket.com" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade on Polymarket →</a>
   </div>
 </nav>
 
@@ -553,6 +604,17 @@
 </footer>
 
 <script>
+// ===== AFFILIATE LINK — swap this URL when Polymarket approves =====
+const AFFILIATE_URL = 'https://polymarket.com';
+
+// Update all affiliate links at once
+function setAffiliateLinks(url) {
+  document.querySelectorAll('[data-affiliate]').forEach(el => {
+    el.href = url;
+  });
+}
+setAffiliateLinks(AFFILIATE_URL);
+
 // ===== THEME =====
 function toggleTheme() {
   const html = document.documentElement;
@@ -679,7 +741,10 @@ function renderActivity(items) {
           </div>
           <div class="feed-market">${truncate(t.title, 70)}</div>
         </div>
-        <div class="feed-time">${timeAgo(t.timestamp)}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <div class="feed-time">${timeAgo(t.timestamp)}</div>
+          <a href="${AFFILIATE_URL}" target="_blank" rel="noopener" class="feed-trade-link" data-affiliate>Trade →</a>
+        </div>
       </div>
     `;
   }).join('');
@@ -964,6 +1029,10 @@ function renderPositions(positions) {
         }).join('')}
       </tbody>
     </table>
+    <div class="modal-footer">
+      <span class="modal-footer-note">See something you like? Copy this whale's bet on Polymarket.</span>
+      <a href="${AFFILIATE_URL}" target="_blank" rel="noopener" class="trade-btn" data-affiliate>Trade on Polymarket →</a>
+    </div>
   `;
 }
 
