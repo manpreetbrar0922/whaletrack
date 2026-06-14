@@ -634,6 +634,12 @@
 // ===== AFFILIATE LINK — swap this URL when Polymarket approves =====
 const AFFILIATE_URL = 'https://polymarket.com';
 
+function marketUrl(slug) {
+  const base = slug ? `https://polymarket.com/event/${slug}` : 'https://polymarket.com';
+  // When affiliate approved, append ?ref=xxx to base
+  return base;
+}
+
 // Update all affiliate links at once
 function setAffiliateLinks(url) {
   document.querySelectorAll('[data-affiliate]').forEach(el => {
@@ -779,7 +785,7 @@ function renderActivity(items) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
           <div class="feed-time">${timeAgo(t.timestamp)}</div>
-          <a href="${AFFILIATE_URL}" target="_blank" rel="noopener" class="feed-trade-link" data-affiliate>Trade →</a>
+          <a href="${marketUrl(t.slug)}" target="_blank" rel="noopener" class="feed-trade-link">Copy Bet →</a>
         </div>
       </div>
     `;
@@ -1040,6 +1046,7 @@ function renderPositions(positions) {
           <th class="r">Avg Price</th>
           <th class="r">Current</th>
           <th class="r">Unrealized P&L</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -1061,6 +1068,7 @@ function renderPositions(positions) {
               <td class="r">${avgPrice > 0 ? (avgPrice * 100).toFixed(1) + '¢' : '—'}</td>
               <td class="r" style="font-weight:600">${curPrice > 0 ? (curPrice * 100).toFixed(1) + '¢' : '—'}</td>
               <td class="r" style="font-weight:600;color:${pnlColor}">${pnl !== 0 ? pnlSign + '$' + Math.abs(pnl).toFixed(0) : '—'}</td>
+              <td class="r"><a href="${marketUrl(p.slug || p.conditionId)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;color:var(--green);text-decoration:none;padding:3px 8px;border:1px solid var(--green);border-radius:5px;white-space:nowrap;">Copy Bet →</a></td>
             </tr>
           `;
         }).join('')}
