@@ -3,7 +3,28 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WhaleTrack 🐋 — Smart Money on Polymarket</title>
+  <title>WhaleTrack — Track Whale Trades on Polymarket in Real Time</title>
+
+  <!-- SEO -->
+  <meta name="description" content="WhaleTrack shows you what the biggest Polymarket traders are betting on. Track whale wallets, copy their bets, and get real-time alerts on smart money moves."/>
+  <meta name="keywords" content="Polymarket, whale tracker, prediction market, smart money, Polymarket bets, whale trades, copy trading"/>
+  <meta name="author" content="WhaleTrack"/>
+  <link rel="canonical" href="https://whaletrack.app"/>
+
+  <!-- Open Graph (Facebook, Reddit, Discord) -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://whaletrack.app"/>
+  <meta property="og:title" content="WhaleTrack — Track Whale Trades on Polymarket"/>
+  <meta property="og:description" content="See what the top Polymarket traders are betting on. Real-time whale activity, open positions, and copy bet buttons."/>
+  <meta property="og:image" content="https://whaletrack.app/og-image.png"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:site" content="@manpreetbrar09"/>
+  <meta name="twitter:title" content="WhaleTrack — Track Whale Trades on Polymarket"/>
+  <meta name="twitter:description" content="See what the top Polymarket traders are betting on. Real-time whale activity, open positions, and copy bet buttons."/>
+  <meta name="twitter:image" content="https://whaletrack.app/og-image.png"/>
+
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RN22NVFVP"></script>
   <script>
@@ -624,6 +645,29 @@
   </div>
 </div>
 
+<!-- EMAIL CAPTURE -->
+<div style="background:linear-gradient(135deg,#1a2332,#0d1117);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:40px 24px;text-align:center;margin-top:48px;">
+  <div style="max-width:480px;margin:0 auto;">
+    <div style="font-size:28px;margin-bottom:8px;">🐋</div>
+    <h3 style="font-size:20px;font-weight:700;margin-bottom:8px;color:var(--text)">Get Whale Alerts by Email</h3>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:20px;">Be the first to know when smart money makes a big move on Polymarket.</p>
+    <form id="emailForm" onsubmit="submitEmail(event)" style="display:flex;gap:8px;max-width:400px;margin:0 auto;">
+      <input
+        type="email"
+        id="emailInput"
+        placeholder="your@email.com"
+        required
+        style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;outline:none;"
+      />
+      <button type="submit" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">
+        Notify Me
+      </button>
+    </form>
+    <div id="emailMsg" style="margin-top:12px;font-size:13px;color:var(--green);display:none;">✅ You're on the list!</div>
+    <p style="font-size:11px;color:var(--text2);margin-top:12px;">No spam. Unsubscribe anytime.</p>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <footer>
   <p>🐋 WhaleTrack — Smart Money Intelligence for Polymarket</p>
@@ -1079,6 +1123,23 @@ function renderPositions(positions) {
       <a href="${AFFILIATE_URL}" target="_blank" rel="noopener" class="trade-btn" data-affiliate>Trade on Polymarket →</a>
     </div>
   `;
+}
+
+// ===== EMAIL CAPTURE =====
+function submitEmail(e) {
+  e.preventDefault();
+  const email = document.getElementById('emailInput').value.trim();
+  if (!email) return;
+
+  // Store in localStorage for now — replace with API call when backend ready
+  const emails = JSON.parse(localStorage.getItem('wt_emails') || '[]');
+  if (!emails.includes(email)) { emails.push(email); localStorage.setItem('wt_emails', JSON.stringify(emails)); }
+
+  document.getElementById('emailForm').style.display = 'none';
+  document.getElementById('emailMsg').style.display = 'block';
+
+  // Track in Google Analytics
+  if (typeof gtag !== 'undefined') gtag('event', 'email_signup', { email });
 }
 
 // Auto refresh activity feed every 60 seconds
