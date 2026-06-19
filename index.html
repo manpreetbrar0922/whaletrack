@@ -1126,20 +1126,39 @@ function renderPositions(positions) {
 }
 
 // ===== EMAIL CAPTURE =====
-function submitEmail(e) {
+const FORMSPREE_ID = 'mnjykrka';
+
+async function submitEmail(e) {
   e.preventDefault();
   const email = document.getElementById('emailInput').value.trim();
   if (!email) return;
 
-  // Store in localStorage for now — replace with API call when backend ready
-  const emails = JSON.parse(localStorage.getItem('wt_emails') || '[]');
-  if (!emails.includes(email)) { emails.push(email); localStorage.setItem('wt_emails', JSON.stringify(emails)); }
+  const btn = e.target.querySelector('button[type="submit"]');
+  const origText = btn.textContent;
+  btn.textContent = 'Joining...';
+  btn.disabled = true;
 
-  document.getElementById('emailForm').style.display = 'none';
-  document.getElementById('emailMsg').style.display = 'block';
+  try {
+    const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ email })
+    });
 
-  // Track in Google Analytics
-  if (typeof gtag !== 'undefined') gtag('event', 'email_signup', { email });
+    if (res.ok) {
+      document.getElementById('emailForm').style.display = 'none';
+      document.getElementById('emailMsg').style.display = 'block';
+      if (typeof gtag !== 'undefined') gtag('event', 'email_signup', { email });
+    } else {
+      btn.textContent = origText;
+      btn.disabled = false;
+      alert('Something went wrong. Please try again.');
+    }
+  } catch(err) {
+    btn.textContent = origText;
+    btn.disabled = false;
+    alert('Something went wrong. Please try again.');
+  }
 }
 
 // Auto refresh activity feed every 60 seconds
