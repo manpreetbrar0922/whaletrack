@@ -2,6 +2,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
 
   const KNOWN_NAMES = {
     '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': 'somalianKing',
@@ -40,11 +41,18 @@ export default async function handler(req, res) {
       if (r.status !== 'fulfilled') continue;
       for (const t of (Array.isArray(r.value) ? r.value : [])) {
         const addr = (t.proxyWallet || '').toLowerCase();
+        // Derive outcome if missing: outcomeIndex 0 = Yes, 1 = No for binary markets
+        let outcome = t.outcome || '';
+        if (!outcome && t.outcomeIndex !== undefined && t.outcomeIndex !== null) {
+          outcome = t.outcomeIndex === 0 ? 'Yes' : t.outcomeIndex === 1 ? 'No' : '';
+        }
+        if (!outcome) outcome = '—';
+
         all.push({
           whale:     KNOWN_NAMES[addr] || t.name || t.pseudonym || addr.slice(0,8) + '…',
           address:   t.proxyWallet || '',
           side:      t.side || 'BUY',
-          outcome:   t.outcome || '—',
+          outcome,
           usdcSize:  Math.round(parseFloat(t.usdcSize || 0)),
           size:      parseFloat(t.size || 0),
           price:     parseFloat(t.price || 0),

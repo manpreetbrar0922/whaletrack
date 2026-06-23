@@ -2,6 +2,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
 
   // Known tracked wallets (may not be in top 50 leaderboard)
   const knownNames = {
