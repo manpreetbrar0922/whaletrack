@@ -15,6 +15,29 @@ export default async function handler(req, res) {
     return addr ? addr.slice(0, 6) + '\u2026' + addr.slice(-4) : '';
   }
 
+  // Fetch win rate and trade count from positions
+  async function fetchWalletStats(address) {
+    try {
+      const r = await fetch(
+        `https://data-api.polymarket.com/positions?user=${address}&limit=50&sortBy=INITIAL&sortDirection=DESC`
+      );
+      if (!r.ok) return { winRate: '—', trades: '—' };
+      const positions = await r.json();
+      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: positions.length || '—' };
+
+      // Only count closed positions (currentValue = 0) with nonzero investment
+      const closed = positions.filter(p => p.currentValue === 0 && parseFloat(p.totalBought || 0) > 0);
+      if (!closed.length) return { winRate: '—', trades: positions.length };
+
+      const wins = closed.filter(p => parseFloat(p.realizedPnl || 0) > 0).length;
+      const winRate = Math.round((wins / closed.length) * 100);
+
+      return { winRate, trades: positions.length };
+    } catch (e) {
+      return { winRate: '—', trades: '—' };
+    }
+  }
+
   let leaderboard = [];
   try {
     const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=20');
@@ -24,7 +47,7 @@ export default async function handler(req, res) {
   } catch (e) {}
 
   const seen = new Set();
-  const whales = [];
+  const whaleBase = [];
 
   // Top leaderboard traders
   for (const t of leaderboard.slice(0, 10)) {
@@ -35,12 +58,10 @@ export default async function handler(req, res) {
       || t.userName
       || t.xUsername
       || addrShort(t.proxyWallet);
-    whales.push({
+    whaleBase.push({
       name:    displayName,
       address: t.proxyWallet || '',
       pnl:     Math.round(parseFloat(t.pnl || 0)),
-      winRate: '—',
-      trades:  '—',
       volume:  parseFloat(t.vol || 0),
       rank:    t.rank || '—',
     });
@@ -52,16 +73,23 @@ export default async function handler(req, res) {
     const e = leaderboard.find(t =>
       (t.proxyWallet || '').toLowerCase() === addr.toLowerCase()
     );
-    whales.push({
+    whaleBase.push({
       name,
       address: addr,
       pnl:     e ? Math.round(parseFloat(e.pnl || 0)) : 0,
-      winRate: '—',
-      trades:  '—',
       volume:  parseFloat(e?.vol || 0),
       rank:    e?.rank || '—',
     });
   }
+
+  // Fetch win rate + trade count for all whales in parallel
+  const stats = await Promise.all(whaleBase.map(w => fetchWalletStats(w.address)));
+
+  const whales = whaleBase.map((w, i) => ({
+    ...w,
+    winRate: stats[i].winRate,
+    trades:  stats[i].trades,
+  }));
 
   res.status(200).json(whales);
 }

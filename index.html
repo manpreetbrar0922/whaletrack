@@ -871,11 +871,11 @@ function renderWhales(whales) {
         </div>
         <div class="whale-stat-row">
           <span class="whale-stat-label">Win Rate</span>
-          <span class="whale-stat-val">${w.winRate}%</span>
+          <span class="whale-stat-val">${w.winRate !== '—' ? w.winRate + '%' : '—'}</span>
         </div>
         <div class="whale-stat-row">
           <span class="whale-stat-label">Total Trades</span>
-          <span class="whale-stat-val">${w.trades}</span>
+          <span class="whale-stat-val">${w.trades !== '—' ? w.trades + '+' : '—'}</span>
         </div>
         <div class="whale-stat-row">
           <span class="whale-stat-label">Volume Traded</span>
