@@ -29,8 +29,10 @@ export default async function handler(req, res) {
       const closed = positions.filter(p => p.currentValue === 0 && parseFloat(p.totalBought || 0) > 0);
       if (!closed.length) return { winRate: '—', trades: positions.length };
 
-      const wins = closed.filter(p => parseFloat(p.realizedPnl || 0) > 0).length;
-      const winRate = Math.round((wins / closed.length) * 100);
+      // Use cashPnl for win determination (covers negative risk markets too)
+      const wins = closed.filter(p => parseFloat(p.cashPnl || p.realizedPnl || 0) > 0).length;
+      // Only show win rate if we have enough closed positions
+      const winRate = closed.length >= 3 ? Math.round((wins / closed.length) * 100) : '—';
 
       return { winRate, trades: positions.length };
     } catch (e) {
