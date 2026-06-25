@@ -522,7 +522,7 @@
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
     <button class="alert-btn" onclick="toggleAlerts()" id="alertBtn">🔔 Alerts Off</button>
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
-    <a href="https://polymarket.com" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade on Polymarket →</a>
+    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade on Polymarket →</a>
   </div>
 </nav>
 
@@ -684,10 +684,10 @@
 
 <script>
 // ===== AFFILIATE LINK — swap this URL when Polymarket approves =====
-const AFFILIATE_URL = 'https://polymarket.com';
+const AFFILIATE_URL = 'https://polymarket.com?via=manpreet-singh-brar';
 
 function marketUrl(slug) {
-  const base = slug ? `https://polymarket.com/event/${slug}` : 'https://polymarket.com';
+  const base = slug ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar` : 'https://polymarket.com?via=manpreet-singh-brar';
   // When affiliate approved, append ?ref=xxx to base
   return base;
 }
