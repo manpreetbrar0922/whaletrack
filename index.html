@@ -243,13 +243,15 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 14px;
+      gap: 8px;
     }
-    .whale-name { font-size: 15px; font-weight: 700; color: var(--accent); }
+    .whale-name { font-size: 15px; font-weight: 700; color: var(--accent); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .whale-pnl {
       font-size: 13px;
       font-weight: 600;
       padding: 3px 10px;
       border-radius: 8px;
+      flex-shrink: 0;
     }
     .whale-pnl.positive { background: rgba(63,185,80,0.15); color: var(--green); }
     .whale-pnl.negative { background: rgba(248,81,73,0.15); color: var(--red); }
@@ -258,9 +260,10 @@
       justify-content: space-between;
       margin-bottom: 8px;
       font-size: 13px;
+      gap: 8px;
     }
-    .whale-stat-label { color: var(--text2); }
-    .whale-stat-val { font-weight: 600; }
+    .whale-stat-label { color: var(--text2); flex-shrink: 0; }
+    .whale-stat-val { font-weight: 600; text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .whale-address {
       font-size: 11px;
       color: var(--text2);
