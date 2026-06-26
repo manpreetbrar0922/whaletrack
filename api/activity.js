@@ -63,11 +63,14 @@ export default async function handler(req, res) {
       }
     }
 
-    // Sort by most recent, deduplicate by transactionHash equivalent (timestamp+address)
-    all.sort((a, b) => b.timestamp - a.timestamp);
+    // Filter out trades with no market title or zero price (combo/internal transactions)
+    const filtered = all.filter(t => t.title && t.title !== 'Unknown Market' && t.price > 0);
+
+    // Sort by most recent
+    filtered.sort((a, b) => b.timestamp - a.timestamp);
 
     // Return top 40 most recent trades
-    res.status(200).json(all.slice(0, 40));
+    res.status(200).json(filtered.slice(0, 40));
   } catch (e) {
     res.status(200).json([]);
   }
