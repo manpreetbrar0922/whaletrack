@@ -74,6 +74,18 @@
       transition: background 0.3s, color 0.3s;
     }
 
+    /* ===== WHALE ALERT BANNER ===== */
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.2); }
+    }
+    body.alert-visible nav,
+    body.alert-visible .container { margin-top: 52px; }
+
     /* ===== NAVBAR ===== */
     nav {
       background: var(--bg2);
@@ -516,6 +528,21 @@
   </style>
 </head>
 <body>
+
+<!-- WHALE ALERT BANNER -->
+<div id="whaleAlertBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#0a0a0a,#1a1a1a);border-bottom:2px solid #00ff88;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:slideDown 0.4s ease;box-shadow:0 4px 24px rgba(0,255,136,0.15)">
+  <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
+    <span style="font-size:22px;animation:pulse 1s infinite">🚨</span>
+    <div style="min-width:0">
+      <div style="font-size:11px;color:#00ff88;font-weight:700;letter-spacing:1px;text-transform:uppercase">Whale Alert</div>
+      <div id="whaleAlertText" style="font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Loading...</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <a id="whaleAlertLink" href="#" target="_blank" rel="noopener" style="background:#00ff88;color:#000;font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;text-decoration:none;white-space:nowrap">Copy Bet →</a>
+    <button onclick="dismissWhaleAlert()" style="background:none;border:none;color:#666;font-size:18px;cursor:pointer;padding:0 4px;line-height:1">✕</button>
+  </div>
+</div>
 
 <!-- NAVBAR -->
 <nav>
@@ -983,6 +1010,7 @@ async function loadAll() {
     renderWhales(whales);
     cachedActivity = activity;
     applyActivityFilter();
+    checkBigTrades(activity);
     renderMovers(markets);
     renderSpikes(markets);
     document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
@@ -1056,6 +1084,60 @@ function checkWhaleAlerts(whales) {
     }
   }
   prevWhales = whales;
+}
+
+// ===== WHALE ALERT BANNER =====
+let lastAlertKey = null;
+
+function showWhaleAlertBanner(trade) {
+  const usd = trade.usdcSize >= 1000
+    ? '$' + (trade.usdcSize / 1000).toFixed(1) + 'K'
+    : '$' + Math.round(trade.usdcSize);
+  const side = trade.side === 'BUY' ? 'bet' : 'sold';
+  const outcome = trade.outcome || '';
+  const title = trade.title ? trade.title.replace(/Will /i, '').replace(/\?$/, '') : 'a market';
+  const text = `🐋 ${trade.whale} just ${side} ${usd} ${outcome} on "${title}"`;
+
+  document.getElementById('whaleAlertText').textContent = text;
+  const link = document.getElementById('whaleAlertLink');
+  link.href = trade.slug
+    ? `https://polymarket.com/event/${trade.slug}?via=manpreet-singh-brar`
+    : `https://polymarket.com?via=manpreet-singh-brar`;
+
+  const banner = document.getElementById('whaleAlertBanner');
+  banner.style.display = 'flex';
+  document.body.classList.add('alert-visible');
+
+  // Auto-dismiss after 12 seconds
+  clearTimeout(window._alertTimer);
+  window._alertTimer = setTimeout(dismissWhaleAlert, 12000);
+}
+
+function dismissWhaleAlert() {
+  const banner = document.getElementById('whaleAlertBanner');
+  banner.style.display = 'none';
+  document.body.classList.remove('alert-visible');
+}
+
+function checkBigTrades(activity) {
+  if (!activity || !activity.length) return;
+  // Find biggest trade >= $5K
+  const big = activity
+    .filter(t => t.usdcSize >= 5000)
+    .sort((a, b) => b.usdcSize - a.usdcSize)[0];
+
+  if (!big) return;
+
+  // Only show if it's a new trade we haven't alerted on
+  const key = `${big.whale}-${big.timestamp}-${big.usdcSize}`;
+  if (key === lastAlertKey) return;
+  lastAlertKey = key;
+
+  // Only alert if trade is within last 10 minutes
+  const age = Math.floor(Date.now() / 1000) - big.timestamp;
+  if (age > 600) return;
+
+  showWhaleAlertBanner(big);
 }
 
 // ===== POSITIONS MODAL =====
@@ -1178,6 +1260,7 @@ async function refreshActivity() {
     const activity = await fetchActivity();
     cachedActivity = activity;
     applyActivityFilter();
+    checkBigTrades(activity);
   } catch(e) {}
 }
 
