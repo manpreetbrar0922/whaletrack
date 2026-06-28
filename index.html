@@ -83,8 +83,8 @@
       0%, 100% { transform: scale(1); }
       50%       { transform: scale(1.2); }
     }
-    body.alert-visible nav,
-    body.alert-visible .container { margin-top: 52px; }
+    /* Banner sits below nav, doesn't push layout */
+    #whaleAlertBanner { top: 60px; }
 
     /* ===== NAVBAR ===== */
     nav {
@@ -1106,7 +1106,6 @@ function showWhaleAlertBanner(trade) {
 
   const banner = document.getElementById('whaleAlertBanner');
   banner.style.display = 'flex';
-  document.body.classList.add('alert-visible');
 
   // Auto-dismiss after 12 seconds
   clearTimeout(window._alertTimer);
@@ -1116,7 +1115,6 @@ function showWhaleAlertBanner(trade) {
 function dismissWhaleAlert() {
   const banner = document.getElementById('whaleAlertBanner');
   banner.style.display = 'none';
-  document.body.classList.remove('alert-visible');
 }
 
 function checkBigTrades(activity) {
