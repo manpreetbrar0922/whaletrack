@@ -530,7 +530,7 @@
 <body>
 
 <!-- WHALE ALERT BANNER -->
-<div id="whaleAlertBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#0a0a0a,#1a1a1a);border-bottom:2px solid #00ff88;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:slideDown 0.4s ease;box-shadow:0 4px 24px rgba(0,255,136,0.15)">
+<div id="whaleAlertBanner" style="display:none;position:fixed;top:60px;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#0a0a0a,#1a1a1a);border-bottom:2px solid #00ff88;padding:10px 20px;align-items:center;justify-content:space-between;gap:12px;animation:slideDown 0.4s ease;box-shadow:0 4px 24px rgba(0,255,136,0.15)">
   <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
     <span style="font-size:22px;animation:pulse 1s infinite">🚨</span>
     <div style="min-width:0">
@@ -1106,6 +1106,9 @@ function showWhaleAlertBanner(trade) {
 
   const banner = document.getElementById('whaleAlertBanner');
   banner.style.display = 'flex';
+  banner.style.animation = 'none';
+  banner.offsetHeight; // reflow
+  banner.style.animation = 'slideDown 0.4s ease';
 
   // Auto-dismiss after 12 seconds
   clearTimeout(window._alertTimer);
