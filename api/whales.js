@@ -15,15 +15,15 @@ export default async function handler(req, res) {
     return addr ? addr.slice(0, 6) + '\u2026' + addr.slice(-4) : '';
   }
 
-  // Fetch win rate and trade count from positions
+  // Fetch win rate, trade count, and top open position
   async function fetchWalletStats(address) {
     try {
       const r = await fetch(
-        `https://data-api.polymarket.com/positions?user=${address}&limit=100&sortBy=INITIAL&sortDirection=DESC`
+        `https://data-api.polymarket.com/positions?user=${address}&limit=100&sortBy=CURRENT&sortDirection=DESC`
       );
-      if (!r.ok) return { winRate: '—', trades: '—' };
+      if (!r.ok) return { winRate: '—', trades: '—', topBet: null };
       const positions = await r.json();
-      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—' };
+      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—', topBet: null };
 
       // Won = redeemable (market resolved in their favour, shares worth $1)
       // Lost = currentValue=0 AND not redeemable (market resolved against them)
@@ -33,9 +33,23 @@ export default async function handler(req, res) {
       const total = won + lost;
 
       const winRate = total >= 3 ? Math.round((won / total) * 100) : '—';
-      return { winRate, trades: withInvestment.length };
+
+      // Top open bet = biggest currentValue position that's still open
+      const open = positions.filter(p => p.redeemable === false && parseFloat(p.currentValue || 0) > 1);
+      let topBet = null;
+      if (open.length) {
+        const top = open[0]; // already sorted by CURRENT DESC
+        topBet = {
+          title: top.title || top.market || top.question || null,
+          outcome: top.outcome || top.side || null,
+          value: Math.round(parseFloat(top.currentValue || 0)),
+          slug: top.slug || top.conditionId || null,
+        };
+      }
+
+      return { winRate, trades: withInvestment.length, topBet };
     } catch (e) {
-      return { winRate: '—', trades: '—' };
+      return { winRate: '—', trades: '—', topBet: null };
     }
   }
 
@@ -90,6 +104,7 @@ export default async function handler(req, res) {
     ...w,
     winRate: stats[i].winRate,
     trades:  stats[i].trades,
+    topBet:  stats[i].topBet,
   }));
 
   res.status(200).json(whales);
