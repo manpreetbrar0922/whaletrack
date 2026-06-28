@@ -593,6 +593,16 @@
     <div class="loading"><div class="spinner"></div>Fetching whale data...</div>
   </div>
 
+  <!-- WHALE BATTLES -->
+  <div class="section-header" style="margin-top:32px">
+    <h2>⚔️ Whale Battles</h2>
+    <span class="badge" id="battlesBadge">Loading...</span>
+    <span style="font-size:12px;color:var(--text2);margin-left:auto">Whales on opposite sides</span>
+  </div>
+  <div class="whale-grid" id="battlesGrid">
+    <div class="loading"><div class="spinner"></div>Finding whale battles...</div>
+  </div>
+
   <!-- WORLD CUP BETS -->
   <div class="section-header" style="margin-top:32px">
     <h2>⚽ World Cup Bets</h2>
@@ -827,6 +837,78 @@ async function fetchWhales() {
   const res = await fetch('/api/whales');
   if (!res.ok) throw new Error('whales fetch failed');
   return res.json();
+}
+
+async function fetchBattles() {
+  try {
+    const res = await fetch('/api/battles');
+    if (!res.ok) return [];
+    return res.json();
+  } catch (e) { return []; }
+}
+
+// ===== RENDER WHALE BATTLES =====
+function renderBattles(battles) {
+  const grid = document.getElementById('battlesGrid');
+  const badge = document.getElementById('battlesBadge');
+
+  if (!battles || !battles.length) {
+    badge.textContent = '0 battles';
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No whale battles found right now — check back during active markets 🐋</div>';
+    return;
+  }
+
+  badge.textContent = battles.length + ' battle' + (battles.length !== 1 ? 's' : '');
+
+  grid.innerHTML = battles.map(b => {
+    const total = b.totalValue || 0;
+    const yesPct = total > 0 ? Math.round((b.yesTotal / total) * 100) : 50;
+    const noPct  = 100 - yesPct;
+    const winner = b.yesTotal > b.noTotal ? 'YES' : b.noTotal > b.yesTotal ? 'NO' : 'EVEN';
+    const winnerColor = winner === 'YES' ? 'var(--green)' : winner === 'NO' ? 'var(--red)' : 'var(--text2)';
+
+    const tweetText = encodeURIComponent(
+      `⚔️ Whale Battle on Polymarket!\n\n` +
+      `YES: ${b.yes.map(w => w.whale + ' $' + w.value.toLocaleString()).join(', ')}\n` +
+      `NO: ${b.no.map(w => w.whale + ' $' + w.value.toLocaleString()).join(', ')}\n\n` +
+      `"${b.title.slice(0, 60)}"\n\n` +
+      `Who wins? 🐋 whaletrack.app`
+    );
+
+    return `
+      <div class="whale-card" style="cursor:default;border-color:rgba(188,140,255,0.3)">
+        <!-- Title -->
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.4">${truncate(b.title, 60)}</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:14px">
+          💰 <strong style="color:var(--purple)">$${total.toLocaleString()}</strong> total at stake &nbsp;·&nbsp; Smart money leading: <strong style="color:${winnerColor}">${winner}</strong>
+        </div>
+
+        <!-- VS bar -->
+        <div style="display:flex;height:10px;border-radius:6px;overflow:hidden;margin-bottom:14px;gap:2px">
+          <div style="width:${yesPct}%;background:var(--green);border-radius:6px 0 0 6px;transition:width 0.5s"></div>
+          <div style="width:${noPct}%;background:var(--red);border-radius:0 6px 6px 0;transition:width 0.5s"></div>
+        </div>
+
+        <!-- YES side -->
+        <div style="margin-bottom:10px;padding:10px;background:rgba(63,185,80,0.07);border:1px solid rgba(63,185,80,0.2);border-radius:8px">
+          <div style="font-size:11px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">✅ YES — $${b.yesTotal.toLocaleString()} (${yesPct}%)</div>
+          ${b.yes.map(w => `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span style="color:var(--text);font-weight:600">${w.whale}</span><span style="color:var(--green);font-weight:700">$${w.value.toLocaleString()}</span></div>`).join('')}
+        </div>
+
+        <!-- NO side -->
+        <div style="margin-bottom:14px;padding:10px;background:rgba(248,81,73,0.07);border:1px solid rgba(248,81,73,0.2);border-radius:8px">
+          <div style="font-size:11px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">❌ NO — $${b.noTotal.toLocaleString()} (${noPct}%)</div>
+          ${b.no.map(w => `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span style="color:var(--text);font-weight:600">${w.whale}</span><span style="color:var(--red);font-weight:700">$${w.value.toLocaleString()}</span></div>`).join('')}
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:8px">
+          ${b.slug ? `<a href="${marketUrl(b.slug)}" target="_blank" rel="noopener" style="flex:1;display:block;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--accent);text-align:center;text-decoration:none;font-weight:600">Copy Bet →</a>` : ''}
+          <a href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener" style="display:block;padding:8px 12px;background:#1d9bf0;border-radius:8px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;white-space:nowrap">🐦 Tweet</a>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 async function fetchMatchBets() {
@@ -1096,10 +1178,11 @@ async function loadAll() {
   btn.textContent = '↻ Loading...';
 
   try {
-    const [markets, whales, activity, matchBets] = await Promise.all([fetchMarkets(), fetchWhales(), fetchActivity(), fetchMatchBets()]);
+    const [markets, whales, activity, matchBets, battles] = await Promise.all([fetchMarkets(), fetchWhales(), fetchActivity(), fetchMatchBets(), fetchBattles()]);
     document.getElementById('statMarkets').textContent = markets.length;
     checkWhaleAlerts(whales);
     renderWhales(whales);
+    renderBattles(battles);
     renderMatchBets(matchBets);
     cachedActivity = activity;
     applyActivityFilter();
