@@ -19,23 +19,21 @@ export default async function handler(req, res) {
   async function fetchWalletStats(address) {
     try {
       const r = await fetch(
-        `https://data-api.polymarket.com/positions?user=${address}&limit=50&sortBy=INITIAL&sortDirection=DESC`
+        `https://data-api.polymarket.com/positions?user=${address}&limit=100&sortBy=INITIAL&sortDirection=DESC`
       );
       if (!r.ok) return { winRate: '—', trades: '—' };
       const positions = await r.json();
-      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: positions.length || '—' };
+      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—' };
 
-      // Only count closed positions (currentValue = 0) with nonzero investment
-      const closed = positions.filter(p => p.currentValue === 0 && parseFloat(p.totalBought || 0) > 0);
-      if (!closed.length) return { winRate: '—', trades: positions.length };
+      // Won = redeemable (market resolved in their favour, shares worth $1)
+      // Lost = currentValue=0 AND not redeemable (market resolved against them)
+      const withInvestment = positions.filter(p => parseFloat(p.totalBought || 0) > 0);
+      const won  = withInvestment.filter(p => p.redeemable === true).length;
+      const lost = withInvestment.filter(p => p.currentValue === 0 && p.redeemable === false).length;
+      const total = won + lost;
 
-      // Use cashPnl for win determination (covers negative risk markets too)
-      const wins = closed.filter(p => parseFloat(p.cashPnl || p.realizedPnl || 0) > 0).length;
-      // Only show win rate if we have enough closed positions
-      const winRateNum = closed.length >= 3 ? Math.round((wins / closed.length) * 100) : 0;
-      const winRate = winRateNum > 0 ? winRateNum : '—';
-
-      return { winRate, trades: positions.length };
+      const winRate = total >= 3 ? Math.round((won / total) * 100) : '—';
+      return { winRate, trades: withInvestment.length };
     } catch (e) {
       return { winRate: '—', trades: '—' };
     }
