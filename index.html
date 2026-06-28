@@ -584,6 +584,16 @@
     </div>
   </div>
 
+  <!-- WHALE CONSENSUS -->
+  <div class="section-header" style="margin-top:8px">
+    <h2>🚨 Whale Consensus</h2>
+    <span class="badge" id="consensusBadge">Loading...</span>
+    <span style="font-size:12px;color:var(--text2);margin-left:auto">When smart money agrees</span>
+  </div>
+  <div class="whale-grid" id="consensusGrid">
+    <div class="loading"><div class="spinner"></div>Scanning for whale consensus...</div>
+  </div>
+
   <!-- WHALE WALLETS -->
   <div class="section-header">
     <h2>🐋 Whale Wallets</h2>
@@ -837,6 +847,109 @@ async function fetchWhales() {
   const res = await fetch('/api/whales');
   if (!res.ok) throw new Error('whales fetch failed');
   return res.json();
+}
+
+async function fetchConsensus() {
+  try {
+    const res = await fetch('/api/consensus');
+    if (!res.ok) return [];
+    return res.json();
+  } catch (e) { return []; }
+}
+
+// ===== RENDER WHALE CONSENSUS =====
+function renderConsensus(items) {
+  const grid  = document.getElementById('consensusGrid');
+  const badge = document.getElementById('consensusBadge');
+
+  if (!items || !items.length) {
+    badge.textContent = '0 signals';
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No whale consensus detected right now — check back during active markets 🐋</div>';
+    return;
+  }
+
+  badge.textContent = items.length + ' signal' + (items.length !== 1 ? 's' : '');
+
+  // Auto-trigger banner for strongest consensus (3+ whales)
+  const top = items[0];
+  if (top && top.whaleCount >= 3) {
+    const usd = top.totalAgreeing >= 1000000
+      ? '$' + (top.totalAgreeing/1000000).toFixed(1) + 'M'
+      : top.totalAgreeing >= 1000
+      ? '$' + Math.round(top.totalAgreeing/1000) + 'K'
+      : '$' + top.totalAgreeing;
+    showWhaleAlertBanner({
+      whale: `${top.whaleCount} whales`,
+      side: 'BUY',
+      outcome: top.side,
+      usdcSize: top.totalAgreeing,
+      title: top.title,
+      slug: top.slug,
+      timestamp: Math.floor(Date.now()/1000),
+    });
+  }
+
+  grid.innerHTML = items.map(c => {
+    const sideColor = c.side === 'Yes' ? 'var(--green)' : 'var(--red)';
+    const bgColor   = c.side === 'Yes' ? 'rgba(63,185,80,0.07)' : 'rgba(248,81,73,0.07)';
+    const borderColor = c.side === 'Yes' ? 'rgba(63,185,80,0.25)' : 'rgba(248,81,73,0.25)';
+
+    const tweetText = encodeURIComponent(
+      `${c.strength} on Polymarket!\n\n` +
+      `${c.whaleCount}/${c.totalWhales} tracked whales say ${c.side.toUpperCase()} on:\n` +
+      `"${c.title.slice(0, 60)}"\n\n` +
+      `💰 $${c.totalAgreeing.toLocaleString()} in agreement\n\n` +
+      `Smart money doesn't lie 🐋 whaletrack.app`
+    );
+
+    return `
+      <div class="whale-card" style="cursor:default;border-color:${borderColor}">
+        <!-- Strength label -->
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.5px;color:${c.strengthColor};margin-bottom:8px">${c.strength}</div>
+
+        <!-- Title -->
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.4">${truncate(c.title, 60)}</div>
+
+        <!-- Consensus stats -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 12px;background:${bgColor};border:1px solid ${borderColor};border-radius:8px;">
+          <div style="font-size:28px;font-weight:800;color:${sideColor};line-height:1">${c.whaleCount}</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:${sideColor}">${c.side.toUpperCase()} · $${c.totalAgreeing.toLocaleString()}</div>
+            <div style="font-size:11px;color:var(--text2)">${c.whaleCount} of ${c.totalWhales} tracked whales agree</div>
+          </div>
+        </div>
+
+        <!-- Agreeing whales -->
+        <div style="margin-bottom:${c.opposing.length ? '10px' : '14px'}">
+          ${c.agreeing.map(w => `
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+              <span style="color:var(--text);font-weight:600">✅ ${w.whale}</span>
+              <span style="color:${sideColor};font-weight:700">$${w.value.toLocaleString()}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Opposing whales (if any) -->
+        ${c.opposing.length ? `
+          <div style="margin-bottom:14px;padding-top:8px;border-top:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Against (${c.side === 'Yes' ? 'NO' : 'YES'})</div>
+            ${c.opposing.map(w => `
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                <span style="color:var(--text2)">❌ ${w.whale}</span>
+                <span style="color:var(--text2)">$${w.value.toLocaleString()}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <!-- Actions -->
+        <div style="display:flex;gap:8px">
+          ${c.slug ? `<a href="${marketUrl(c.slug)}" target="_blank" rel="noopener" style="flex:1;display:block;padding:8px;background:${bgColor};border:1px solid ${borderColor};border-radius:8px;font-size:12px;color:${sideColor};text-align:center;text-decoration:none;font-weight:700">Copy ${c.side} Bet →</a>` : ''}
+          <a href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener" style="display:block;padding:8px 12px;background:#1d9bf0;border-radius:8px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;white-space:nowrap">🐦 Tweet</a>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 async function fetchBattles() {
@@ -1178,9 +1291,10 @@ async function loadAll() {
   btn.textContent = '↻ Loading...';
 
   try {
-    const [markets, whales, activity, matchBets, battles] = await Promise.all([fetchMarkets(), fetchWhales(), fetchActivity(), fetchMatchBets(), fetchBattles()]);
+    const [markets, whales, activity, matchBets, battles, consensus] = await Promise.all([fetchMarkets(), fetchWhales(), fetchActivity(), fetchMatchBets(), fetchBattles(), fetchConsensus()]);
     document.getElementById('statMarkets').textContent = markets.length;
     checkWhaleAlerts(whales);
+    renderConsensus(consensus);
     renderWhales(whales);
     renderBattles(battles);
     renderMatchBets(matchBets);
