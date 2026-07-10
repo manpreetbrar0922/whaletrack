@@ -9,6 +9,8 @@ export default async function handler(req, res) {
     '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': 'somalianKing',
     '0xd9eee545c64c3f5c3acc088259289677858a89a4': 'somalianKing #2',
     '0xeccf1ecfcf3ffe049d48f60b4697ca91e8256603': 'Whale #3',
+    '0x3dfb153c197d4c19d3b31c1ecd2c7b6860eeabaf': 'Sparkling8899',
+    '0xa01c0a5e4f8c1114e95c68ee97694bc95e51766c': 'AbrahamE',
   };
 
   function addrShort(addr) {
@@ -69,9 +71,10 @@ export default async function handler(req, res) {
     const addr = (t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
+    const rawName = t.userName || t.xUsername || '';
+    const cleanName = (rawName && !rawName.startsWith('0x')) ? rawName : null;
     const displayName = knownNames[addr]
-      || t.userName
-      || t.xUsername
+      || cleanName
       || addrShort(t.proxyWallet);
     whaleBase.push({
       name:    displayName,
