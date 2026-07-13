@@ -36,8 +36,15 @@ export default async function handler(req, res) {
 
       const winRate = total >= 3 ? Math.round((won / total) * 100) : '—';
 
-      // Top open bet = biggest currentValue position that's still open
-      const open = positions.filter(p => p.redeemable === false && parseFloat(p.currentValue || 0) > 1);
+      // Top open bet = biggest currentValue position that's still active
+      // Price filter (0.03–0.97) excludes resolved markets: lost positions sit at ~0¢,
+      // won/redeemable sit at ~100¢ — only truly open markets land in this range
+      const open = positions.filter(p => {
+        if (p.redeemable !== false) return false;
+        if (parseFloat(p.currentValue || 0) <= 1) return false;
+        const px = parseFloat(p.price || p.curPrice || p.currentPrice || 0);
+        return px > 0.03 && px < 0.97;
+      });
       let topBet = null;
       if (open.length) {
         const top = open[0]; // already sorted by CURRENT DESC
