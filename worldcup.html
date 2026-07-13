@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>World Cup Whale Tracker — Smart Money on FIFA 2026 | WhaleTrack</title>
+
+  <meta name="description" content="See where the biggest Polymarket traders are putting their money on the 2026 World Cup. Real-time whale positions, smart money signals, and copy bet buttons."/>
+  <meta name="keywords" content="World Cup 2026, Polymarket, whale tracker, FIFA 2026, prediction market, smart money, football betting"/>
+  <link rel="canonical" href="https://whaletrack.app/worldcup"/>
+
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://whaletrack.app/worldcup"/>
+  <meta property="og:title" content="World Cup Whale Tracker — Where Smart Money is Going on FIFA 2026"/>
+  <meta property="og:description" content="$3.89 BILLION bet on the World Cup on Polymarket. See exactly where the top traders are putting their money."/>
+  <meta property="og:image" content="https://whaletrack.app/og-image.svg"/>
+
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="World Cup Whale Tracker — Where Smart Money is Going on FIFA 2026"/>
+  <meta name="twitter:description" content="$3.89B bet on Polymarket. See where the top traders are putting their money on the World Cup."/>
+  <meta name="twitter:image" content="https://whaletrack.app/og-image.svg"/>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RN22NVFVP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6RN22NVFVP');
+  </script>
+
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #d29922;
+      --purple: #bc8cff;
+      --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    :root[data-theme="light"] {
+      --bg: #f6f8fa;
+      --bg2: #ffffff;
+      --bg3: #f0f2f4;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --text2: #656d76;
+      --accent: #0969da;
+      --green: #1a7f37;
+      --red: #cf222e;
+      --yellow: #9a6700;
+      --purple: #8250df;
+      --card-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 20px; font-weight: 700; color: var(--accent); text-decoration: none; }
+    .logo span { color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .nav-btn:hover { background: var(--border); }
+    .nav-trade-btn {
+      background: var(--green);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .nav-trade-btn:hover { opacity: 0.85; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, #0d2b0d 0%, #0d1117 50%, #1a1a0d 100%);
+      border-bottom: 1px solid rgba(63,185,80,0.2);
+      padding: 48px 24px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(63,185,80,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-emoji { font-size: 56px; margin-bottom: 16px; display: block; }
+    .hero h1 {
+      font-size: clamp(24px, 5vw, 42px);
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+    .hero h1 span { color: var(--green); }
+    .hero-sub {
+      font-size: 16px;
+      color: var(--text2);
+      margin-bottom: 28px;
+      max-width: 560px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* STAT PILLS */
+    .stat-pills {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .stat-pill {
+      background: rgba(63,185,80,0.1);
+      border: 1px solid rgba(63,185,80,0.25);
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .stat-pill span { color: var(--text2); font-weight: 400; }
+
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-btn-primary {
+      background: var(--green);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 11px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .hero-btn-primary:hover { opacity: 0.85; }
+    .hero-btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .hero-btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+    /* CONTAINER */
+    .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+    /* SECTION HEADER */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      margin-top: 36px;
+    }
+    .section-header:first-child { margin-top: 0; }
+    .section-header h2 { font-size: 18px; font-weight: 700; }
+    .badge {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .section-note { font-size: 12px; color: var(--text2); margin-left: auto; }
+
+    /* CARDS GRID */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .market-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+      transition: border-color 0.2s;
+    }
+    .market-card:hover { border-color: var(--green); }
+
+    /* LOADING / EMPTY */
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: var(--text2);
+      font-size: 14px;
+      grid-column: 1 / -1;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty { text-align: center; padding: 48px; color: var(--text2); font-size: 14px; grid-column: 1/-1; }
+
+    /* ACTIVITY FEED */
+    .feed-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+    .feed-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-item:hover { background: var(--bg3); }
+    .feed-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(63,185,80,0.15);
+      border: 2px solid rgba(63,185,80,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: var(--green);
+      flex-shrink: 0;
+    }
+    .feed-body { flex: 1; min-width: 0; }
+    .feed-top { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+    .feed-whale { font-size: 13px; font-weight: 700; color: var(--accent); }
+    .feed-action { font-size: 13px; color: var(--text2); }
+    .feed-outcome {
+      font-size: 12px; font-weight: 700;
+      padding: 2px 8px; border-radius: 6px;
+    }
+    .feed-outcome.yes { background: rgba(63,185,80,0.15); color: var(--green); }
+    .feed-outcome.no  { background: rgba(248,81,73,0.15); color: var(--red); }
+    .feed-size { font-size: 13px; font-weight: 700; color: var(--text); }
+    .feed-market { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-time { font-size: 11px; color: var(--text2); flex-shrink: 0; white-space: nowrap; }
+    .copy-link {
+      font-size: 11px; font-weight: 700; color: var(--green);
+      text-decoration: none; padding: 3px 8px;
+      border: 1px solid var(--green); border-radius: 5px;
+      white-space: nowrap; opacity: 0.8; transition: opacity 0.2s; flex-shrink: 0;
+    }
+    .copy-link:hover { opacity: 1; }
+
+    /* LIVE DOT */
+    .live-dot {
+      display: inline-block; width: 8px; height: 8px;
+      background: var(--green); border-radius: 50%; margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+    /* FOOTER */
+    footer {
+      text-align: center; padding: 32px;
+      color: var(--text2); font-size: 12px;
+      border-top: 1px solid var(--border); margin-top: 48px;
+    }
+    .footer-cta {
+      display: inline-block;
+      margin-top: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .footer-cta:hover { opacity: 0.85; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .hero { padding: 32px 16px 28px; }
+      .hero-emoji { font-size: 40px; }
+      .nav-trade-btn { display: none; }
+      .feed-item { padding: 10px 14px; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="logo">🐋 Whale<span>Track</span></a>
+  <div class="nav-right">
+    <a href="/" class="nav-btn">← All Markets</a>
+    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn">Trade on Polymarket →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <span class="hero-emoji">⚽</span>
+  <h1>Where Smart Money is Going<br>on the <span>2026 World Cup</span></h1>
+  <p class="hero-sub">Track the biggest Polymarket traders in real time. See their open World Cup bets, copy their positions, and follow the smart money.</p>
+
+  <div class="stat-pills">
+    <div class="stat-pill" id="heroTotalBet">Loading… <span>WC volume on Polymarket</span></div>
+    <div class="stat-pill" id="heroMarkets">— <span>markets tracked</span></div>
+    <div class="stat-pill" id="heroWhales">— <span>whale wallets</span></div>
+  </div>
+
+  <div class="hero-actions">
+    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="hero-btn-primary">⚽ Bet on Polymarket →</a>
+    <a href="#markets" class="hero-btn-secondary">See Whale Positions ↓</a>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- WHALE POSITIONS BY MARKET -->
+  <div class="section-header" id="markets">
+    <h2>⚽ Whale Positions by Market</h2>
+    <span class="badge" id="marketsBadge">Loading...</span>
+    <span class="section-note">Sorted by total whale money</span>
+  </div>
+  <div class="cards-grid" id="marketsGrid">
+    <div class="loading"><div class="spinner"></div>Scanning whale World Cup positions...</div>
+  </div>
+
+  <!-- LIVE WC ACTIVITY -->
+  <div class="section-header" style="margin-top:40px">
+    <h2>⚡ Live World Cup Trades</h2>
+    <span class="badge" id="activityBadge">Loading...</span>
+    <span class="section-note"><span class="live-dot"></span>Real-time</span>
+  </div>
+  <div class="feed-wrap">
+    <div id="activityFeed">
+      <div class="loading"><div class="spinner"></div>Loading recent trades...</div>
+    </div>
+  </div>
+
+  <!-- CTA BANNER -->
+  <div style="margin-top:40px;padding:28px 24px;background:linear-gradient(135deg,#0d2b0d,#0d1117);border:1px solid rgba(63,185,80,0.25);border-radius:12px;text-align:center;">
+    <div style="font-size:24px;margin-bottom:8px">🐋</div>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)">Track All Whale Markets — Not Just World Cup</h3>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:16px">WhaleTrack shows real-time positions across politics, sports, crypto, and more.</p>
+    <a href="/" style="display:inline-block;background:var(--accent);color:#fff;font-size:14px;font-weight:700;padding:10px 24px;border-radius:8px;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">View Full Whale Dashboard →</a>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>⚽ WhaleTrack World Cup Tracker — Smart Money on FIFA 2026</p>
+  <p style="margin-top:4px">Data from Polymarket public API. Not financial advice. Refreshed every 5 minutes.</p>
+  <a href="/" class="footer-cta">← Back to WhaleTrack</a>
+</footer>
+
+<script>
+const AFFILIATE = 'https://polymarket.com?via=manpreet-singh-brar';
+
+function marketUrl(slug) {
+  return slug
+    ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
+    : AFFILIATE;
+}
+
+function fmtUSD(n) {
+  n = parseFloat(n);
+  if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000)    return '$' + (n/1000).toFixed(0) + 'K';
+  return '$' + n.toFixed(0);
+}
+
+function truncate(str, n) {
+  return str && str.length > n ? str.slice(0, n) + '…' : (str || '');
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor(Date.now() / 1000) - ts;
+  if (diff < 60)    return diff + 's ago';
+  if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+const WC_TERMS = [
+  'world cup', 'fifa', '2026 world cup', 'world cup 2026',
+  'round of 16', 'knockout', 'group stage', 'quarterfinal',
+  'semifinal', 'world cup winner', 'world cup champion',
+  'golden boot', 'world cup final', 'wc 2026',
+];
+
+function isWC(title) {
+  const t = (title || '').toLowerCase();
+  return WC_TERMS.some(term => t.includes(term));
+}
+
+// ===== RENDER MARKETS =====
+function renderMarkets(markets) {
+  const grid  = document.getElementById('marketsGrid');
+  const badge = document.getElementById('marketsBadge');
+
+  if (!markets || !markets.length) {
+    badge.textContent = '0 markets';
+    grid.innerHTML = '<div class="empty">No whale World Cup positions found right now. Check back during match time 🏆</div>';
+    // Update hero
+    document.getElementById('heroMarkets').innerHTML = '0 <span>markets tracked</span>';
+    return;
+  }
+
+  badge.textContent = markets.length + ' market' + (markets.length !== 1 ? 's' : '');
+  document.getElementById('heroMarkets').innerHTML = markets.length + ' <span>markets tracked</span>';
+
+  // Total whale money across all WC markets
+  const totalWhale = markets.reduce((s, m) => s + (m.totalValue || 0), 0);
+
+  grid.innerHTML = markets.map(m => {
+    const total   = m.totalValue || 0;
+    const yesPct  = total > 0 ? Math.round((m.yesValue / total) * 100) : 0;
+    const noPct   = 100 - yesPct;
+    const whaleCount = m.bets ? m.bets.length : 0;
+    const dominantSide = m.yesValue >= m.noValue ? 'YES' : 'NO';
+    const dominantColor = dominantSide === 'YES' ? 'var(--green)' : 'var(--red)';
+
+    const tweetText = encodeURIComponent(
+      `⚽ Smart money on the World Cup:\n\n` +
+      `"${m.title.slice(0, 60)}"\n\n` +
+      `🐋 ${whaleCount} whale${whaleCount!==1?'s':''} · $${total.toLocaleString()} total\n` +
+      `YES: ${yesPct}% · NO: ${noPct}%\n\n` +
+      `Track whale money → whaletrack.app/worldcup`
+    );
+
+    return `
+      <div class="market-card">
+        <!-- Title -->
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.4">${truncate(m.title, 65)}</div>
+
+        <!-- Meta row -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;color:var(--text2)">
+          <span>🐋 ${whaleCount} whale${whaleCount!==1?'s':''}</span>
+          <span>·</span>
+          <span style="color:var(--accent);font-weight:700">${fmtUSD(total)} at stake</span>
+          <span>·</span>
+          <span style="color:${dominantColor};font-weight:700">Smart money: ${dominantSide}</span>
+        </div>
+
+        <!-- VS bar -->
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+            <span style="color:var(--green);font-weight:700">YES — ${fmtUSD(m.yesValue)} (${yesPct}%)</span>
+            <span style="color:var(--red);font-weight:700">NO — ${fmtUSD(m.noValue)} (${noPct}%)</span>
+          </div>
+          <div style="display:flex;height:10px;border-radius:6px;overflow:hidden;gap:2px">
+            <div style="width:${yesPct}%;background:var(--green);border-radius:6px 0 0 6px;min-width:${yesPct>0?'4px':'0'}"></div>
+            <div style="width:${noPct}%;background:var(--red);border-radius:0 6px 6px 0;min-width:${noPct>0?'4px':'0'}"></div>
+          </div>
+        </div>
+
+        <!-- Whale name tags -->
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px">
+          ${(m.bets || []).map(b => `
+            <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${b.outcome==='Yes'?'rgba(63,185,80,0.15)':'rgba(248,81,73,0.15)'};color:${b.outcome==='Yes'?'var(--green)':'var(--red)'}">
+              ${b.whale} · ${b.outcome} · ${fmtUSD(b.value)}
+            </span>
+          `).join('')}
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:8px">
+          ${m.slug ? `<a href="${marketUrl(m.slug)}" target="_blank" rel="noopener" style="flex:1;display:block;padding:9px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);border-radius:8px;font-size:12px;color:var(--green);text-align:center;text-decoration:none;font-weight:700">⚽ Copy Bet →</a>` : ''}
+          <a href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener" style="display:block;padding:9px 12px;background:#1d9bf0;border-radius:8px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;white-space:nowrap">🐦 Share</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== RENDER ACTIVITY =====
+function renderActivity(items) {
+  const feed  = document.getElementById('activityFeed');
+  const badge = document.getElementById('activityBadge');
+
+  // Filter for WC trades
+  const wc = items.filter(t => isWC(t.title));
+
+  if (!wc.length) {
+    badge.textContent = '0 trades';
+    feed.innerHTML = '<div class="empty" style="padding:32px">No recent whale World Cup trades found — check back during match time ⚽</div>';
+    return;
+  }
+
+  badge.textContent = wc.length + ' recent trades';
+
+  feed.innerHTML = wc.map(t => {
+    const outcome = t.outcome || '—';
+    const outcomeClass = outcome === 'Yes' ? 'yes' : outcome === 'No' ? 'no' : '';
+    const sideEmoji = t.side === 'BUY' ? '🟢' : '🔴';
+    const sideText  = t.side === 'BUY' ? 'bought' : 'sold';
+    const initial   = (t.whale || '?')[0].toUpperCase();
+    const usd = t.usdcSize >= 1000 ? '$' + (t.usdcSize/1000).toFixed(1) + 'K' : '$' + t.usdcSize;
+
+    return `
+      <div class="feed-item">
+        <div class="feed-avatar">${initial}</div>
+        <div class="feed-body">
+          <div class="feed-top">
+            <span class="feed-whale">${t.whale}</span>
+            <span class="feed-action">${sideEmoji} ${sideText}</span>
+            <span class="feed-outcome ${outcomeClass}">${outcome}</span>
+            <span class="feed-size">${usd}</span>
+            <span class="feed-action">@ ${(t.price * 100).toFixed(0)}¢</span>
+          </div>
+          <div class="feed-market">${truncate(t.title, 75)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <div class="feed-time">${timeAgo(t.timestamp)}</div>
+          <a href="${marketUrl(t.slug)}" target="_blank" rel="noopener" class="copy-link">Copy Bet →</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== LOAD =====
+async function loadAll() {
+  try {
+    const [matchRes, activityRes] = await Promise.all([
+      fetch('/api/matches'),
+      fetch('/api/activity'),
+    ]);
+
+    const markets  = matchRes.ok  ? await matchRes.json()  : [];
+    const activity = activityRes.ok ? await activityRes.json() : [];
+
+    // Hero stats
+    const whaleCount = new Set((markets.flatMap(m => m.bets || [])).map(b => b.whale)).size;
+    document.getElementById('heroWhales').innerHTML = whaleCount + ' <span>whale wallets</span>';
+    document.getElementById('heroTotalBet').innerHTML = '$3.89B <span>WC volume on Polymarket</span>';
+
+    renderMarkets(markets);
+    renderActivity(activity);
+  } catch(e) {
+    document.getElementById('marketsGrid').innerHTML = '<div class="empty">Failed to load data. Please refresh.</div>';
+  }
+}
+
+loadAll();
+// Refresh every 5 minutes
+setInterval(loadAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>
