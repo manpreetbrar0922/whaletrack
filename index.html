@@ -724,6 +724,7 @@
       <input
         type="email"
         id="emailInput"
+        name="email"
         placeholder="your@email.com"
         required
         style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:14px;outline:none;"
@@ -1260,7 +1261,7 @@ function renderWhales(whales) {
             <div style="font-size:10px;color:var(--text2);margin-bottom:5px;">💸 If you copied this bet:</div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               <span style="font-size:11px;color:var(--text2);">$</span>
-              <input type="number" value="10" min="1" max="100000"
+              <input type="number" name="bet-amount" value="10" min="1" max="100000"
                 data-price="${w.topBet.price}"
                 onclick="event.stopPropagation()"
                 oninput="event.stopPropagation();updateCalc(this)"
