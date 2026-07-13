@@ -513,73 +513,49 @@ let matchTimer = null;
 
 async function fetchMatchOdds() {
   try {
-    // Search gamma API for France vs Spain match market
-    const terms = ['France vs Spain', 'France Spain semifinal', 'France Spain semi'];
-    let market = null;
+    // Fetch France and Spain WC winner markets in parallel
+    const [frRes, esRes] = await Promise.all([
+      fetch('https://gamma-api.polymarket.com/markets?q=Will+France+win+2026+FIFA+World+Cup&active=true&closed=false&limit=5'),
+      fetch('https://gamma-api.polymarket.com/markets?q=Will+Spain+win+2026+FIFA+World+Cup&active=true&closed=false&limit=5'),
+    ]);
 
-    for (const q of terms) {
-      const r = await fetch(`https://gamma-api.polymarket.com/markets?q=${encodeURIComponent(q)}&active=true&closed=false&limit=10`);
-      if (!r.ok) continue;
-      const data = await r.json();
-      const markets = Array.isArray(data) ? data : (data.markets || data.data || []);
-      market = markets.find(m => {
-        const title = (m.question || m.title || '').toLowerCase();
-        return title.includes('france') && title.includes('spain') && (title.includes('win') || title.includes('semi') || title.includes('vs'));
+    const frData = frRes.ok ? await frRes.json() : [];
+    const esData = esRes.ok ? await esRes.json() : [];
+
+    function findMarket(data, keyword) {
+      const list = Array.isArray(data) ? data : (data.markets || data.data || []);
+      return list.find(m => {
+        const q = (m.question || m.title || '').toLowerCase();
+        return q.includes(keyword) && q.includes('win') && (q.includes('world cup') || q.includes('fifa'));
       });
-      if (market) break;
     }
 
-    // Fallback — search events
-    if (!market) {
-      const r = await fetch('https://gamma-api.polymarket.com/events?q=France+Spain&active=true&closed=false&limit=10');
-      if (r.ok) {
-        const data = await r.json();
-        const events = Array.isArray(data) ? data : (data.events || data.data || []);
-        for (const ev of events) {
-          const title = (ev.title || '').toLowerCase();
-          if (title.includes('france') && title.includes('spain')) {
-            const mkt = (ev.markets || []).find(m => {
-              const q = (m.question || '').toLowerCase();
-              return q.includes('france') || q.includes('win');
-            });
-            if (mkt) { market = mkt; break; }
-          }
-        }
-      }
-    }
+    const franceMkt = findMarket(frData, 'france');
+    const spainMkt  = findMarket(esData, 'spain');
 
-    if (!market) {
-      document.getElementById('matchMeta').textContent = 'Market not found — may not be listed yet on Polymarket.';
+    if (!franceMkt && !spainMkt) {
+      document.getElementById('matchMeta').textContent = 'Live odds unavailable — markets may be resolved.';
       return;
     }
 
-    // Parse outcomes and prices
-    let outcomes, prices;
-    try {
-      outcomes = typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : (market.outcomes || []);
-      prices   = typeof market.outcomePrices === 'string' ? JSON.parse(market.outcomePrices) : (market.outcomePrices || []);
-    } catch(e) { return; }
-
-    // Find France price — could be "France" outcome or "Yes" in a France-specific market
-    let francePct, spainPct, marketUrl, marketTitle;
-    marketTitle = market.question || market.title || '';
-    marketUrl   = market.slug ? `https://polymarket.com/event/${market.eventSlug || market.slug}?via=manpreet-singh-brar` : AFFILIATE;
-
-    const franceIdx = outcomes.findIndex(o => o.toLowerCase().includes('france'));
-    const spainIdx  = outcomes.findIndex(o => o.toLowerCase().includes('spain'));
-
-    if (franceIdx !== -1 && spainIdx !== -1) {
-      // Multi-outcome market (France / Spain / Draw)
-      francePct = Math.round(parseFloat(prices[franceIdx] || 0) * 100);
-      spainPct  = Math.round(parseFloat(prices[spainIdx] || 0) * 100);
-    } else if (outcomes.length === 2 && outcomes[0] === 'Yes') {
-      // Binary "Will France win?" — Yes = France
-      francePct = Math.round(parseFloat(prices[0] || 0) * 100);
-      spainPct  = 100 - francePct;
-    } else {
-      document.getElementById('matchMeta').textContent = 'Could not parse odds from market: ' + marketTitle;
-      return;
+    function getYesPrice(mkt) {
+      if (!mkt) return null;
+      let outcomes, prices;
+      try {
+        outcomes = typeof mkt.outcomes === 'string' ? JSON.parse(mkt.outcomes) : (mkt.outcomes || []);
+        prices   = typeof mkt.outcomePrices === 'string' ? JSON.parse(mkt.outcomePrices) : (mkt.outcomePrices || []);
+      } catch(e) { return null; }
+      const yesIdx = outcomes.findIndex(o => (o||'').toLowerCase() === 'yes');
+      return yesIdx !== -1 ? parseFloat(prices[yesIdx] || 0) : parseFloat(prices[0] || 0);
     }
+
+    const franceRaw = getYesPrice(franceMkt) || 0;
+    const spainRaw  = getYesPrice(spainMkt)  || 0;
+
+    // Normalize so the two add to 100%
+    const total = franceRaw + spainRaw;
+    const francePct = total > 0 ? Math.round((franceRaw / total) * 100) : 50;
+    const spainPct  = 100 - francePct;
 
     // Update UI
     document.getElementById('francePct').textContent = francePct + '%';
@@ -587,20 +563,24 @@ async function fetchMatchOdds() {
     document.getElementById('franceBar').style.width = francePct + '%';
     document.getElementById('spainBar').style.width  = spainPct + '%';
 
-    const favourite = francePct >= spainPct ? 'France' : 'Spain';
+    const favourite = francePct >= spainPct ? '🇫🇷 France' : '🇪🇸 Spain';
+    const updatedAt = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
     document.getElementById('matchMeta').textContent =
-      `Smart money: ${favourite} favoured · ${francePct > spainPct ? francePct : spainPct}% probability · ${truncate(marketTitle, 60)}`;
+      `Smart money favourite: ${favourite} · Based on Polymarket WC winner odds · Updated ${updatedAt}`;
 
-    document.getElementById('matchBetBtn').href = marketUrl;
+    // Link to France market as primary
+    const slug = franceMkt?.eventSlug || franceMkt?.slug || '';
+    document.getElementById('matchBetBtn').href = slug
+      ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
+      : 'https://polymarket.com/sports?via=manpreet-singh-brar';
 
     const tweetText = encodeURIComponent(
       `🇫🇷 France ${francePct}% vs 🇪🇸 Spain ${spainPct}%\n\n` +
-      `That's where $3.89B in prediction market money is right now for today's World Cup semi-final.\n\n` +
-      `Live odds → whaletrack.app/worldcup`
+      `That's where smart money on Polymarket is right now for today's World Cup semi-final 👀\n\n` +
+      `Track live odds → whaletrack.app/worldcup`
     );
     document.getElementById('matchTweetBtn').href = `https://twitter.com/intent/tweet?text=${tweetText}`;
 
-    // Reset countdown
     matchCountdown = 30;
 
   } catch(e) {
