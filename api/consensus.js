@@ -57,7 +57,7 @@ export default async function handler(req, res) {
           title: p.title || p.market || p.question || 'Unknown',
           outcome: p.outcome || p.side || '?',
           value: Math.round(parseFloat(p.currentValue || 0)),
-          slug: p.slug || p.conditionId || null,
+          slug: p.eventSlug || p.slug || p.conditionId || null,
           conditionId: p.conditionId || null,
         }));
     } catch (e) { return []; }
