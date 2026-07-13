@@ -191,3 +191,35 @@ else
     echo "  ⚠️  $ISSUES issue(s) found — review above." >> $LOG
 fi
 echo "=== END ===" >> $LOG
+
+# ── NOTIFY ──────────────────────────────────────────────────────────────────
+# Always send macOS notification so you know the check ran
+HOUR=$(date +%H)
+SUMMARY_LINE="$ISSUES issue(s) | $(date '+%I:%M %p')"
+
+if [ "$ISSUES" -gt 0 ]; then
+    # Desktop alert — plays sound so you notice
+    osascript -e "display notification \"⚠️  $ISSUES issue(s) found — open bug_check.log\" with title \"🚨 WhaleTrack Bug Alert\" sound name \"Submarine\"" 2>/dev/null
+
+    # Email yourself the issue list (uses macOS mail command)
+    ISSUE_LINES=$(grep -E "❌|⚠️" "$LOG" | tail -20)
+    echo "WhaleTrack bug check at $(date):
+
+$ISSUE_LINES
+
+Full log: $LOG" | mail -s "🚨 WhaleTrack: $ISSUES issue(s) found" manpreetbrar491@gmail.com 2>/dev/null || true
+
+    # Fallback: also write a LATEST_ISSUES file so it's easy to spot
+    {
+        echo "=== ISSUES FOUND $(date) ==="
+        grep -E "❌|⚠️" "$LOG" | tail -20
+    } > /Users/manpreetbrar/whaletrack/latest_issues.txt
+
+else
+    # Silent success — only notify once a day (8AM check) to confirm all clear
+    if [ "$HOUR" = "08" ]; then
+        osascript -e "display notification \"✅ All checks passed\" with title \"WhaleTrack Bug Check\"" 2>/dev/null
+    fi
+    # Clear any old issues file
+    rm -f /Users/manpreetbrar/whaletrack/latest_issues.txt
+fi
