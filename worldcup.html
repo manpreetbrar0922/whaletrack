@@ -513,51 +513,54 @@ let matchTimer = null;
 
 async function fetchMatchOdds() {
   try {
-    // Fetch France and Spain WC winner markets in parallel
-    const [frRes, esRes] = await Promise.all([
-      fetch('https://gamma-api.polymarket.com/markets?q=Will+France+win+2026+FIFA+World+Cup&active=true&closed=false&limit=5'),
-      fetch('https://gamma-api.polymarket.com/markets?q=Will+Spain+win+2026+FIFA+World+Cup&active=true&closed=false&limit=5'),
-    ]);
+    // Fetch top WC events by volume and filter client-side
+    const r = await fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&limit=100&order=volume&ascending=false');
+    if (!r.ok) throw new Error('fetch failed');
+    const events = await r.json();
 
-    const frData = frRes.ok ? await frRes.json() : [];
-    const esData = esRes.ok ? await esRes.json() : [];
+    let franceMkt = null, spainMkt = null, franceSlug = '', spainSlug = '';
 
-    function findMarket(data, keyword) {
-      const list = Array.isArray(data) ? data : (data.markets || data.data || []);
-      return list.find(m => {
+    for (const ev of (Array.isArray(events) ? events : [])) {
+      const evTitle = (ev.title || '').toLowerCase();
+      const isWC = evTitle.includes('world cup') || evTitle.includes('fifa') || evTitle.includes('2026');
+      if (!isWC) continue;
+
+      for (const m of (ev.markets || [])) {
         const q = (m.question || m.title || '').toLowerCase();
-        return q.includes(keyword) && q.includes('win') && (q.includes('world cup') || q.includes('fifa'));
-      });
+        let outcomes, prices;
+        try {
+          outcomes = typeof m.outcomes === 'string' ? JSON.parse(m.outcomes) : (m.outcomes || []);
+          prices   = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : (m.outcomePrices || []);
+        } catch(e) { continue; }
+
+        const yesIdx = outcomes.findIndex(o => (o||'').toLowerCase() === 'yes');
+        const price  = yesIdx !== -1 ? parseFloat(prices[yesIdx] || 0) : null;
+        if (price === null || price <= 0) continue;
+
+        if (!franceMkt && q.includes('france') && q.includes('win')) {
+          franceMkt = price;
+          franceSlug = ev.slug || m.eventSlug || m.slug || '';
+        }
+        if (!spainMkt && q.includes('spain') && q.includes('win')) {
+          spainMkt = price;
+          spainSlug = ev.slug || m.eventSlug || m.slug || '';
+        }
+        if (franceMkt && spainMkt) break;
+      }
+      if (franceMkt && spainMkt) break;
     }
 
-    const franceMkt = findMarket(frData, 'france');
-    const spainMkt  = findMarket(esData, 'spain');
-
     if (!franceMkt && !spainMkt) {
-      document.getElementById('matchMeta').textContent = 'Live odds unavailable — markets may be resolved.';
+      document.getElementById('matchMeta').textContent = 'Odds not available — WC winner markets may be closed or not yet listed.';
       return;
     }
 
-    function getYesPrice(mkt) {
-      if (!mkt) return null;
-      let outcomes, prices;
-      try {
-        outcomes = typeof mkt.outcomes === 'string' ? JSON.parse(mkt.outcomes) : (mkt.outcomes || []);
-        prices   = typeof mkt.outcomePrices === 'string' ? JSON.parse(mkt.outcomePrices) : (mkt.outcomePrices || []);
-      } catch(e) { return null; }
-      const yesIdx = outcomes.findIndex(o => (o||'').toLowerCase() === 'yes');
-      return yesIdx !== -1 ? parseFloat(prices[yesIdx] || 0) : parseFloat(prices[0] || 0);
-    }
-
-    const franceRaw = getYesPrice(franceMkt) || 0;
-    const spainRaw  = getYesPrice(spainMkt)  || 0;
-
-    // Normalize so the two add to 100%
-    const total = franceRaw + spainRaw;
-    const francePct = total > 0 ? Math.round((franceRaw / total) * 100) : 50;
+    const fr = franceMkt || 0;
+    const es = spainMkt  || 0;
+    const total = fr + es;
+    const francePct = total > 0 ? Math.round((fr / total) * 100) : 50;
     const spainPct  = 100 - francePct;
 
-    // Update UI
     document.getElementById('francePct').textContent = francePct + '%';
     document.getElementById('spainPct').textContent  = spainPct + '%';
     document.getElementById('franceBar').style.width = francePct + '%';
@@ -566,12 +569,10 @@ async function fetchMatchOdds() {
     const favourite = francePct >= spainPct ? '🇫🇷 France' : '🇪🇸 Spain';
     const updatedAt = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
     document.getElementById('matchMeta').textContent =
-      `Smart money favourite: ${favourite} · Based on Polymarket WC winner odds · Updated ${updatedAt}`;
+      `Smart money favourite: ${favourite} · Polymarket WC winner odds normalised · Updated ${updatedAt}`;
 
-    // Link to France market as primary
-    const slug = franceMkt?.eventSlug || franceMkt?.slug || '';
-    document.getElementById('matchBetBtn').href = slug
-      ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
+    document.getElementById('matchBetBtn').href = franceSlug
+      ? `https://polymarket.com/event/${franceSlug}?via=manpreet-singh-brar`
       : 'https://polymarket.com/sports?via=manpreet-singh-brar';
 
     const tweetText = encodeURIComponent(
@@ -582,7 +583,6 @@ async function fetchMatchOdds() {
     document.getElementById('matchTweetBtn').href = `https://twitter.com/intent/tweet?text=${tweetText}`;
 
     matchCountdown = 30;
-
   } catch(e) {
     document.getElementById('matchMeta').textContent = 'Error loading odds. Retrying...';
   }
