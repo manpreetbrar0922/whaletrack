@@ -1166,8 +1166,10 @@ function renderWhales(whales) {
   }
 
   grid.innerHTML = whales.map(w => {
-    const pnlClass = w.pnl >= 0 ? 'positive' : 'negative';
-    const pnlSign = w.pnl >= 0 ? '+' : '';
+    const hasPnl   = w.pnl !== null && w.pnl !== undefined;
+    const pnlClass = hasPnl ? (w.pnl >= 0 ? 'positive' : 'negative') : '';
+    const pnlSign  = hasPnl ? (w.pnl >= 0 ? '+' : '') : '';
+    const pnlDisplay = hasPnl ? pnlSign + '$' + Math.abs(w.pnl).toLocaleString() : '—';
     const safeName = w.name.replace(/'/g, "\\'");
 
     // Win rate badge colour
@@ -1183,11 +1185,11 @@ function renderWhales(whales) {
             <span class="whale-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.name}</span>
             <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${wrBg};color:${wrColor};white-space:nowrap;flex-shrink:0">${wrLabel}</span>
           </div>
-          <span class="whale-pnl ${pnlClass}">${pnlSign}$${Math.abs(w.pnl).toLocaleString()}</span>
+          <span class="whale-pnl ${pnlClass}">${pnlDisplay}</span>
         </div>
         <div class="whale-stat-row">
           <span class="whale-stat-label">30d P&L</span>
-          <span class="whale-stat-val ${pnlClass}">${pnlSign}$${Math.abs(w.pnl).toLocaleString()}</span>
+          <span class="whale-stat-val ${pnlClass}">${pnlDisplay}</span>
         </div>
         <div class="whale-stat-row">
           <span class="whale-stat-label">Win Rate</span>
@@ -1510,7 +1512,7 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
       </div>
       <div style="text-align:center">
         <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">30d P&L</div>
-        <div style="font-size:22px;font-weight:800" class="${pnlClass}">${whale.pnl !== undefined ? pnlSign + '$' + Math.abs(whale.pnl).toLocaleString() : '—'}</div>
+        <div style="font-size:22px;font-weight:800" class="${pnlClass}">${whale.pnl !== null && whale.pnl !== undefined ? pnlSign + '$' + Math.abs(whale.pnl).toLocaleString() : '—'}</div>
       </div>
       <div style="text-align:center">
         <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Total Trades</div>
@@ -1567,7 +1569,7 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
               <td class="r">${avgPrice > 0 ? (avgPrice * 100).toFixed(1) + '¢' : '—'}</td>
               <td class="r" style="font-weight:600">${curPrice > 0 ? (curPrice * 100).toFixed(1) + '¢' : '—'}</td>
               <td class="r" style="font-weight:600;color:${pnlColor}">${pnl !== 0 ? pnlSign + '$' + Math.abs(pnl).toFixed(0) : '—'}</td>
-              <td class="r"><a href="${marketUrl(p.slug || p.conditionId)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;color:var(--green);text-decoration:none;padding:3px 8px;border:1px solid var(--green);border-radius:5px;white-space:nowrap;">Copy Bet →</a></td>
+              <td class="r"><a href="${marketUrl(p.eventSlug || p.slug || p.conditionId)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;color:var(--green);text-decoration:none;padding:3px 8px;border:1px solid var(--green);border-radius:5px;white-space:nowrap;">Copy Bet →</a></td>
             </tr>
           `;
         }).join('')}

@@ -17,8 +17,15 @@ export default async function handler(req, res) {
       res.status(200).json([]);
       return;
     }
-    const data = await r.json();
-    res.status(200).json(Array.isArray(data) ? data : []);
+    const raw = await r.json();
+    if (!Array.isArray(raw)) { res.status(200).json([]); return; }
+
+    // Only return positions that are still open (redeemable=false).
+    // redeemable=true = already cashed out → shows as $0 rows, useless to user.
+    // If wallet has redeemed everything, fall back to last 20 for history view.
+    const open = raw.filter(p => p.redeemable === false);
+    const result = open.length > 0 ? open : raw.slice(0, 20);
+    res.status(200).json(result);
   } catch (e) {
     res.status(200).json([]);
   }

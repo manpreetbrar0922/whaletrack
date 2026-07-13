@@ -57,7 +57,7 @@ export default async function handler(req, res) {
           size:      parseFloat(t.size || 0),
           price:     parseFloat(t.price || 0),
           title:     t.title || 'Unknown Market',
-          slug:      t.slug || '',
+          slug:      t.eventSlug || t.slug || '',  // eventSlug works on polymarket.com/event/, market slug gives 404
           timestamp: t.timestamp || 0,
         });
       }

@@ -49,11 +49,12 @@ export default async function handler(req, res) {
       if (open.length) {
         const top = open[0]; // already sorted by CURRENT DESC
         topBet = {
-          title: top.title || top.market || top.question || null,
+          title:   top.title || top.market || top.question || null,
           outcome: top.outcome || top.side || null,
-          value: Math.round(parseFloat(top.currentValue || 0)),
-          slug: top.slug || top.conditionId || null,
-          price: parseFloat(top.price || top.curPrice || top.currentPrice || 0),
+          value:   Math.round(parseFloat(top.currentValue || 0)),
+          // eventSlug works on polymarket.com/event/ — market-level slug gives 404
+          slug:    top.eventSlug || top.slug || top.conditionId || null,
+          price:   parseFloat(top.price || top.curPrice || top.currentPrice || 0),
         };
       }
 
@@ -80,7 +81,9 @@ export default async function handler(req, res) {
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
     const rawName = t.userName || t.xUsername || '';
-    const cleanName = (rawName && !rawName.startsWith('0x')) ? rawName : null;
+    // Strip Polymarket's appended rank suffix e.g. "thif - 33063" → "thif"
+    const stripped = rawName.replace(/ - \d{3,}$/, '').trim();
+    const cleanName = (stripped && !stripped.startsWith('0x')) ? stripped : null;
     const displayName = knownNames[addr]
       || cleanName
       || addrShort(t.proxyWallet);
@@ -102,7 +105,7 @@ export default async function handler(req, res) {
     whaleBase.push({
       name,
       address: addr,
-      pnl:     e ? Math.round(parseFloat(e.pnl || 0)) : 0,
+      pnl:     e ? Math.round(parseFloat(e.pnl || 0)) : null,  // null = not on leaderboard, show — not $0
       volume:  parseFloat(e?.vol || 0),
       rank:    e?.rank || '—',
     });
