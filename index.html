@@ -1601,6 +1601,18 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
           const curPrice = parseFloat(p.currentPrice || p.curPrice || 0);
           const size = parseFloat(p.currentValue || p.size || 0);
           const title = p.title || p.market || p.question || 'Unknown Market';
+
+          // Only show Copy Bet for genuinely open positions (redeemable=false, has value)
+          // redeemable=true = already cashed out → dead link. Show status badge instead.
+          const isOpen = p.redeemable === false && size > 0.5;
+          const isWon  = p.redeemable === true;
+          const isLost = p.redeemable === false && size <= 0.5;
+          const actionCell = isOpen
+            ? `<a href="${marketUrl(p.eventSlug || p.slug || p.conditionId)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;color:var(--green);text-decoration:none;padding:3px 8px;border:1px solid var(--green);border-radius:5px;white-space:nowrap;">Copy Bet →</a>`
+            : isWon
+            ? `<span style="font-size:11px;font-weight:700;color:var(--green);padding:3px 8px;border:1px solid rgba(63,185,80,0.3);border-radius:5px;white-space:nowrap;">✅ Cashed</span>`
+            : `<span style="font-size:11px;font-weight:700;color:var(--red);padding:3px 8px;border:1px solid rgba(248,81,73,0.3);border-radius:5px;white-space:nowrap;">📉 Lost</span>`;
+
           return `
             <tr>
               <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${title}">${truncate(title, 48)}</td>
@@ -1609,7 +1621,7 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
               <td class="r">${avgPrice > 0 ? (avgPrice * 100).toFixed(1) + '¢' : '—'}</td>
               <td class="r" style="font-weight:600">${curPrice > 0 ? (curPrice * 100).toFixed(1) + '¢' : '—'}</td>
               <td class="r" style="font-weight:600;color:${pnlColor}">${pnl !== 0 ? pnlSign + '$' + Math.abs(pnl).toFixed(0) : '—'}</td>
-              <td class="r"><a href="${marketUrl(p.eventSlug || p.slug || p.conditionId)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;color:var(--green);text-decoration:none;padding:3px 8px;border:1px solid var(--green);border-radius:5px;white-space:nowrap;">Copy Bet →</a></td>
+              <td class="r">${actionCell}</td>
             </tr>
           `;
         }).join('')}

@@ -25,7 +25,14 @@ export default async function handler(req, res) {
       );
       if (!r.ok) return { winRate: '—', trades: '—', topBet: null };
       const positions = await r.json();
-      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—', topBet: null };
+      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—', topBet: null, inactive: true };
+
+      // Skip wallets whose most recent position has an endDate before 2024 — these are
+      // ancient/inactive traders (e.g. 2021 Polymarket era) not worth showing to users
+      const mostRecent = positions[0];
+      const endDate = mostRecent?.endDate || '';
+      const endYear = endDate ? parseInt(endDate.slice(0, 4)) : 9999;
+      if (endYear < 2024) return { winRate: '—', trades: '—', topBet: null, inactive: true };
 
       // Won = redeemable (market resolved in their favour, shares worth $1)
       // Lost = currentValue=0 AND not redeemable (market resolved against them)
@@ -114,12 +121,11 @@ export default async function handler(req, res) {
   // Fetch win rate + trade count for all whales in parallel
   const stats = await Promise.all(whaleBase.map(w => fetchWalletStats(w.address)));
 
-  const whales = whaleBase.map((w, i) => ({
-    ...w,
-    winRate: stats[i].winRate,
-    trades:  stats[i].trades,
-    topBet:  stats[i].topBet,
-  }));
+  // Filter out inactive wallets (last trade before 2024) — they show dead links and old data
+  const whales = whaleBase
+    .map((w, i) => ({ ...w, winRate: stats[i].winRate, trades: stats[i].trades, topBet: stats[i].topBet, _inactive: stats[i].inactive }))
+    .filter(w => !w._inactive)
+    .map(({ _inactive, ...w }) => w);
 
   res.status(200).json(whales);
 }
