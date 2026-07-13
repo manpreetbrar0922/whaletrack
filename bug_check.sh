@@ -282,25 +282,36 @@ fi
 # ─────────────────────────────────────────────────────────────
 
 # D1. Bot alive — last log entry within 15 min
+# Uses Python to parse UTC timestamp correctly (macOS date -j treats UTC as local → wrong diff)
 if [ -f "$BOT_LOG" ]; then
     LAST_LINE=$(grep "\[20" "$BOT_LOG" | tail -1)
     if [ -z "$LAST_LINE" ]; then
         echo "  ❌ Bot log empty or no timestamp" >> $LOG
         ISSUES=$((ISSUES+1))
     else
-        TS_STR=$(echo "$LAST_LINE" | grep -oE '\[20[0-9]{2}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+Z\]' | tr -d '[]')
-        if [ -n "$TS_STR" ]; then
-            LAST_TS=$(date -j -f "%Y-%m-%dT%H:%M:%S" "${TS_STR%.*}" "+%s" 2>/dev/null)
-            NOW_TS=$(date +%s)
-            DIFF=$((NOW_TS - LAST_TS))
-            if [ "$DIFF" -gt 900 ]; then
+        BOT_CHECK=$(echo "$LAST_LINE" | python3 -c "
+import sys, re, time
+from datetime import datetime, timezone
+line = sys.stdin.read()
+m = re.search(r'\[20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', line)
+if not m:
+    print('no_ts')
+else:
+    ts_str = m.group(0)[1:]  # strip leading [
+    dt = datetime.strptime(ts_str, '%Y-%m-%dT%H:%M:%S').replace(tzinfo=timezone.utc)
+    diff = int(time.time() - dt.timestamp())
+    print(f'diff:{diff}')
+" 2>/dev/null)
+        if [ "$BOT_CHECK" = "no_ts" ]; then
+            echo "  ⚠️  Could not parse bot log timestamp" >> $LOG
+        else
+            DIFF=$(echo "$BOT_CHECK" | grep "^diff:" | cut -d: -f2)
+            if [ "${DIFF:-9999}" -gt 900 ]; then
                 echo "  ❌ Bot stalled — last entry ${DIFF}s ago" >> $LOG
                 ISSUES=$((ISSUES+1))
             else
                 echo "  ✅ Bot alive — last entry ${DIFF}s ago" >> $LOG
             fi
-        else
-            echo "  ⚠️  Could not parse bot log timestamp" >> $LOG
         fi
     fi
 else
