@@ -1098,6 +1098,7 @@ function renderMatchBets(markets) {
 
 // ===== ACTIVITY FILTER =====
 let cachedActivity = [];
+let cachedWhales = [];
 
 function applyActivityFilter() {
   const min = parseInt(document.getElementById('minSizeFilter').value) || 0;
@@ -1154,6 +1155,7 @@ function renderActivity(items) {
 
 // ===== RENDER WHALES =====
 function renderWhales(whales) {
+  cachedWhales = whales;
   const grid = document.getElementById('whaleGrid');
   document.getElementById('whaleBadge').textContent = whales.length + ' wallets';
   document.getElementById('statWhales').textContent = whales.length;
@@ -1167,10 +1169,20 @@ function renderWhales(whales) {
     const pnlClass = w.pnl >= 0 ? 'positive' : 'negative';
     const pnlSign = w.pnl >= 0 ? '+' : '';
     const safeName = w.name.replace(/'/g, "\\'");
+
+    // Win rate badge colour
+    const wr = w.winRate;
+    const wrColor  = wr !== '—' ? (wr >= 60 ? 'var(--green)' : wr >= 40 ? '#f0c040' : 'var(--red)') : 'var(--text2)';
+    const wrBg     = wr !== '—' ? (wr >= 60 ? 'rgba(63,185,80,0.18)' : wr >= 40 ? 'rgba(240,192,64,0.18)' : 'rgba(248,81,73,0.18)') : 'var(--bg3)';
+    const wrLabel  = wr !== '—' ? wr + '% W' : '—';
+
     return `
       <div class="whale-card" onclick="showPositions('${w.address}', '${safeName}')">
         <div class="whale-card-header">
-          <span class="whale-name">${w.name}</span>
+          <div style="display:flex;align-items:center;gap:7px;min-width:0">
+            <span class="whale-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.name}</span>
+            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${wrBg};color:${wrColor};white-space:nowrap;flex-shrink:0">${wrLabel}</span>
+          </div>
           <span class="whale-pnl ${pnlClass}">${pnlSign}$${Math.abs(w.pnl).toLocaleString()}</span>
         </div>
         <div class="whale-stat-row">
@@ -1179,7 +1191,7 @@ function renderWhales(whales) {
         </div>
         <div class="whale-stat-row">
           <span class="whale-stat-label">Win Rate</span>
-          <span class="whale-stat-val">${w.winRate !== '—' ? w.winRate + '%' : '—'}</span>
+          <span class="whale-stat-val" style="color:${wrColor};font-weight:700">${wr !== '—' ? wr + '%' : '—'}</span>
         </div>
         <div class="whale-stat-row">
           <span class="whale-stat-label">Total Trades</span>
@@ -1199,11 +1211,27 @@ function renderWhales(whales) {
           <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">🔥 Top Open Bet</div>
           <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${w.topBet.title.replace(/"/g,'&quot;')}">${w.topBet.title.length > 45 ? w.topBet.title.slice(0,45)+'…' : w.topBet.title}</div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
-            <span style="font-size:12px;color:${w.topBet.outcome === 'Yes' ? 'var(--green)' : 'var(--red)'};font-weight:700">${w.topBet.outcome}</span>
+            <span style="font-size:12px;color:${w.topBet.outcome === 'Yes' ? 'var(--green)' : 'var(--red)'};font-weight:700">${w.topBet.outcome}${w.topBet.price > 0 ? ' @ ' + (w.topBet.price * 100).toFixed(0) + '¢' : ''}</span>
             <span style="font-size:12px;font-weight:700;color:var(--accent)">$${w.topBet.value.toLocaleString()}</span>
           </div>
+          ${w.topBet.price > 0.01 && w.topBet.price < 0.99 ? `
+          <div style="margin-top:8px;padding:8px 10px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:6px;">
+            <div style="font-size:10px;color:var(--text2);margin-bottom:5px;">💸 If you copied this bet:</div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span style="font-size:11px;color:var(--text2);">$</span>
+              <input type="number" value="10" min="1" max="100000"
+                data-price="${w.topBet.price}"
+                onclick="event.stopPropagation()"
+                oninput="event.stopPropagation();updateCalc(this)"
+                style="width:56px;padding:3px 6px;border-radius:5px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:12px;font-weight:700;outline:none;">
+              <span style="font-size:11px;color:var(--text2);">→ win</span>
+              <span class="calc-result" style="font-size:13px;font-weight:800;color:#00ff88;">$${(10 / w.topBet.price).toFixed(2)}</span>
+              <span style="font-size:11px;color:var(--text2);">(${((1 / w.topBet.price - 1) * 100).toFixed(0)}% ROI)</span>
+            </div>
+          </div>
+          ` : ''}
         </div>` : ''}
-        <div class="view-positions">👁 View Open Positions</div>
+        <div class="view-positions">👁 View Full Profile & Positions</div>
       </div>
     `;
   }).join('');
@@ -1438,13 +1466,20 @@ function checkBigTrades(activity) {
 // ===== POSITIONS MODAL =====
 async function showPositions(address, name) {
   document.getElementById('modalWhaleName').textContent = name;
-  document.getElementById('modalBody').innerHTML = '<div class="loading"><div class="spinner"></div>Loading positions...</div>';
+  document.getElementById('modalBody').innerHTML = '<div class="loading"><div class="spinner"></div>Loading profile...</div>';
   document.getElementById('positionsModal').classList.add('open');
+
+  // Grab cached whale stats for the profile header
+  const whale = cachedWhales.find(w => w.address === address) || {};
+  const wr = whale.winRate;
+  const wrColor = wr !== undefined && wr !== '—' ? (wr >= 60 ? 'var(--green)' : wr >= 40 ? '#f0c040' : 'var(--red)') : 'var(--text2)';
+  const pnlClass = (whale.pnl || 0) >= 0 ? 'positive' : 'negative';
+  const pnlSign  = (whale.pnl || 0) >= 0 ? '+' : '';
 
   try {
     const res = await fetch(`/api/positions?address=${encodeURIComponent(address)}`);
     const positions = await res.json();
-    renderPositions(positions);
+    renderPositions(positions, whale, wrColor, pnlClass, pnlSign);
   } catch(e) {
     document.getElementById('modalBody').innerHTML = '<div class="empty">Failed to load positions. Try again.</div>';
   }
@@ -1457,18 +1492,50 @@ function closeModal() {
 // Close on Escape key
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-function renderPositions(positions) {
+function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
+  whale = whale || {};
   const body = document.getElementById('modalBody');
 
+  // Profile stats header
+  const wr = whale.winRate;
+  wrColor  = wrColor  || 'var(--text2)';
+  pnlClass = pnlClass || 'neutral';
+  pnlSign  = pnlSign  || '';
+
+  const profileHeader = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:18px;padding:14px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)">
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Win Rate</div>
+        <div style="font-size:22px;font-weight:800;color:${wrColor}">${wr !== undefined && wr !== '—' ? wr + '%' : '—'}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">30d P&L</div>
+        <div style="font-size:22px;font-weight:800" class="${pnlClass}">${whale.pnl !== undefined ? pnlSign + '$' + Math.abs(whale.pnl).toLocaleString() : '—'}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Total Trades</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text)">${whale.trades !== undefined && whale.trades !== '—' ? whale.trades + '+' : '—'}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Volume</div>
+        <div style="font-size:22px;font-weight:800;color:var(--accent)">${whale.volume ? '$' + (whale.volume/1000000).toFixed(1) + 'M' : '—'}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Leaderboard</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text)">${whale.rank && whale.rank !== '—' ? '#' + whale.rank : '—'}</div>
+      </div>
+    </div>
+  `;
+
   if (!positions || !positions.length) {
-    body.innerHTML = '<div class="empty">No open positions found for this whale.</div>';
+    body.innerHTML = profileHeader + '<div class="empty">No open positions found for this whale.</div>';
     return;
   }
 
   // Sort by current value descending
   positions.sort((a, b) => parseFloat(b.currentValue || b.size || 0) - parseFloat(a.currentValue || a.size || 0));
 
-  body.innerHTML = `
+  body.innerHTML = profileHeader + `
     <table class="pos-table">
       <thead>
         <tr>
@@ -1511,6 +1578,15 @@ function renderPositions(positions) {
       <a href="${AFFILIATE_URL}" target="_blank" rel="noopener" class="trade-btn" data-affiliate>Trade on Polymarket →</a>
     </div>
   `;
+}
+
+// ===== COPY-BET CALCULATOR =====
+function updateCalc(input) {
+  const price = parseFloat(input.dataset.price);
+  const bet   = parseFloat(input.value) || 0;
+  const win   = (price > 0 && bet > 0) ? (bet / price).toFixed(2) : '0.00';
+  const result = input.parentElement.querySelector('.calc-result');
+  if (result) result.textContent = '$' + win;
 }
 
 // ===== EMAIL CAPTURE =====

@@ -46,6 +46,7 @@ export default async function handler(req, res) {
           outcome: top.outcome || top.side || null,
           value: Math.round(parseFloat(top.currentValue || 0)),
           slug: top.slug || top.conditionId || null,
+          price: parseFloat(top.price || top.curPrice || top.currentPrice || 0),
         };
       }
 
