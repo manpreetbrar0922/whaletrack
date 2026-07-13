@@ -744,6 +744,45 @@
 </footer>
 
 <script>
+// ===== JS ERROR TRACKER =====
+// Catches any JS crash on the site and emails manpreetbrar491@gmail.com via Formspree
+(function() {
+  var _errors = [];
+  var _sent = false;
+
+  function sendErrors() {
+    if (_sent || _errors.length === 0) return;
+    _sent = true;
+    var body = _errors.slice(0, 5).map(function(e) {
+      return e.msg + '\n  at ' + e.src + ':' + e.line + '\n  ' + new Date(e.ts).toISOString();
+    }).join('\n\n');
+    fetch('https://formspree.io/f/mnjykrka', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: '🚨 WhaleTrack JS Error on ' + location.hostname,
+        message: body,
+        url: location.href,
+        userAgent: navigator.userAgent.slice(0, 120)
+      })
+    }).catch(function(){});
+  }
+
+  // Catch synchronous JS errors (broken functions, undefined variables, etc.)
+  window.onerror = function(msg, src, line, col, err) {
+    _errors.push({ msg: msg, src: src, line: line, ts: Date.now() });
+    setTimeout(sendErrors, 3000); // batch — wait 3s in case multiple errors fire
+    return false;
+  };
+
+  // Catch async errors (failed fetch, broken Promise chains, etc.)
+  window.addEventListener('unhandledrejection', function(e) {
+    var msg = e.reason ? (e.reason.message || String(e.reason)) : 'Unhandled promise rejection';
+    _errors.push({ msg: msg, src: 'promise', line: 0, ts: Date.now() });
+    setTimeout(sendErrors, 3000);
+  });
+})();
+
 // ===== AFFILIATE LINK — swap this URL when Polymarket approves =====
 const AFFILIATE_URL = 'https://polymarket.com?via=manpreet-singh-brar';
 
