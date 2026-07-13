@@ -300,6 +300,75 @@
     }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
+    /* LIVE MATCH WIDGET */
+    .match-widget {
+      background: linear-gradient(135deg, #0d1a0d, #1a0d0d, #0d0d1a);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .match-live-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(248,81,73,0.15); border: 1px solid rgba(248,81,73,0.4);
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 11px; font-weight: 800; color: #f85149;
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .match-live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #f85149; animation: pulse 1s infinite;
+    }
+    .match-teams {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .match-team {
+      text-align: center; min-width: 120px;
+    }
+    .match-team-flag { font-size: 48px; line-height: 1; margin-bottom: 6px; }
+    .match-team-name { font-size: 16px; font-weight: 800; color: var(--text); }
+    .match-team-odds {
+      font-size: 28px; font-weight: 900; margin-top: 4px;
+    }
+    .match-vs {
+      font-size: 20px; font-weight: 800; color: var(--text2);
+      margin: 0 4px;
+    }
+    .match-bar-wrap {
+      max-width: 500px; margin: 0 auto 12px;
+      height: 12px; border-radius: 8px; overflow: hidden;
+      display: flex; gap: 2px;
+      background: var(--bg3);
+    }
+    .match-bar-france {
+      height: 100%; background: linear-gradient(90deg, #002395, #0033cc);
+      border-radius: 8px 0 0 8px; transition: width 1s ease;
+    }
+    .match-bar-spain {
+      height: 100%; background: linear-gradient(90deg, #c60b1e, #aa0918);
+      border-radius: 0 8px 8px 0; transition: width 1s ease;
+    }
+    .match-meta {
+      font-size: 12px; color: var(--text2); margin-bottom: 16px;
+    }
+    .match-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .match-bet-btn {
+      display: inline-block; padding: 9px 20px;
+      background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.35);
+      border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--green);
+      text-decoration: none; transition: background 0.2s;
+    }
+    .match-bet-btn:hover { background: rgba(63,185,80,0.2); }
+    .match-tweet-btn {
+      display: inline-block; padding: 9px 20px;
+      background: #1d9bf0; border-radius: 8px;
+      font-size: 13px; font-weight: 700; color: #fff;
+      text-decoration: none; transition: opacity 0.2s;
+    }
+    .match-tweet-btn:hover { opacity: 0.85; }
+    .match-refresh { font-size: 11px; color: var(--text2); margin-top: 10px; }
+
     /* FOOTER */
     footer {
       text-align: center; padding: 32px;
@@ -360,6 +429,39 @@
   </div>
 </div>
 
+<!-- LIVE MATCH ODDS WIDGET -->
+<div class="match-widget" id="matchWidget">
+  <div class="match-live-badge"><span class="match-live-dot"></span>LIVE ODDS</div>
+  <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:16px;letter-spacing:0.5px">🏆 WORLD CUP SEMI-FINAL · POLYMARKET ODDS</div>
+
+  <div class="match-teams">
+    <div class="match-team">
+      <div class="match-team-flag">🇫🇷</div>
+      <div class="match-team-name">France</div>
+      <div class="match-team-odds" id="francePct" style="color:#4a90d9">—%</div>
+    </div>
+    <div class="match-vs">VS</div>
+    <div class="match-team">
+      <div class="match-team-flag">🇪🇸</div>
+      <div class="match-team-name">Spain</div>
+      <div class="match-team-odds" id="spainPct" style="color:#c60b1e">—%</div>
+    </div>
+  </div>
+
+  <div class="match-bar-wrap">
+    <div class="match-bar-france" id="franceBar" style="width:50%"></div>
+    <div class="match-bar-spain" id="spainBar" style="width:50%"></div>
+  </div>
+
+  <div class="match-meta" id="matchMeta">Fetching live odds from Polymarket...</div>
+
+  <div class="match-actions">
+    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="match-bet-btn" id="matchBetBtn">⚽ Bet on this match →</a>
+    <a href="#" target="_blank" rel="noopener" class="match-tweet-btn" id="matchTweetBtn">🐦 Share odds</a>
+  </div>
+  <div class="match-refresh" id="matchRefresh">Updates every 30 seconds</div>
+</div>
+
 <!-- MAIN -->
 <div class="container">
 
@@ -404,6 +506,126 @@
 
 <script>
 const AFFILIATE = 'https://polymarket.com?via=manpreet-singh-brar';
+
+// ===== LIVE MATCH ODDS =====
+let matchCountdown = 30;
+let matchTimer = null;
+
+async function fetchMatchOdds() {
+  try {
+    // Search gamma API for France vs Spain match market
+    const terms = ['France vs Spain', 'France Spain semifinal', 'France Spain semi'];
+    let market = null;
+
+    for (const q of terms) {
+      const r = await fetch(`https://gamma-api.polymarket.com/markets?q=${encodeURIComponent(q)}&active=true&closed=false&limit=10`);
+      if (!r.ok) continue;
+      const data = await r.json();
+      const markets = Array.isArray(data) ? data : (data.markets || data.data || []);
+      market = markets.find(m => {
+        const title = (m.question || m.title || '').toLowerCase();
+        return title.includes('france') && title.includes('spain') && (title.includes('win') || title.includes('semi') || title.includes('vs'));
+      });
+      if (market) break;
+    }
+
+    // Fallback — search events
+    if (!market) {
+      const r = await fetch('https://gamma-api.polymarket.com/events?q=France+Spain&active=true&closed=false&limit=10');
+      if (r.ok) {
+        const data = await r.json();
+        const events = Array.isArray(data) ? data : (data.events || data.data || []);
+        for (const ev of events) {
+          const title = (ev.title || '').toLowerCase();
+          if (title.includes('france') && title.includes('spain')) {
+            const mkt = (ev.markets || []).find(m => {
+              const q = (m.question || '').toLowerCase();
+              return q.includes('france') || q.includes('win');
+            });
+            if (mkt) { market = mkt; break; }
+          }
+        }
+      }
+    }
+
+    if (!market) {
+      document.getElementById('matchMeta').textContent = 'Market not found — may not be listed yet on Polymarket.';
+      return;
+    }
+
+    // Parse outcomes and prices
+    let outcomes, prices;
+    try {
+      outcomes = typeof market.outcomes === 'string' ? JSON.parse(market.outcomes) : (market.outcomes || []);
+      prices   = typeof market.outcomePrices === 'string' ? JSON.parse(market.outcomePrices) : (market.outcomePrices || []);
+    } catch(e) { return; }
+
+    // Find France price — could be "France" outcome or "Yes" in a France-specific market
+    let francePct, spainPct, marketUrl, marketTitle;
+    marketTitle = market.question || market.title || '';
+    marketUrl   = market.slug ? `https://polymarket.com/event/${market.eventSlug || market.slug}?via=manpreet-singh-brar` : AFFILIATE;
+
+    const franceIdx = outcomes.findIndex(o => o.toLowerCase().includes('france'));
+    const spainIdx  = outcomes.findIndex(o => o.toLowerCase().includes('spain'));
+
+    if (franceIdx !== -1 && spainIdx !== -1) {
+      // Multi-outcome market (France / Spain / Draw)
+      francePct = Math.round(parseFloat(prices[franceIdx] || 0) * 100);
+      spainPct  = Math.round(parseFloat(prices[spainIdx] || 0) * 100);
+    } else if (outcomes.length === 2 && outcomes[0] === 'Yes') {
+      // Binary "Will France win?" — Yes = France
+      francePct = Math.round(parseFloat(prices[0] || 0) * 100);
+      spainPct  = 100 - francePct;
+    } else {
+      document.getElementById('matchMeta').textContent = 'Could not parse odds from market: ' + marketTitle;
+      return;
+    }
+
+    // Update UI
+    document.getElementById('francePct').textContent = francePct + '%';
+    document.getElementById('spainPct').textContent  = spainPct + '%';
+    document.getElementById('franceBar').style.width = francePct + '%';
+    document.getElementById('spainBar').style.width  = spainPct + '%';
+
+    const favourite = francePct >= spainPct ? 'France' : 'Spain';
+    document.getElementById('matchMeta').textContent =
+      `Smart money: ${favourite} favoured · ${francePct > spainPct ? francePct : spainPct}% probability · ${truncate(marketTitle, 60)}`;
+
+    document.getElementById('matchBetBtn').href = marketUrl;
+
+    const tweetText = encodeURIComponent(
+      `🇫🇷 France ${francePct}% vs 🇪🇸 Spain ${spainPct}%\n\n` +
+      `That's where $3.89B in prediction market money is right now for today's World Cup semi-final.\n\n` +
+      `Live odds → whaletrack.app/worldcup`
+    );
+    document.getElementById('matchTweetBtn').href = `https://twitter.com/intent/tweet?text=${tweetText}`;
+
+    // Reset countdown
+    matchCountdown = 30;
+
+  } catch(e) {
+    document.getElementById('matchMeta').textContent = 'Error loading odds. Retrying...';
+  }
+}
+
+function startMatchCountdown() {
+  if (matchTimer) clearInterval(matchTimer);
+  matchTimer = setInterval(() => {
+    matchCountdown--;
+    document.getElementById('matchRefresh').textContent =
+      matchCountdown > 0
+        ? `Refreshing in ${matchCountdown}s...`
+        : 'Updating odds...';
+    if (matchCountdown <= 0) {
+      matchCountdown = 30;
+      fetchMatchOdds();
+    }
+  }, 1000);
+}
+
+// Init match widget
+fetchMatchOdds();
+startMatchCountdown();
 
 function marketUrl(slug) {
   return slug
