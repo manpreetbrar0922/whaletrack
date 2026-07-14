@@ -4,14 +4,21 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Cache-Control', 'no-store, max-age=0');
 
-  const CRYPTO_TERMS = [
-    'bitcoin', 'btc', 'ethereum', 'eth', 'solana', 'sol',
-    'xrp', 'ripple', 'dogecoin', 'doge', 'crypto', 'cryptocurrency',
-    'defi', 'coinbase', 'binance', 'altcoin', 'web3', 'nft',
-    'stablecoin', 'halving', 'blockchain', 'hyperliquid', 'hype token',
-    'cardano', 'ada', 'avalanche', 'avax', 'polygon', 'matic',
-    'chainlink', 'link', 'uniswap', 'aave', 'shiba',
+  // Terms that need whole-word matching (avoid false positives like eth→Ethiopia, sol→dissolution)
+  const CRYPTO_EXACT = ['btc', 'eth', 'sol', 'xrp', 'ada', 'bnb', 'doge', 'avax', 'matic', 'link', 'nft', 'defi'];
+  // Terms safe for substring match
+  const CRYPTO_PARTIAL = [
+    'bitcoin', 'ethereum', 'solana', 'ripple', 'dogecoin', 'crypto', 'cryptocurrency',
+    'coinbase', 'binance', 'altcoin', 'web3', 'stablecoin', 'halving', 'blockchain',
+    'hyperliquid', 'hype token', 'cardano', 'avalanche', 'polygon', 'chainlink',
+    'uniswap', 'aave', 'shiba', 'litecoin', 'polkadot',
   ];
+
+  function isCrypto(title) {
+    const t = (title || '').toLowerCase();
+    if (CRYPTO_PARTIAL.some(k => t.includes(k))) return true;
+    return CRYPTO_EXACT.some(k => new RegExp(`\\b${k}\\b`).test(t));
+  }
 
   const knownNames = {
     '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': 'somalianKing',
@@ -60,8 +67,8 @@ export default async function handler(req, res) {
 
       return positions
         .filter(p => {
-          const title = (p.title || p.market || p.question || '').toLowerCase();
-          return CRYPTO_TERMS.some(t => title.includes(t))
+          const title = p.title || p.market || p.question || '';
+          return isCrypto(title)
             && p.redeemable === false
             && parseFloat(p.currentValue || 0) > 1;
         })

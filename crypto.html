@@ -519,13 +519,23 @@ const AFFILIATE = 'https://polymarket.com?via=manpreet-singh-brar';
 let cryptoCountdown = 30;
 let cryptoTimer = null;
 
-// Coins we care about (emoji, search keyword, display name)
+// Coins we care about — exactWord:true uses \b word boundary to avoid "eth"→Ethiopia
 const COINS = [
-  { emoji: '₿',  keys: ['bitcoin', 'btc'],      name: 'Bitcoin',  color: '#f7931a' },
-  { emoji: '⟠',  keys: ['ethereum', 'eth'],      name: 'Ethereum', color: '#627eea' },
-  { emoji: '◎',  keys: ['solana', 'sol'],         name: 'Solana',   color: '#9945ff' },
-  { emoji: '✕',  keys: ['xrp', 'ripple'],         name: 'XRP',      color: '#346aa9' },
+  { emoji: '₿',  keys: ['bitcoin', 'btc'],      name: 'Bitcoin',  color: '#f7931a', exactWord: ['btc'] },
+  { emoji: '⟠',  keys: ['ethereum', 'eth'],      name: 'Ethereum', color: '#627eea', exactWord: ['eth'] },
+  { emoji: '◎',  keys: ['solana', 'sol'],         name: 'Solana',   color: '#9945ff', exactWord: ['sol'] },
+  { emoji: '✕',  keys: ['xrp', 'ripple'],         name: 'XRP',      color: '#346aa9', exactWord: ['xrp'] },
 ];
+
+function coinMatchesTitle(coin, title) {
+  const t = title.toLowerCase();
+  return coin.keys.some(k => {
+    if (coin.exactWord && coin.exactWord.includes(k)) {
+      return new RegExp(`\\b${k}\\b`).test(t);
+    }
+    return t.includes(k);
+  });
+}
 
 async function fetchCryptoOdds() {
   try {
@@ -543,7 +553,7 @@ async function fetchCryptoOdds() {
 
       for (const coin of COINS) {
         if (usedCoins.has(coin.name)) continue;
-        const matchesCoin = coin.keys.some(k => evTitle.includes(k));
+        const matchesCoin = coinMatchesTitle(coin, ev.title || '');
         if (!matchesCoin) continue;
 
         // Find a binary YES/NO market inside
@@ -653,17 +663,18 @@ function timeAgo(ts) {
   return Math.floor(diff / 86400) + 'd ago';
 }
 
-const CRYPTO_TERMS = [
-  'bitcoin', 'btc', 'ethereum', 'eth', 'solana', 'sol',
-  'xrp', 'ripple', 'dogecoin', 'doge', 'crypto', 'cryptocurrency',
-  'defi', 'coinbase', 'binance', 'altcoin', 'web3', 'nft',
-  'stablecoin', 'halving', 'blockchain', 'hyperliquid', 'hype token',
-  'cardano', 'ada', 'avalanche', 'avax', 'polygon', 'chainlink',
+const CRYPTO_EXACT   = ['btc', 'eth', 'sol', 'xrp', 'ada', 'bnb', 'doge', 'avax', 'matic', 'link', 'nft', 'defi'];
+const CRYPTO_PARTIAL = [
+  'bitcoin', 'ethereum', 'solana', 'ripple', 'dogecoin', 'crypto', 'cryptocurrency',
+  'coinbase', 'binance', 'altcoin', 'web3', 'stablecoin', 'halving', 'blockchain',
+  'hyperliquid', 'hype token', 'cardano', 'avalanche', 'polygon', 'chainlink',
+  'uniswap', 'aave', 'shiba', 'litecoin', 'polkadot',
 ];
 
 function isCrypto(title) {
   const t = (title || '').toLowerCase();
-  return CRYPTO_TERMS.some(term => t.includes(term));
+  if (CRYPTO_PARTIAL.some(k => t.includes(k))) return true;
+  return CRYPTO_EXACT.some(k => new RegExp(`\\b${k}\\b`).test(t));
 }
 
 // ===== RENDER MARKETS =====
