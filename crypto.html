@@ -572,6 +572,9 @@ async function fetchCryptoOdds() {
           const question = m.question || m.title || ev.title || '';
           const slug = ev.slug || m.eventSlug || m.slug || '';
 
+          // Double-check: question must ALSO match the coin (avoids Ethiopia slipping in under ETH)
+          if (!coinMatchesTitle(coin, question)) continue;
+
           found.push({
             coin,
             question: question.length > 55 ? question.slice(0, 55) + '…' : question,
