@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>World Cup Whale Tracker — Smart Money on FIFA 2026 | WhaleTrack</title>
+  <title>Crypto Whale Tracker — Smart Money on Bitcoin, Ethereum & Crypto | WhaleTrack</title>
 
-  <meta name="description" content="See where the biggest Polymarket traders are putting their money on the 2026 World Cup. Real-time whale positions, smart money signals, and copy bet buttons."/>
-  <meta name="keywords" content="World Cup 2026, Polymarket, whale tracker, FIFA 2026, prediction market, smart money, football betting"/>
-  <link rel="canonical" href="https://whaletrack.app/worldcup"/>
+  <meta name="description" content="Track the biggest Polymarket traders betting on Bitcoin, Ethereum, and crypto markets in real time. See whale positions, live market odds, and copy their bets."/>
+  <meta name="keywords" content="crypto prediction market, bitcoin polymarket, ethereum whale tracker, BTC odds, crypto betting, polymarket crypto, smart money crypto"/>
+  <link rel="canonical" href="https://whaletrack.app/crypto"/>
 
   <meta property="og:type" content="website"/>
-  <meta property="og:url" content="https://whaletrack.app/worldcup"/>
-  <meta property="og:title" content="World Cup Whale Tracker — Where Smart Money is Going on FIFA 2026"/>
-  <meta property="og:description" content="$3.89 BILLION bet on the World Cup on Polymarket. See exactly where the top traders are putting their money."/>
+  <meta property="og:url" content="https://whaletrack.app/crypto"/>
+  <meta property="og:title" content="Crypto Whale Tracker — Where Smart Money is Going on BTC, ETH & More"/>
+  <meta property="og:description" content="Track whale bets on Bitcoin, Ethereum, and top crypto markets on Polymarket in real time."/>
   <meta property="og:image" content="https://whaletrack.app/og-image.svg"/>
 
   <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="World Cup Whale Tracker — Where Smart Money is Going on FIFA 2026"/>
-  <meta name="twitter:description" content="$3.89B bet on Polymarket. See where the top traders are putting their money on the World Cup."/>
+  <meta name="twitter:title" content="Crypto Whale Tracker — Where Smart Money is Going on BTC, ETH & More"/>
+  <meta name="twitter:description" content="Real-time whale positions on crypto prediction markets. Follow the smart money on Bitcoin and Ethereum."/>
   <meta name="twitter:image" content="https://whaletrack.app/og-image.svg"/>
 
   <!-- Google Analytics -->
@@ -41,8 +41,10 @@
       --green: #3fb950;
       --red: #f85149;
       --yellow: #d29922;
+      --orange: #f0883e;
       --purple: #bc8cff;
       --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --crypto: #f7931a;
     }
     :root[data-theme="light"] {
       --bg: #f6f8fa;
@@ -55,8 +57,10 @@
       --green: #1a7f37;
       --red: #cf222e;
       --yellow: #9a6700;
+      --orange: #bc4c00;
       --purple: #8250df;
       --card-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --crypto: #e67d00;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -97,7 +101,7 @@
     }
     .nav-btn:hover { background: var(--border); }
     .nav-trade-btn {
-      background: var(--green);
+      background: var(--crypto);
       color: #fff;
       font-size: 13px;
       font-weight: 700;
@@ -110,8 +114,8 @@
 
     /* HERO */
     .hero {
-      background: linear-gradient(135deg, #0d2b0d 0%, #0d1117 50%, #1a1a0d 100%);
-      border-bottom: 1px solid rgba(63,185,80,0.2);
+      background: linear-gradient(135deg, #1a0e00 0%, #0d1117 50%, #0d0a1a 100%);
+      border-bottom: 1px solid rgba(247,147,26,0.2);
       padding: 48px 24px 40px;
       text-align: center;
       position: relative;
@@ -121,7 +125,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse at 50% 0%, rgba(63,185,80,0.08) 0%, transparent 70%);
+      background: radial-gradient(ellipse at 50% 0%, rgba(247,147,26,0.07) 0%, transparent 70%);
       pointer-events: none;
     }
     .hero-emoji { font-size: 56px; margin-bottom: 16px; display: block; }
@@ -132,7 +136,7 @@
       margin-bottom: 12px;
       line-height: 1.2;
     }
-    .hero h1 span { color: var(--green); }
+    .hero h1 span { color: var(--crypto); }
     .hero-sub {
       font-size: 16px;
       color: var(--text2);
@@ -151,19 +155,19 @@
       margin-bottom: 28px;
     }
     .stat-pill {
-      background: rgba(63,185,80,0.1);
-      border: 1px solid rgba(63,185,80,0.25);
+      background: rgba(247,147,26,0.1);
+      border: 1px solid rgba(247,147,26,0.25);
       border-radius: 20px;
       padding: 8px 18px;
       font-size: 13px;
       font-weight: 700;
-      color: var(--green);
+      color: var(--crypto);
     }
     .stat-pill span { color: var(--text2); font-weight: 400; }
 
     .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .hero-btn-primary {
-      background: var(--green);
+      background: var(--crypto);
       color: #fff;
       font-size: 14px;
       font-weight: 700;
@@ -223,7 +227,7 @@
       box-shadow: var(--card-shadow);
       transition: border-color 0.2s;
     }
-    .market-card:hover { border-color: var(--green); }
+    .market-card:hover { border-color: var(--crypto); }
 
     /* LOADING / EMPTY */
     .loading {
@@ -236,7 +240,7 @@
     .spinner {
       width: 32px; height: 32px;
       border: 3px solid var(--border);
-      border-top-color: var(--green);
+      border-top-color: var(--crypto);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
       margin: 0 auto 12px;
@@ -265,10 +269,10 @@
     .feed-avatar {
       width: 36px; height: 36px;
       border-radius: 50%;
-      background: rgba(63,185,80,0.15);
-      border: 2px solid rgba(63,185,80,0.3);
+      background: rgba(247,147,26,0.15);
+      border: 2px solid rgba(247,147,26,0.3);
       display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 700; color: var(--green);
+      font-size: 14px; font-weight: 700; color: var(--crypto);
       flex-shrink: 0;
     }
     .feed-body { flex: 1; min-width: 0; }
@@ -285,9 +289,9 @@
     .feed-market { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .feed-time { font-size: 11px; color: var(--text2); flex-shrink: 0; white-space: nowrap; }
     .copy-link {
-      font-size: 11px; font-weight: 700; color: var(--green);
+      font-size: 11px; font-weight: 700; color: var(--crypto);
       text-decoration: none; padding: 3px 8px;
-      border: 1px solid var(--green); border-radius: 5px;
+      border: 1px solid var(--crypto); border-radius: 5px;
       white-space: nowrap; opacity: 0.8; transition: opacity 0.2s; flex-shrink: 0;
     }
     .copy-link:hover { opacity: 1; }
@@ -300,74 +304,89 @@
     }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
-    /* LIVE MATCH WIDGET */
-    .match-widget {
-      background: linear-gradient(135deg, #0d1a0d, #1a0d0d, #0d0d1a);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+    /* LIVE CRYPTO ODDS WIDGET */
+    .crypto-widget {
+      background: linear-gradient(135deg, #1a0e00, #0d1117, #0d0a00);
+      border-bottom: 1px solid rgba(247,147,26,0.15);
       padding: 28px 24px;
+    }
+    .crypto-widget-header {
       text-align: center;
+      margin-bottom: 20px;
     }
-    .match-live-badge {
+    .crypto-live-badge {
       display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(248,81,73,0.15); border: 1px solid rgba(248,81,73,0.4);
+      background: rgba(247,147,26,0.15); border: 1px solid rgba(247,147,26,0.4);
       border-radius: 20px; padding: 4px 12px;
-      font-size: 11px; font-weight: 800; color: #f85149;
+      font-size: 11px; font-weight: 800; color: var(--crypto);
       letter-spacing: 1px; text-transform: uppercase;
-      margin-bottom: 16px;
+      margin-bottom: 10px;
     }
-    .match-live-dot {
+    .crypto-live-dot {
       width: 7px; height: 7px; border-radius: 50%;
-      background: #f85149; animation: pulse 1s infinite;
+      background: var(--crypto); animation: pulse 1s infinite;
     }
-    .match-teams {
-      display: flex; align-items: center; justify-content: center;
-      gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
+    .crypto-widget-title {
+      font-size: 13px; font-weight: 700; color: var(--text2);
+      letter-spacing: 0.5px;
     }
-    .match-team {
-      text-align: center; min-width: 120px;
+
+    /* ODDS CARDS ROW */
+    .odds-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      max-width: 900px;
+      margin: 0 auto 16px;
     }
-    .match-team-flag { font-size: 48px; line-height: 1; margin-bottom: 6px; }
-    .match-team-name { font-size: 16px; font-weight: 800; color: var(--text); }
-    .match-team-odds {
-      font-size: 28px; font-weight: 900; margin-top: 4px;
+    .odds-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(247,147,26,0.2);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      transition: border-color 0.2s;
     }
-    .match-vs {
-      font-size: 20px; font-weight: 800; color: var(--text2);
-      margin: 0 4px;
+    .odds-card:hover { border-color: rgba(247,147,26,0.5); }
+    .odds-coin { font-size: 28px; margin-bottom: 6px; }
+    .odds-question {
+      font-size: 11px; color: var(--text2); margin-bottom: 10px;
+      line-height: 1.4; min-height: 30px;
     }
-    .match-bar-wrap {
-      max-width: 500px; margin: 0 auto 12px;
-      height: 12px; border-radius: 8px; overflow: hidden;
-      display: flex; gap: 2px;
-      background: var(--bg3);
+    .odds-pct {
+      font-size: 32px; font-weight: 900; color: var(--crypto);
+      margin-bottom: 4px;
     }
-    .match-bar-france {
-      height: 100%; background: linear-gradient(90deg, #002395, #0033cc);
-      border-radius: 8px 0 0 8px; transition: width 1s ease;
+    .odds-label { font-size: 11px; color: var(--text2); margin-bottom: 10px; }
+    .odds-bar-wrap {
+      height: 8px; border-radius: 6px; overflow: hidden;
+      background: rgba(255,255,255,0.08); margin-bottom: 10px;
     }
-    .match-bar-spain {
-      height: 100%; background: linear-gradient(90deg, #c60b1e, #aa0918);
-      border-radius: 0 8px 8px 0; transition: width 1s ease;
+    .odds-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #f7931a, #ffb347);
+      transition: width 1s ease;
     }
-    .match-meta {
-      font-size: 12px; color: var(--text2); margin-bottom: 16px;
-    }
-    .match-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-    .match-bet-btn {
-      display: inline-block; padding: 9px 20px;
-      background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.35);
-      border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--green);
+    .odds-bet-btn {
+      display: block; padding: 7px 12px;
+      background: rgba(247,147,26,0.12); border: 1px solid rgba(247,147,26,0.35);
+      border-radius: 7px; font-size: 11px; font-weight: 700; color: var(--crypto);
       text-decoration: none; transition: background 0.2s;
     }
-    .match-bet-btn:hover { background: rgba(63,185,80,0.2); }
-    .match-tweet-btn {
-      display: inline-block; padding: 9px 20px;
+    .odds-bet-btn:hover { background: rgba(247,147,26,0.22); }
+
+    .crypto-widget-footer {
+      text-align: center;
+    }
+    .crypto-refresh { font-size: 11px; color: var(--text2); margin-bottom: 10px; }
+    .crypto-tweet-btn {
+      display: inline-block; padding: 8px 18px;
       background: #1d9bf0; border-radius: 8px;
-      font-size: 13px; font-weight: 700; color: #fff;
+      font-size: 12px; font-weight: 700; color: #fff;
       text-decoration: none; transition: opacity 0.2s;
     }
-    .match-tweet-btn:hover { opacity: 0.85; }
-    .match-refresh { font-size: 11px; color: var(--text2); margin-top: 10px; }
+    .crypto-tweet-btn:hover { opacity: 0.85; }
 
     /* FOOTER */
     footer {
@@ -397,6 +416,7 @@
       .hero-emoji { font-size: 40px; }
       .nav-trade-btn { display: none; }
       .feed-item { padding: 10px 14px; gap: 10px; }
+      .odds-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -407,60 +427,47 @@
   <a href="/" class="logo">🐋 Whale<span>Track</span></a>
   <div class="nav-right">
     <a href="/" class="nav-btn">← All Markets</a>
-    <a href="/crypto" style="font-size:13px;font-weight:700;color:#f7931a;text-decoration:none;padding:7px 14px;border:1px solid rgba(247,147,26,0.35);border-radius:8px;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(247,147,26,0.1)'" onmouseout="this.style.background='transparent'">₿ Crypto</a>
-    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn">Trade on Polymarket →</a>
+    <a href="/worldcup" style="font-size:13px;font-weight:700;color:var(--green);text-decoration:none;padding:7px 14px;border:1px solid rgba(63,185,80,0.35);border-radius:8px;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(63,185,80,0.1)'" onmouseout="this.style.background='transparent'">⚽ World Cup</a>
+    <a href="https://polymarket.com/crypto?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn">₿ Bet on Crypto →</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <div class="hero">
-  <span class="hero-emoji">⚽</span>
-  <h1>Where Smart Money is Going<br>on the <span>2026 World Cup</span></h1>
-  <p class="hero-sub">Track the biggest Polymarket traders in real time. See their open World Cup bets, copy their positions, and follow the smart money.</p>
+  <span class="hero-emoji">₿</span>
+  <h1>Where Smart Money is Going<br>on <span>Bitcoin, ETH & Crypto</span></h1>
+  <p class="hero-sub">Track the biggest Polymarket traders betting on crypto in real time. See their open positions, copy their bets, and follow the smart money.</p>
 
   <div class="stat-pills">
-    <div class="stat-pill" id="heroTotalBet">Loading… <span>WC volume on Polymarket</span></div>
+    <div class="stat-pill" id="heroVolume">— <span>crypto volume on Polymarket</span></div>
     <div class="stat-pill" id="heroMarkets">— <span>markets tracked</span></div>
     <div class="stat-pill" id="heroWhales">— <span>whale wallets</span></div>
   </div>
 
   <div class="hero-actions">
-    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="hero-btn-primary">⚽ Bet on Polymarket →</a>
+    <a href="https://polymarket.com/crypto?via=manpreet-singh-brar" target="_blank" rel="noopener" class="hero-btn-primary">₿ Bet on Polymarket →</a>
     <a href="#markets" class="hero-btn-secondary">See Whale Positions ↓</a>
   </div>
 </div>
 
-<!-- LIVE MATCH ODDS WIDGET -->
-<div class="match-widget" id="matchWidget">
-  <div class="match-live-badge"><span class="match-live-dot"></span>LIVE ODDS</div>
-  <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:16px;letter-spacing:0.5px">🏆 WORLD CUP SEMI-FINAL · POLYMARKET ODDS</div>
+<!-- LIVE CRYPTO ODDS WIDGET -->
+<div class="crypto-widget">
+  <div class="crypto-widget-header">
+    <div class="crypto-live-badge"><span class="crypto-live-dot"></span>LIVE POLYMARKET ODDS</div>
+    <div class="crypto-widget-title">🔮 TOP CRYPTO PREDICTIONS — WHERE SMART MONEY IS</div>
+  </div>
 
-  <div class="match-teams">
-    <div class="match-team">
-      <div class="match-team-flag">🇫🇷</div>
-      <div class="match-team-name">France</div>
-      <div class="match-team-odds" id="francePct" style="color:#4a90d9">—%</div>
-    </div>
-    <div class="match-vs">VS</div>
-    <div class="match-team">
-      <div class="match-team-flag">🇪🇸</div>
-      <div class="match-team-name">Spain</div>
-      <div class="match-team-odds" id="spainPct" style="color:#c60b1e">—%</div>
+  <div class="odds-row" id="oddsRow">
+    <div style="text-align:center;padding:32px;color:var(--text2);grid-column:1/-1">
+      <div class="spinner" style="border-top-color:var(--crypto)"></div>
+      Loading live crypto odds from Polymarket...
     </div>
   </div>
 
-  <div class="match-bar-wrap">
-    <div class="match-bar-france" id="franceBar" style="width:50%"></div>
-    <div class="match-bar-spain" id="spainBar" style="width:50%"></div>
+  <div class="crypto-widget-footer">
+    <div class="crypto-refresh" id="cryptoRefresh">Updates every 30 seconds</div>
+    <a href="#" target="_blank" rel="noopener" class="crypto-tweet-btn" id="cryptoTweetBtn">🐦 Share crypto odds</a>
   </div>
-
-  <div class="match-meta" id="matchMeta">Fetching live odds from Polymarket...</div>
-
-  <div class="match-actions">
-    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="match-bet-btn" id="matchBetBtn">⚽ Bet on this match →</a>
-    <a href="#" target="_blank" rel="noopener" class="match-tweet-btn" id="matchTweetBtn">🐦 Share odds</a>
-  </div>
-  <div class="match-refresh" id="matchRefresh">Updates every 30 seconds</div>
 </div>
 
 <!-- MAIN -->
@@ -468,30 +475,30 @@
 
   <!-- WHALE POSITIONS BY MARKET -->
   <div class="section-header" id="markets">
-    <h2>⚽ Whale Positions by Market</h2>
+    <h2>₿ Whale Crypto Positions</h2>
     <span class="badge" id="marketsBadge">Loading...</span>
     <span class="section-note">Sorted by total whale money</span>
   </div>
   <div class="cards-grid" id="marketsGrid">
-    <div class="loading"><div class="spinner"></div>Scanning whale World Cup positions...</div>
+    <div class="loading"><div class="spinner"></div>Scanning whale crypto positions...</div>
   </div>
 
-  <!-- LIVE WC ACTIVITY -->
+  <!-- LIVE CRYPTO ACTIVITY -->
   <div class="section-header" style="margin-top:40px">
-    <h2>⚡ Live World Cup Trades</h2>
+    <h2>⚡ Live Crypto Trades</h2>
     <span class="badge" id="activityBadge">Loading...</span>
     <span class="section-note"><span class="live-dot"></span>Real-time</span>
   </div>
   <div class="feed-wrap">
     <div id="activityFeed">
-      <div class="loading"><div class="spinner"></div>Loading recent trades...</div>
+      <div class="loading"><div class="spinner"></div>Loading recent crypto trades...</div>
     </div>
   </div>
 
   <!-- CTA BANNER -->
-  <div style="margin-top:40px;padding:28px 24px;background:linear-gradient(135deg,#0d2b0d,#0d1117);border:1px solid rgba(63,185,80,0.25);border-radius:12px;text-align:center;">
+  <div style="margin-top:40px;padding:28px 24px;background:linear-gradient(135deg,#1a0e00,#0d1117);border:1px solid rgba(247,147,26,0.25);border-radius:12px;text-align:center;">
     <div style="font-size:24px;margin-bottom:8px">🐋</div>
-    <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)">Track All Whale Markets — Not Just World Cup</h3>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)">Track All Whale Markets — Not Just Crypto</h3>
     <p style="font-size:14px;color:var(--text2);margin-bottom:16px">WhaleTrack shows real-time positions across politics, sports, crypto, and more.</p>
     <a href="/" style="display:inline-block;background:var(--accent);color:#fff;font-size:14px;font-weight:700;padding:10px 24px;border-radius:8px;text-decoration:none;transition:opacity 0.2s" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">View Full Whale Dashboard →</a>
   </div>
@@ -500,7 +507,7 @@
 
 <!-- FOOTER -->
 <footer>
-  <p>⚽ WhaleTrack World Cup Tracker — Smart Money on FIFA 2026</p>
+  <p>₿ WhaleTrack Crypto Tracker — Smart Money on Bitcoin, Ethereum & More</p>
   <p style="margin-top:4px">Data from Polymarket public API. Not financial advice. Refreshed every 5 minutes.</p>
   <a href="/" class="footer-cta">← Back to WhaleTrack</a>
 </footer>
@@ -508,123 +515,136 @@
 <script>
 const AFFILIATE = 'https://polymarket.com?via=manpreet-singh-brar';
 
-// ===== LIVE MATCH ODDS =====
-let matchCountdown = 30;
-let matchTimer = null;
+// ===== LIVE CRYPTO ODDS WIDGET =====
+let cryptoCountdown = 30;
+let cryptoTimer = null;
 
-async function fetchMatchOdds() {
+// Coins we care about (emoji, search keyword, display name)
+const COINS = [
+  { emoji: '₿',  keys: ['bitcoin', 'btc'],      name: 'Bitcoin',  color: '#f7931a' },
+  { emoji: '⟠',  keys: ['ethereum', 'eth'],      name: 'Ethereum', color: '#627eea' },
+  { emoji: '◎',  keys: ['solana', 'sol'],         name: 'Solana',   color: '#9945ff' },
+  { emoji: '✕',  keys: ['xrp', 'ripple'],         name: 'XRP',      color: '#346aa9' },
+];
+
+async function fetchCryptoOdds() {
   try {
-    // Fetch top WC events by volume and filter client-side
-    const r = await fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&limit=100&order=volume&ascending=false');
+    const r = await fetch(
+      'https://gamma-api.polymarket.com/events?active=true&closed=false&limit=100&order=volume&ascending=false'
+    );
     if (!r.ok) throw new Error('fetch failed');
     const events = await r.json();
 
-    let franceMkt = null, spainMkt = null, franceSlug = '', spainSlug = '';
+    const found = [];
+    const usedCoins = new Set();
 
     for (const ev of (Array.isArray(events) ? events : [])) {
       const evTitle = (ev.title || '').toLowerCase();
-      const isWC = evTitle.includes('world cup') || evTitle.includes('fifa') || evTitle.includes('2026');
-      if (!isWC) continue;
 
-      for (const m of (ev.markets || [])) {
-        const q = (m.question || m.title || '').toLowerCase();
-        let outcomes, prices;
-        try {
-          outcomes = typeof m.outcomes === 'string' ? JSON.parse(m.outcomes) : (m.outcomes || []);
-          prices   = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : (m.outcomePrices || []);
-        } catch(e) { continue; }
+      for (const coin of COINS) {
+        if (usedCoins.has(coin.name)) continue;
+        const matchesCoin = coin.keys.some(k => evTitle.includes(k));
+        if (!matchesCoin) continue;
 
-        const yesIdx = outcomes.findIndex(o => (o||'').toLowerCase() === 'yes');
-        const price  = yesIdx !== -1 ? parseFloat(prices[yesIdx] || 0) : null;
-        if (price === null || price <= 0) continue;
+        // Find a binary YES/NO market inside
+        for (const m of (ev.markets || [])) {
+          let outcomes, prices;
+          try {
+            outcomes = typeof m.outcomes === 'string' ? JSON.parse(m.outcomes) : (m.outcomes || []);
+            prices   = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : (m.outcomePrices || []);
+          } catch(e) { continue; }
 
-        if (!franceMkt && q.includes('france') && q.includes('win')) {
-          franceMkt = price;
-          franceSlug = ev.slug || m.eventSlug || m.slug || '';
+          const yesIdx = outcomes.findIndex(o => (o||'').toLowerCase() === 'yes');
+          if (yesIdx === -1) continue;
+          const price = parseFloat(prices[yesIdx] || 0);
+          if (price <= 0 || price > 1) continue;
+
+          const question = m.question || m.title || ev.title || '';
+          const slug = ev.slug || m.eventSlug || m.slug || '';
+
+          found.push({
+            coin,
+            question: question.length > 55 ? question.slice(0, 55) + '…' : question,
+            pct: Math.round(price * 100),
+            slug,
+          });
+          usedCoins.add(coin.name);
+          break;
         }
-        if (!spainMkt && q.includes('spain') && q.includes('win')) {
-          spainMkt = price;
-          spainSlug = ev.slug || m.eventSlug || m.slug || '';
-        }
-        if (franceMkt && spainMkt) break;
+        if (usedCoins.has(coin.name)) break;
       }
-      if (franceMkt && spainMkt) break;
+      if (found.length >= 4) break;
     }
 
-    if (!franceMkt && !spainMkt) {
-      document.getElementById('matchMeta').textContent = 'Odds not available — WC winner markets may be closed or not yet listed.';
+    if (!found.length) {
+      document.getElementById('oddsRow').innerHTML =
+        '<div style="text-align:center;padding:32px;color:var(--text2);grid-column:1/-1">No live crypto markets found right now — check back soon.</div>';
       return;
     }
 
-    const fr = franceMkt || 0;
-    const es = spainMkt  || 0;
-    const total = fr + es;
-    const francePct = total > 0 ? Math.round((fr / total) * 100) : 50;
-    const spainPct  = 100 - francePct;
+    document.getElementById('oddsRow').innerHTML = found.map(f => `
+      <div class="odds-card">
+        <div class="odds-coin">${f.coin.emoji}</div>
+        <div class="odds-question">${f.question}</div>
+        <div class="odds-pct" style="color:${f.coin.color}">${f.pct}%</div>
+        <div class="odds-label">chance · YES on Polymarket</div>
+        <div class="odds-bar-wrap">
+          <div class="odds-bar-fill" style="width:${f.pct}%;background:linear-gradient(90deg,${f.coin.color},${f.coin.color}aa)"></div>
+        </div>
+        <a href="${f.slug ? `https://polymarket.com/event/${f.slug}?via=manpreet-singh-brar` : AFFILIATE}"
+           target="_blank" rel="noopener" class="odds-bet-btn" style="color:${f.coin.color};border-color:${f.coin.color}44;background:${f.coin.color}18">
+          Bet on ${f.coin.name} →
+        </a>
+      </div>
+    `).join('');
 
-    document.getElementById('francePct').textContent = francePct + '%';
-    document.getElementById('spainPct').textContent  = spainPct + '%';
-    document.getElementById('franceBar').style.width = francePct + '%';
-    document.getElementById('spainBar').style.width  = spainPct + '%';
-
-    const favourite = francePct >= spainPct ? '🇫🇷 France' : '🇪🇸 Spain';
-    const updatedAt = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    document.getElementById('matchMeta').textContent =
-      `Smart money favourite: ${favourite} · Polymarket WC winner odds normalised · Updated ${updatedAt}`;
-
-    document.getElementById('matchBetBtn').href = franceSlug
-      ? `https://polymarket.com/event/${franceSlug}?via=manpreet-singh-brar`
-      : 'https://polymarket.com/sports?via=manpreet-singh-brar';
-
+    // Tweet button
+    const summary = found.map(f => `${f.coin.emoji} ${f.coin.name}: ${f.pct}%`).join(' · ');
     const tweetText = encodeURIComponent(
-      `🇫🇷 France ${francePct}% vs 🇪🇸 Spain ${spainPct}%\n\n` +
-      `That's where smart money on Polymarket is right now for today's World Cup semi-final 👀\n\n` +
-      `Track live odds → whaletrack.app/worldcup`
+      `Polymarket crypto odds right now 👀\n\n${summary}\n\nTrack whale money → whaletrack.app/crypto`
     );
-    document.getElementById('matchTweetBtn').href = `https://twitter.com/intent/tweet?text=${tweetText}`;
+    document.getElementById('cryptoTweetBtn').href = `https://twitter.com/intent/tweet?text=${tweetText}`;
 
-    matchCountdown = 30;
+    cryptoCountdown = 30;
   } catch(e) {
-    document.getElementById('matchMeta').textContent = 'Error loading odds. Retrying...';
+    document.getElementById('oddsRow').innerHTML =
+      '<div style="text-align:center;padding:32px;color:var(--text2);grid-column:1/-1">Error loading odds. Retrying...</div>';
   }
 }
 
-function startMatchCountdown() {
-  if (matchTimer) clearInterval(matchTimer);
-  matchTimer = setInterval(() => {
-    matchCountdown--;
-    document.getElementById('matchRefresh').textContent =
-      matchCountdown > 0
-        ? `Refreshing in ${matchCountdown}s...`
+function startCryptoCountdown() {
+  if (cryptoTimer) clearInterval(cryptoTimer);
+  cryptoTimer = setInterval(() => {
+    cryptoCountdown--;
+    document.getElementById('cryptoRefresh').textContent =
+      cryptoCountdown > 0
+        ? `Refreshing in ${cryptoCountdown}s...`
         : 'Updating odds...';
-    if (matchCountdown <= 0) {
-      matchCountdown = 30;
-      fetchMatchOdds();
+    if (cryptoCountdown <= 0) {
+      cryptoCountdown = 30;
+      fetchCryptoOdds();
     }
   }, 1000);
 }
 
-// Init match widget
-fetchMatchOdds();
-startMatchCountdown();
+fetchCryptoOdds();
+startCryptoCountdown();
 
+// ===== HELPERS =====
 function marketUrl(slug) {
   return slug
     ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
     : AFFILIATE;
 }
-
 function fmtUSD(n) {
   n = parseFloat(n);
   if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
   if (n >= 1000)    return '$' + (n/1000).toFixed(0) + 'K';
   return '$' + n.toFixed(0);
 }
-
 function truncate(str, n) {
   return str && str.length > n ? str.slice(0, n) + '…' : (str || '');
 }
-
 function timeAgo(ts) {
   const diff = Math.floor(Date.now() / 1000) - ts;
   if (diff < 60)    return diff + 's ago';
@@ -633,16 +653,17 @@ function timeAgo(ts) {
   return Math.floor(diff / 86400) + 'd ago';
 }
 
-const WC_TERMS = [
-  'world cup', 'fifa', '2026 world cup', 'world cup 2026',
-  'round of 16', 'knockout', 'group stage', 'quarterfinal',
-  'semifinal', 'world cup winner', 'world cup champion',
-  'golden boot', 'world cup final', 'wc 2026',
+const CRYPTO_TERMS = [
+  'bitcoin', 'btc', 'ethereum', 'eth', 'solana', 'sol',
+  'xrp', 'ripple', 'dogecoin', 'doge', 'crypto', 'cryptocurrency',
+  'defi', 'coinbase', 'binance', 'altcoin', 'web3', 'nft',
+  'stablecoin', 'halving', 'blockchain', 'hyperliquid', 'hype token',
+  'cardano', 'ada', 'avalanche', 'avax', 'polygon', 'chainlink',
 ];
 
-function isWC(title) {
+function isCrypto(title) {
   const t = (title || '').toLowerCase();
-  return WC_TERMS.some(term => t.includes(term));
+  return CRYPTO_TERMS.some(term => t.includes(term));
 }
 
 // ===== RENDER MARKETS =====
@@ -652,8 +673,7 @@ function renderMarkets(markets) {
 
   if (!markets || !markets.length) {
     badge.textContent = '0 markets';
-    grid.innerHTML = '<div class="empty">No whale World Cup positions found right now. Check back during match time 🏆</div>';
-    // Update hero
+    grid.innerHTML = '<div class="empty">No whale crypto positions found right now. Whales may be taking profits 📉</div>';
     document.getElementById('heroMarkets').innerHTML = '0 <span>markets tracked</span>';
     return;
   }
@@ -661,40 +681,31 @@ function renderMarkets(markets) {
   badge.textContent = markets.length + ' market' + (markets.length !== 1 ? 's' : '');
   document.getElementById('heroMarkets').innerHTML = markets.length + ' <span>markets tracked</span>';
 
-  // Total whale money across all WC markets
-  const totalWhale = markets.reduce((s, m) => s + (m.totalValue || 0), 0);
-
   grid.innerHTML = markets.map(m => {
-    const total   = m.totalValue || 0;
-    const yesPct  = total > 0 ? Math.round((m.yesValue / total) * 100) : 0;
-    const noPct   = 100 - yesPct;
+    const total      = m.totalValue || 0;
+    const yesPct     = total > 0 ? Math.round((m.yesValue / total) * 100) : 0;
+    const noPct      = 100 - yesPct;
     const whaleCount = m.bets ? m.bets.length : 0;
-    const dominantSide = m.yesValue >= m.noValue ? 'YES' : 'NO';
+    const dominantSide  = m.yesValue >= m.noValue ? 'YES' : 'NO';
     const dominantColor = dominantSide === 'YES' ? 'var(--green)' : 'var(--red)';
 
     const tweetText = encodeURIComponent(
-      `⚽ Smart money on the World Cup:\n\n` +
-      `"${m.title.slice(0, 60)}"\n\n` +
-      `🐋 ${whaleCount} whale${whaleCount!==1?'s':''} · $${total.toLocaleString()} total\n` +
+      `🐋 Smart money on crypto:\n\n"${m.title.slice(0, 60)}"\n\n` +
+      `${whaleCount} whale${whaleCount!==1?'s':''} · $${total.toLocaleString()} total\n` +
       `YES: ${yesPct}% · NO: ${noPct}%\n\n` +
-      `Track whale money → whaletrack.app/worldcup`
+      `Track whale money → whaletrack.app/crypto`
     );
 
     return `
       <div class="market-card">
-        <!-- Title -->
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.4">${truncate(m.title, 65)}</div>
-
-        <!-- Meta row -->
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;color:var(--text2)">
           <span>🐋 ${whaleCount} whale${whaleCount!==1?'s':''}</span>
           <span>·</span>
-          <span style="color:var(--accent);font-weight:700">${fmtUSD(total)} at stake</span>
+          <span style="color:var(--crypto);font-weight:700">${fmtUSD(total)} at stake</span>
           <span>·</span>
           <span style="color:${dominantColor};font-weight:700">Smart money: ${dominantSide}</span>
         </div>
-
-        <!-- VS bar -->
         <div style="margin-bottom:10px">
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
             <span style="color:var(--green);font-weight:700">YES — ${fmtUSD(m.yesValue)} (${yesPct}%)</span>
@@ -705,8 +716,6 @@ function renderMarkets(markets) {
             <div style="width:${noPct}%;background:var(--red);border-radius:0 6px 6px 0;min-width:${noPct>0?'4px':'0'}"></div>
           </div>
         </div>
-
-        <!-- Whale name tags -->
         <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px">
           ${(m.bets || []).map(b => `
             <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${b.outcome==='Yes'?'rgba(63,185,80,0.15)':'rgba(248,81,73,0.15)'};color:${b.outcome==='Yes'?'var(--green)':'var(--red)'}">
@@ -714,10 +723,8 @@ function renderMarkets(markets) {
             </span>
           `).join('')}
         </div>
-
-        <!-- Actions -->
         <div style="display:flex;gap:8px">
-          ${m.slug ? `<a href="${marketUrl(m.slug)}" target="_blank" rel="noopener" style="flex:1;display:block;padding:9px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.3);border-radius:8px;font-size:12px;color:var(--green);text-align:center;text-decoration:none;font-weight:700">⚽ Copy Bet →</a>` : ''}
+          ${m.slug ? `<a href="${marketUrl(m.slug)}" target="_blank" rel="noopener" style="flex:1;display:block;padding:9px;background:rgba(247,147,26,0.1);border:1px solid rgba(247,147,26,0.3);border-radius:8px;font-size:12px;color:var(--crypto);text-align:center;text-decoration:none;font-weight:700">₿ Copy Bet →</a>` : ''}
           <a href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener" style="display:block;padding:9px 12px;background:#1d9bf0;border-radius:8px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;white-space:nowrap">🐦 Share</a>
         </div>
       </div>
@@ -730,18 +737,17 @@ function renderActivity(items) {
   const feed  = document.getElementById('activityFeed');
   const badge = document.getElementById('activityBadge');
 
-  // Filter for WC trades
-  const wc = items.filter(t => isWC(t.title));
+  const crypto = items.filter(t => isCrypto(t.title));
 
-  if (!wc.length) {
+  if (!crypto.length) {
     badge.textContent = '0 trades';
-    feed.innerHTML = '<div class="empty" style="padding:32px">No recent whale World Cup trades found — check back during match time ⚽</div>';
+    feed.innerHTML = '<div class="empty" style="padding:32px">No recent whale crypto trades found. Whales are quiet for now 🤫</div>';
     return;
   }
 
-  badge.textContent = wc.length + ' recent trades';
+  badge.textContent = crypto.length + ' recent trades';
 
-  feed.innerHTML = wc.map(t => {
+  feed.innerHTML = crypto.map(t => {
     const outcome = t.outcome || '—';
     const outcomeClass = outcome === 'Yes' ? 'yes' : outcome === 'No' ? 'no' : '';
     const sideEmoji = t.side === 'BUY' ? '🟢' : '🔴';
@@ -774,18 +780,19 @@ function renderActivity(items) {
 // ===== LOAD =====
 async function loadAll() {
   try {
-    const [matchRes, activityRes] = await Promise.all([
-      fetch('/api/matches'),
+    const [cryptoRes, activityRes] = await Promise.all([
+      fetch('/api/crypto'),
       fetch('/api/activity'),
     ]);
 
-    const markets  = matchRes.ok  ? await matchRes.json()  : [];
+    const markets  = cryptoRes.ok   ? await cryptoRes.json()   : [];
     const activity = activityRes.ok ? await activityRes.json() : [];
 
     // Hero stats
     const whaleCount = new Set((markets.flatMap(m => m.bets || [])).map(b => b.whale)).size;
+    const totalVol   = markets.reduce((s, m) => s + (m.totalValue || 0), 0);
     document.getElementById('heroWhales').innerHTML = whaleCount + ' <span>whale wallets</span>';
-    document.getElementById('heroTotalBet').innerHTML = '$3.89B <span>WC volume on Polymarket</span>';
+    document.getElementById('heroVolume').innerHTML = fmtUSD(totalVol) + ' <span>in open crypto positions</span>';
 
     renderMarkets(markets);
     renderActivity(activity);
@@ -795,7 +802,6 @@ async function loadAll() {
 }
 
 loadAll();
-// Refresh every 5 minutes
 setInterval(loadAll, 5 * 60 * 1000);
 </script>
 </body>

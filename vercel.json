@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/worldcup", "destination": "/worldcup.html" }
+    { "source": "/worldcup", "destination": "/worldcup.html" },
+    { "source": "/crypto",   "destination": "/crypto.html"   }
   ]
 }
