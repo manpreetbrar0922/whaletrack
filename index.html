@@ -576,6 +576,16 @@
   </div>
 </nav>
 
+<!-- NEW USER BANNER -->
+<div id="newUserBanner" style="background:linear-gradient(90deg,rgba(88,166,255,0.12),rgba(63,185,80,0.08));border-bottom:1px solid rgba(88,166,255,0.2);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+  <span style="font-size:13px;color:#8b949e;">👋 <strong style="color:#e6edf3;">New to Polymarket?</strong> Create a free account and copy your first whale bet in 2 minutes.</span>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="background:#58a6ff;color:#fff;font-size:12px;font-weight:700;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;">Get Started Free →</a>
+    <button onclick="document.getElementById('newUserBanner').style.display='none';localStorage.setItem('wt_nb','1')" style="background:none;border:none;color:#8b949e;font-size:18px;cursor:pointer;line-height:1;padding:0 4px;">×</button>
+  </div>
+</div>
+<script>if(localStorage.getItem('wt_nb'))document.getElementById('newUserBanner').style.display='none';</script>
+
 <!-- MAIN -->
 <div class="container">
 
