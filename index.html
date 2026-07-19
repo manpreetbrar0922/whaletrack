@@ -43,7 +43,7 @@
   </script>
 
   <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RN22NVFVP"></script>
+  <script async crossorigin="anonymous" src="https://www.googletagmanager.com/gtag/js?id=G-6RN22NVFVP"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -800,15 +800,37 @@
   }
 
   // Catch synchronous JS errors (broken functions, undefined variables, etc.)
+  // Patterns from browser extensions / wallet plugins — not WhaleTrack errors
+  var _ignorePatterns = [
+    'Script error', 'script error',
+    'provider is disc', 'provider disconnected',       // MetaMask / wallet extensions
+    'sseError', 'sseError not',                        // wallet SSE errors
+    'Invalid call to runtime', 'runtime.lastError',    // Chrome extension runtime
+    'ResizeObserver loop', 'ResizeObserver Loop',      // benign browser warning
+    'Non-Error promise rejection',                     // third-party noise
+    'chrome-extension://', 'moz-extension://',        // extension URLs
+    'Failed to construct',                             // extension trying to build EventSource/URL
+  ];
+
   window.onerror = function(msg, src, line, col, err) {
-    _errors.push({ msg: msg, src: src, line: line, ts: Date.now() });
-    setTimeout(sendErrors, 3000); // batch — wait 3s in case multiple errors fire
+    if (!msg) return false;
+    var m = String(msg);
+    for (var i = 0; i < _ignorePatterns.length; i++) {
+      if (m.indexOf(_ignorePatterns[i]) !== -1) return false;
+    }
+    // Also skip errors originating from extension URLs
+    if (src && (src.indexOf('chrome-extension://') !== -1 || src.indexOf('moz-extension://') !== -1)) return false;
+    _errors.push({ msg: m, src: src, line: line, ts: Date.now() });
+    setTimeout(sendErrors, 3000);
     return false;
   };
 
   // Catch async errors (failed fetch, broken Promise chains, etc.)
   window.addEventListener('unhandledrejection', function(e) {
     var msg = e.reason ? (e.reason.message || String(e.reason)) : 'Unhandled promise rejection';
+    for (var i = 0; i < _ignorePatterns.length; i++) {
+      if (msg.indexOf(_ignorePatterns[i]) !== -1) return;
+    }
     _errors.push({ msg: msg, src: 'promise', line: 0, ts: Date.now() });
     setTimeout(sendErrors, 3000);
   });
@@ -863,10 +885,13 @@ function addrShort(addr) { return addr ? addr.slice(0,6) + '…' + addr.slice(-4
 
 // ===== FETCH FROM POLYMARKET PUBLIC API =====
 async function fetchMarkets() {
-  const res = await fetch(
-    'https://gamma-api.polymarket.com/events?active=true&closed=false&limit=50&order=volume&ascending=false'
-  );
-  if (!res.ok) throw new Error('markets fetch failed');
+  let res;
+  try {
+    res = await fetch(
+      'https://gamma-api.polymarket.com/events?active=true&closed=false&limit=50&order=volume&ascending=false'
+    );
+  } catch (e) { return []; }
+  if (!res.ok) return [];
   const data = await res.json();
 
   const markets = [];
@@ -907,16 +932,19 @@ async function fetchMarkets() {
 }
 
 async function fetchActivity() {
-  const res = await fetch('/api/activity');
-  if (!res.ok) throw new Error('activity fetch failed');
-  return res.json();
+  try {
+    const res = await fetch('/api/activity');
+    if (!res.ok) return [];
+    return res.json();
+  } catch (e) { return []; }
 }
 
 async function fetchWhales() {
-  // Calls our Vercel serverless function (server-side, no CORS issues)
-  const res = await fetch('/api/whales');
-  if (!res.ok) throw new Error('whales fetch failed');
-  return res.json();
+  try {
+    const res = await fetch('/api/whales');
+    if (!res.ok) return [];
+    return res.json();
+  } catch (e) { return []; }
 }
 
 async function fetchConsensus() {
