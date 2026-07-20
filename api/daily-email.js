@@ -71,16 +71,29 @@ async function fetchWhaleData() {
   return whales.map((w, i) => ({ ...w, wr: stats[i].wr, trades: stats[i].trades }));
 }
 
-// ── Fetch recent big activity ─────────────────────────────────────────────────
+// ── Fetch recent big activity (per whale, last 24h) ──────────────────────────
 async function fetchTopActivity() {
   try {
-    const r = await fetch('https://data-api.polymarket.com/activity?limit=100');
-    if (!r.ok) return [];
-    const data = await r.json();
-    const items = Array.isArray(data) ? data : (data.data || data.activities || []);
-    return items
-      .filter(a => parseFloat(a.usdcSize || a.size || 0) >= 5000)
-      .sort((a, b) => parseFloat(b.usdcSize || b.size || 0) - parseFloat(a.usdcSize || a.size || 0))
+    // Get top whales to query
+    const lb = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=10');
+    if (!lb.ok) return [];
+    const leaderboard = await lb.json();
+    const addrs = leaderboard.slice(0, 8).map(t => t.proxyWallet).filter(Boolean);
+
+    const cutoff = Date.now() / 1000 - 86400; // last 24h
+
+    const allTrades = (await Promise.all(addrs.map(async addr => {
+      try {
+        const r = await fetch(`https://data-api.polymarket.com/activity?user=${addr}&limit=20`);
+        if (!r.ok) return [];
+        const data = await r.json();
+        return (Array.isArray(data) ? data : [])
+          .filter(a => a.type === 'TRADE' && a.timestamp >= cutoff && parseFloat(a.usdcSize || 0) >= 1000);
+      } catch { return []; }
+    }))).flat();
+
+    return allTrades
+      .sort((a, b) => parseFloat(b.usdcSize || 0) - parseFloat(a.usdcSize || 0))
       .slice(0, 3);
   } catch { return []; }
 }
