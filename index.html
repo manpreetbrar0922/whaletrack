@@ -1476,28 +1476,8 @@ let alertsEnabled = false;
 let prevWhales = [];
 
 async function toggleAlerts() {
-  if (alertsEnabled) {
-    alertsEnabled = false;
-    updateAlertBtn();
-    return;
-  }
-
-  if (!('Notification' in window)) {
-    alert('Your browser does not support notifications.');
-    return;
-  }
-
-  const permission = await Notification.requestPermission();
-  if (permission === 'granted') {
-    alertsEnabled = true;
-    updateAlertBtn();
-    new Notification('🐋 WhaleTrack Alerts On', {
-      body: 'You\'ll be notified when whale P&L changes significantly.',
-      icon: 'https://whaletrack.app/favicon.ico'
-    });
-  } else {
-    alert('Please allow notifications in your browser to enable alerts.');
-  }
+  // Always show the premium modal when alerts button is clicked
+  showAlertModal();
 }
 
 function updateAlertBtn() {
@@ -1783,5 +1763,58 @@ loadAll();
 setInterval(loadAll, 5 * 60 * 1000);
 setInterval(refreshActivity, 60 * 1000);
 </script>
+
+<!-- ── Alert Premium Modal ─────────────────────────────────────────────────── -->
+<div id="alertModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:16px;padding:32px 28px;width:100%;max-width:400px;text-align:center;position:relative;box-shadow:0 24px 64px rgba(0,0,0,0.6);">
+    <button onclick="closeAlertModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#8b949e;font-size:20px;cursor:pointer;line-height:1;" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'">✕</button>
+
+    <div style="font-size:36px;margin-bottom:12px">🔔</div>
+    <h2 style="font-size:20px;font-weight:800;color:#e6edf3;margin-bottom:6px">Get Whale Alerts on Telegram</h2>
+    <p style="font-size:13px;color:#8b949e;margin-bottom:20px;line-height:1.5">Know instantly when smart money moves — before it hits the leaderboard.</p>
+
+    <!-- Example alert -->
+    <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid #3fb950;border-radius:8px;padding:10px 12px;margin-bottom:16px;text-align:left;">
+      <div style="color:#e6edf3;font-weight:700;font-size:13px;margin-bottom:4px">🐋 Whale Alert — Just Now</div>
+      <span style="background:rgba(0,255,136,0.15);color:#00ff88;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;margin-right:4px">A+</span>
+      <strong style="color:#e6edf3">Themsnw</strong> bet <strong style="color:#3fb950">$47K YES</strong> on<br>
+      <span style="color:#e6edf3;font-size:12px">Will BTC reach $100K by Dec 2026?</span>
+    </div>
+
+    <!-- Features -->
+    <div style="background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:14px 16px;margin-bottom:20px;text-align:left;">
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#e6edf3;padding:5px 0"><span style="color:#3fb950">✓</span> Real-time alerts for bets over $5K</div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#e6edf3;padding:5px 0"><span style="color:#3fb950">✓</span> Whale name + reliability grade (A+→D)</div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#e6edf3;padding:5px 0"><span style="color:#3fb950">✓</span> Market, outcome & amount</div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#e6edf3;padding:5px 0"><span style="color:#3fb950">✓</span> Delivered via Telegram instantly</div>
+    </div>
+
+    <!-- Price -->
+    <div style="display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:16px">
+      <span style="font-size:32px;font-weight:800;color:#e6edf3">$9</span>
+      <span style="font-size:14px;color:#8b949e">/ month</span>
+    </div>
+
+    <a href="https://buy.stripe.com/whaletrack-alerts" target="_blank" id="alertStripeBtn" style="display:block;width:100%;background:#2563eb;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;transition:background 0.2s;margin-bottom:10px" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">Get Alerts on Telegram →</a>
+    <div style="font-size:11px;color:#484f58">Cancel anytime · Powered by Stripe</div>
+  </div>
+</div>
+
+<script>
+function showAlertModal() {
+  const m = document.getElementById('alertModal');
+  m.style.display = 'flex';
+  // Close on backdrop click
+  m.onclick = function(e) { if (e.target === m) closeAlertModal(); };
+}
+function closeAlertModal() {
+  document.getElementById('alertModal').style.display = 'none';
+}
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeAlertModal();
+});
+</script>
+
 </body>
 </html>
