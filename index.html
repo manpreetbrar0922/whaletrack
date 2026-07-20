@@ -1279,18 +1279,39 @@ function renderWhales(whales) {
     const wrBg     = wr !== '—' ? (wr >= 60 ? 'rgba(63,185,80,0.18)' : wr >= 40 ? 'rgba(240,192,64,0.18)' : 'rgba(248,81,73,0.18)') : 'var(--bg3)';
     const wrLabel  = wr !== '—' ? wr + '% W' : '—';
 
+    // Reliability score: letter grade A+/A/B/C/D based on win rate + trade count
+    const trades = w.trades !== '—' ? (w.trades || 0) : 0;
+    let reliGrade, reliColor, reliBg, reliDesc;
+    if (wr === '—' || trades < 5) {
+      reliGrade = 'NEW'; reliColor = 'var(--text2)'; reliBg = 'var(--bg3)'; reliDesc = 'Too few trades to score';
+    } else if (wr >= 70 && trades >= 20) {
+      reliGrade = 'A+'; reliColor = '#00ff88'; reliBg = 'rgba(0,255,136,0.15)'; reliDesc = 'Elite — highly reliable';
+    } else if (wr >= 65 && trades >= 10) {
+      reliGrade = 'A';  reliColor = 'var(--green)'; reliBg = 'rgba(63,185,80,0.18)'; reliDesc = 'Strong — worth following';
+    } else if (wr >= 55 && trades >= 5) {
+      reliGrade = 'B';  reliColor = '#58a6ff'; reliBg = 'rgba(88,166,255,0.15)'; reliDesc = 'Decent — moderate confidence';
+    } else if (wr >= 45) {
+      reliGrade = 'C';  reliColor = '#f0c040'; reliBg = 'rgba(240,192,64,0.18)'; reliDesc = 'Weak — below average';
+    } else {
+      reliGrade = 'D';  reliColor = 'var(--red)'; reliBg = 'rgba(248,81,73,0.15)'; reliDesc = 'Poor — avoid copying';
+    }
+
     return `
       <div class="whale-card" onclick="showPositions('${w.address}', '${safeName}')">
         <div class="whale-card-header">
           <div style="display:flex;align-items:center;gap:7px;min-width:0">
             <span class="whale-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.name}</span>
-            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${wrBg};color:${wrColor};white-space:nowrap;flex-shrink:0">${wrLabel}</span>
+            <span title="${reliDesc}" style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;background:${reliBg};color:${reliColor};white-space:nowrap;flex-shrink:0;letter-spacing:0.5px">${reliGrade}</span>
           </div>
           <span class="whale-pnl ${pnlClass}">${pnlDisplay}</span>
         </div>
         <div class="whale-stat-row">
           <span class="whale-stat-label">True P&amp;L ${hasRedeems ? '<span style="font-size:9px;padding:1px 5px;border-radius:6px;background:rgba(63,185,80,0.18);color:var(--green);font-weight:700;vertical-align:middle">✓ redeems</span>' : ''}</span>
           <span class="whale-stat-val ${pnlClass}">${pnlDisplay}</span>
+        </div>
+        <div class="whale-stat-row">
+          <span class="whale-stat-label">Reliability</span>
+          <span class="whale-stat-val" style="color:${reliColor};font-weight:800">${reliGrade} <span style="font-size:10px;font-weight:400;color:var(--text2)">(${wr !== '—' ? wr + '% WR' : 'no data'})</span></span>
         </div>
         <div class="whale-stat-row">
           <span class="whale-stat-label">Win Rate</span>
