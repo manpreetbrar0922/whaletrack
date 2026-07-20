@@ -747,8 +747,8 @@
 <div style="background:linear-gradient(135deg,#1a2332,#0d1117);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:40px 24px;text-align:center;margin-top:48px;">
   <div style="max-width:480px;margin:0 auto;">
     <div style="font-size:28px;margin-bottom:8px;">🐋</div>
-    <h3 style="font-size:20px;font-weight:700;margin-bottom:8px;color:var(--text)">Get Whale Alerts by Email</h3>
-    <p style="font-size:14px;color:var(--text2);margin-bottom:20px;">Be the first to know when smart money makes a big move on Polymarket.</p>
+    <h3 style="font-size:20px;font-weight:700;margin-bottom:8px;color:var(--text)">📬 Daily Whale Digest</h3>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:20px;">Top whale bets · market consensus · leaderboard snapshot — every morning in your inbox.</p>
     <form id="emailForm" onsubmit="submitEmail(event)" style="display:flex;gap:8px;max-width:400px;margin:0 auto;">
       <input
         type="email"
@@ -1740,9 +1740,9 @@ async function submitEmail(e) {
   btn.disabled = true;
 
   try {
-    const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+    const res = await fetch('/api/subscribe', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
 

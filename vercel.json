@@ -4,5 +4,8 @@
     { "source": "/crypto",   "destination": "/crypto.html"   },
     { "source": "/sports",   "destination": "/sports.html"   },
     { "source": "/politics", "destination": "/politics.html" }
+  ],
+  "crons": [
+    { "path": "/api/daily-email", "schedule": "0 14 * * *" }
   ]
 }
