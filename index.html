@@ -1264,10 +1264,13 @@ function renderWhales(whales) {
   }
 
   grid.innerHTML = whales.map(w => {
-    const hasPnl   = w.pnl !== null && w.pnl !== undefined;
-    const pnlClass = hasPnl ? (w.pnl >= 0 ? 'positive' : 'negative') : '';
-    const pnlSign  = hasPnl ? (w.pnl >= 0 ? '+' : '') : '';
-    const pnlDisplay = hasPnl ? pnlSign + '$' + Math.abs(w.pnl).toLocaleString() : '—';
+    // Use truePnl (leaderboard P&L + pending redeems) when available, fall back to pnl
+    const displayPnl = w.truePnl !== null && w.truePnl !== undefined ? w.truePnl : w.pnl;
+    const hasPnl     = displayPnl !== null && displayPnl !== undefined;
+    const pnlClass   = hasPnl ? (displayPnl >= 0 ? 'positive' : 'negative') : '';
+    const pnlSign    = hasPnl ? (displayPnl >= 0 ? '+' : '') : '';
+    const pnlDisplay = hasPnl ? pnlSign + '$' + Math.abs(displayPnl).toLocaleString() : '—';
+    const hasRedeems = (w.pendingRedeems || 0) > 0;
     const safeName = w.name.replace(/'/g, "\\'");
 
     // Win rate badge colour
@@ -1286,7 +1289,7 @@ function renderWhales(whales) {
           <span class="whale-pnl ${pnlClass}">${pnlDisplay}</span>
         </div>
         <div class="whale-stat-row">
-          <span class="whale-stat-label">30d P&L</span>
+          <span class="whale-stat-label">True P&amp;L ${hasRedeems ? '<span style="font-size:9px;padding:1px 5px;border-radius:6px;background:rgba(63,185,80,0.18);color:var(--green);font-weight:700;vertical-align:middle">✓ redeems</span>' : ''}</span>
           <span class="whale-stat-val ${pnlClass}">${pnlDisplay}</span>
         </div>
         <div class="whale-stat-row">
@@ -1573,8 +1576,9 @@ async function showPositions(address, name) {
   const whale = cachedWhales.find(w => w.address === address) || {};
   const wr = whale.winRate;
   const wrColor = wr !== undefined && wr !== '—' ? (wr >= 60 ? 'var(--green)' : wr >= 40 ? '#f0c040' : 'var(--red)') : 'var(--text2)';
-  const pnlClass = (whale.pnl || 0) >= 0 ? 'positive' : 'negative';
-  const pnlSign  = (whale.pnl || 0) >= 0 ? '+' : '';
+  const displayPnl = whale.truePnl !== null && whale.truePnl !== undefined ? whale.truePnl : (whale.pnl || 0);
+  const pnlClass = displayPnl >= 0 ? 'positive' : 'negative';
+  const pnlSign  = displayPnl >= 0 ? '+' : '';
 
   try {
     const res = await fetch(`/api/positions?address=${encodeURIComponent(address)}`);
@@ -1609,8 +1613,8 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
         <div style="font-size:22px;font-weight:800;color:${wrColor}">${wr !== undefined && wr !== '—' ? wr + '%' : '—'}</div>
       </div>
       <div style="text-align:center">
-        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">30d P&L</div>
-        <div style="font-size:22px;font-weight:800" class="${pnlClass}">${whale.pnl !== null && whale.pnl !== undefined ? pnlSign + '$' + Math.abs(whale.pnl).toLocaleString() : '—'}</div>
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">True P&amp;L ${(whale.pendingRedeems || 0) > 0 ? '<span style="font-size:9px;padding:1px 5px;border-radius:6px;background:rgba(63,185,80,0.18);color:var(--green);font-weight:700">✓ redeems</span>' : ''}</div>
+        <div style="font-size:22px;font-weight:800" class="${pnlClass}">${whale.truePnl !== null && whale.truePnl !== undefined ? pnlSign + '$' + Math.abs(whale.truePnl).toLocaleString() : whale.pnl !== null && whale.pnl !== undefined ? pnlSign + '$' + Math.abs(whale.pnl).toLocaleString() : '—'}</div>
       </div>
       <div style="text-align:center">
         <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Total Trades</div>

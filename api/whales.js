@@ -23,16 +23,16 @@ export default async function handler(req, res) {
       const r = await fetch(
         `https://data-api.polymarket.com/positions?user=${address}&limit=100&sortBy=CURRENT&sortDirection=DESC`
       );
-      if (!r.ok) return { winRate: '—', trades: '—', topBet: null };
+      if (!r.ok) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0 };
       const positions = await r.json();
-      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—', topBet: null, inactive: true };
+      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, inactive: true };
 
       // Skip wallets whose most recent position has an endDate before 2024 — these are
       // ancient/inactive traders (e.g. 2021 Polymarket era) not worth showing to users
       const mostRecent = positions[0];
       const endDate = mostRecent?.endDate || '';
       const endYear = endDate ? parseInt(endDate.slice(0, 4)) : 9999;
-      if (endYear < 2024) return { winRate: '—', trades: '—', topBet: null, inactive: true };
+      if (endYear < 2024) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, inactive: true };
 
       // Won = redeemable (market resolved in their favour, shares worth $1)
       // Lost = currentValue=0 AND not redeemable (market resolved against them)
@@ -65,9 +65,20 @@ export default async function handler(req, res) {
         };
       }
 
-      return { winRate, trades: withInvestment.length, topBet };
+      // True P&L: sum profit from redeemable (won) positions not yet cashed out
+      const pendingRedeems = Math.round(
+        withInvestment
+          .filter(p => p.redeemable === true)
+          .reduce((sum, p) => {
+            const val  = parseFloat(p.currentValue || p.cashPayout || 0);
+            const cost = parseFloat(p.totalBought || 0);
+            return sum + Math.max(0, val - cost);
+          }, 0)
+      );
+
+      return { winRate, trades: withInvestment.length, topBet, pendingRedeems };
     } catch (e) {
-      return { winRate: '—', trades: '—', topBet: null };
+      return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0 };
     }
   }
 
@@ -123,7 +134,18 @@ export default async function handler(req, res) {
 
   // Filter out inactive wallets (last trade before 2024) — they show dead links and old data
   const whales = whaleBase
-    .map((w, i) => ({ ...w, winRate: stats[i].winRate, trades: stats[i].trades, topBet: stats[i].topBet, _inactive: stats[i].inactive }))
+    .map((w, i) => ({
+      ...w,
+      winRate:        stats[i].winRate,
+      trades:         stats[i].trades,
+      topBet:         stats[i].topBet,
+      pendingRedeems: stats[i].pendingRedeems || 0,
+      // truePnl = leaderboard P&L + uncashed winning positions
+      truePnl: w.pnl !== null && w.pnl !== undefined
+        ? Math.round(w.pnl + (stats[i].pendingRedeems || 0))
+        : null,
+      _inactive: stats[i].inactive,
+    }))
     .filter(w => !w._inactive)
     .map(({ _inactive, ...w }) => w);
 
