@@ -15,9 +15,18 @@ export default async function handler(req, res) {
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
+
+    // Auto-discover audience ID if not set explicitly
+    let audienceId = process.env.RESEND_AUDIENCE_ID;
+    if (!audienceId) {
+      const { data: audList } = await resend.audiences.list();
+      audienceId = audList?.data?.[0]?.id;
+    }
+    if (!audienceId) return res.status(500).json({ error: 'No audience found in Resend' });
+
     await resend.contacts.create({
       email,
-      audienceId: process.env.RESEND_AUDIENCE_ID,
+      audienceId,
       unsubscribed: false,
     });
     res.status(200).json({ ok: true });

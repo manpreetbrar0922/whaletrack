@@ -249,8 +249,15 @@ export default async function handler(req, res) {
   }
 
   const resend   = new Resend(process.env.RESEND_API_KEY);
-  const audId    = process.env.RESEND_AUDIENCE_ID;
-  const fromAddr = process.env.RESEND_FROM_EMAIL || 'WhaleTrack <digest@whaletrack.app>';
+  const fromAddr = process.env.RESEND_FROM_EMAIL || 'WhaleTrack <onboarding@resend.dev>';
+
+  // Auto-discover audience ID
+  let audId = process.env.RESEND_AUDIENCE_ID;
+  if (!audId) {
+    const { data: audList } = await resend.audiences.list();
+    audId = audList?.data?.[0]?.id;
+  }
+  if (!audId) return res.status(500).json({ error: 'No audience found in Resend' });
 
   // Fetch all data in parallel
   const [whales, activity, consensus] = await Promise.all([
