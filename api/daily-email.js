@@ -163,9 +163,9 @@ function buildEmail(whales, activity, consensus, date) {
     return `
       <div style="padding:12px 0;border-bottom:1px solid #21262d;">
         <div style="font-size:13px;font-weight:600;color:#e6edf3;margin-bottom:4px">${title}${title.length >= 55 ? '…' : ''}</div>
-        <div style="display:flex;gap:12px;font-size:12px;color:#8b949e">
+        <div style="font-size:12px;color:#8b949e">
           <span>${outcome}</span>
-          <span style="color:#58a6ff;font-weight:700">${size}</span>
+          <span style="color:#58a6ff;font-weight:700;margin:0 8px">${size}</span>
           <span>by ${name}</span>
         </div>
       </div>`;
