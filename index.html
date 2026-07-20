@@ -1320,6 +1320,10 @@ function renderWhales(whales) {
           <span class="whale-stat-val" style="color:${wrColor};font-weight:700">${wr !== '—' ? wr + '%' : '—'}</span>
         </div>
         <div class="whale-stat-row">
+          <span class="whale-stat-label">Realized %</span>
+          <span class="whale-stat-val" style="color:${w.realizedPct !== null && w.realizedPct !== undefined ? (w.realizedPct >= 70 ? 'var(--green)' : w.realizedPct >= 40 ? '#f0c040' : 'var(--red)') : 'var(--text2)'};font-weight:700" title="% of current holdings from already-won (resolved) positions vs still-open bets">${w.realizedPct !== null && w.realizedPct !== undefined ? w.realizedPct + '% locked in' : '—'}</span>
+        </div>
+        <div class="whale-stat-row">
           <span class="whale-stat-label">Total Trades</span>
           <span class="whale-stat-val">${w.trades !== '—' ? w.trades + '+' : '—'}</span>
         </div>

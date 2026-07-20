@@ -23,16 +23,16 @@ export default async function handler(req, res) {
       const r = await fetch(
         `https://data-api.polymarket.com/positions?user=${address}&limit=100&sortBy=CURRENT&sortDirection=DESC`
       );
-      if (!r.ok) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0 };
+      if (!r.ok) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null };
       const positions = await r.json();
-      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, inactive: true };
+      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null, inactive: true };
 
       // Skip wallets whose most recent position has an endDate before 2024 — these are
       // ancient/inactive traders (e.g. 2021 Polymarket era) not worth showing to users
       const mostRecent = positions[0];
       const endDate = mostRecent?.endDate || '';
       const endYear = endDate ? parseInt(endDate.slice(0, 4)) : 9999;
-      if (endYear < 2024) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, inactive: true };
+      if (endYear < 2024) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null, inactive: true };
 
       // Won = redeemable (market resolved in their favour, shares worth $1)
       // Lost = currentValue=0 AND not redeemable (market resolved against them)
@@ -76,9 +76,19 @@ export default async function handler(req, res) {
           }, 0)
       );
 
-      return { winRate, trades: withInvestment.length, topBet, pendingRedeems };
+      // Realized % = won (locked-in) value vs open (still riding) value
+      const realizedValue = withInvestment
+        .filter(p => p.redeemable === true)
+        .reduce((sum, p) => sum + parseFloat(p.currentValue || p.cashPayout || 0), 0);
+      const openValue = withInvestment
+        .filter(p => p.redeemable === false && parseFloat(p.currentValue || 0) > 1)
+        .reduce((sum, p) => sum + parseFloat(p.currentValue || 0), 0);
+      const totalValue = realizedValue + openValue;
+      const realizedPct = totalValue > 0 ? Math.round((realizedValue / totalValue) * 100) : null;
+
+      return { winRate, trades: withInvestment.length, topBet, pendingRedeems, realizedPct };
     } catch (e) {
-      return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0 };
+      return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null };
     }
   }
 
@@ -140,6 +150,7 @@ export default async function handler(req, res) {
       trades:         stats[i].trades,
       topBet:         stats[i].topBet,
       pendingRedeems: stats[i].pendingRedeems || 0,
+      realizedPct:    stats[i].realizedPct,
       // truePnl = leaderboard P&L + uncashed winning positions
       truePnl: w.pnl !== null && w.pnl !== undefined
         ? Math.round(w.pnl + (stats[i].pendingRedeems || 0))
