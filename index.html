@@ -812,6 +812,7 @@
     'Non-Error promise rejection',                     // third-party noise
     'chrome-extension://', 'moz-extension://',        // extension URLs
     'Failed to construct',                             // extension trying to build EventSource/URL
+    'Failed to fetch', 'NetworkError', 'Load failed',  // expected network errors — handled gracefully by try/catch
   ];
 
   window.onerror = function(msg, src, line, col, err) {
@@ -937,7 +938,7 @@ async function fetchActivity() {
   try {
     const res = await fetch('/api/activity');
     if (!res.ok) return [];
-    return res.json();
+    return await res.json();
   } catch (e) { return []; }
 }
 
@@ -945,7 +946,7 @@ async function fetchWhales() {
   try {
     const res = await fetch('/api/whales');
     if (!res.ok) return [];
-    return res.json();
+    return await res.json();
   } catch (e) { return []; }
 }
 
@@ -953,7 +954,7 @@ async function fetchConsensus() {
   try {
     const res = await fetch('/api/consensus');
     if (!res.ok) return [];
-    return res.json();
+    return await res.json();
   } catch (e) { return []; }
 }
 
@@ -1056,7 +1057,7 @@ async function fetchBattles() {
   try {
     const res = await fetch('/api/battles');
     if (!res.ok) return [];
-    return res.json();
+    return await res.json();
   } catch (e) { return []; }
 }
 
@@ -1128,7 +1129,7 @@ async function fetchMatchBets() {
   try {
     const res = await fetch('/api/matches');
     if (!res.ok) return [];
-    return res.json();
+    return await res.json();
   } catch (e) { return []; }
 }
 
