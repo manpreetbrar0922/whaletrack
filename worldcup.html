@@ -582,10 +582,33 @@ async function fetchMatchOdds() {
     document.getElementById('franceBar').style.width = francePct + '%';
     document.getElementById('spainBar').style.width  = spainPct + '%';
 
-    const favourite = francePct >= spainPct ? '🇫🇷 France' : '🇪🇸 Spain';
-    const updatedAt = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    document.getElementById('matchMeta').textContent =
-      `Smart money favourite: ${favourite} · Polymarket WC winner odds normalised · Updated ${updatedAt}`;
+    // Detect resolved market — if one team is at 99%+ it means the match is over
+    const isResolved = francePct >= 99 || spainPct >= 99;
+    const winner = francePct >= 99 ? '🇫🇷 France' : spainPct >= 99 ? '🇪🇸 Spain' : null;
+
+    if (isResolved && winner) {
+      // Switch badge to "FINAL RESULT" and stop refresh
+      const badge = document.querySelector('.match-live-badge');
+      if (badge) {
+        badge.innerHTML = `🏆 FINAL RESULT`;
+        badge.style.background = 'rgba(63,185,80,0.15)';
+        badge.style.color = '#3fb950';
+        badge.style.borderColor = 'rgba(63,185,80,0.3)';
+      }
+      // Hide the pulsing dot
+      const dot = document.querySelector('.match-live-dot');
+      if (dot) dot.style.display = 'none';
+      document.getElementById('matchMeta').textContent =
+        `${winner} won · Market resolved on Polymarket · Data from Polymarket`;
+      document.getElementById('matchRefresh').textContent = 'Match complete';
+      if (matchTimer) { clearInterval(matchTimer); matchTimer = null; }
+    } else {
+      const favourite = francePct >= spainPct ? '🇫🇷 France' : '🇪🇸 Spain';
+      const updatedAt = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      document.getElementById('matchMeta').textContent =
+        `Smart money favourite: ${favourite} · Polymarket WC winner odds normalised · Updated ${updatedAt}`;
+      matchCountdown = 30;
+    }
 
     document.getElementById('matchBetBtn').href = franceSlug
       ? `https://polymarket.com/event/${franceSlug}?via=manpreet-singh-brar`
@@ -597,8 +620,6 @@ async function fetchMatchOdds() {
       `Track live odds → whaletrack.app/worldcup`
     );
     document.getElementById('matchTweetBtn').href = `https://twitter.com/intent/tweet?text=${tweetText}`;
-
-    matchCountdown = 30;
   } catch(e) {
     document.getElementById('matchMeta').textContent = 'Error loading odds. Retrying...';
   }
