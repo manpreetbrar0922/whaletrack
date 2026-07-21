@@ -6,6 +6,7 @@
     { "source": "/politics", "destination": "/politics.html" }
   ],
   "crons": [
-    { "path": "/api/daily-email", "schedule": "0 14 * * *" }
+    { "path": "/api/daily-email",  "schedule": "0 14 * * *" },
+    { "path": "/api/health-check", "schedule": "0 8  * * *" }
   ]
 }
