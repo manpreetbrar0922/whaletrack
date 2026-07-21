@@ -247,9 +247,13 @@ function buildFreeAlert(t) {
 
 function buildPremiumAlert(t, whale, wr) {
   const outcomeEmoji = t.outcome === 'Yes' ? '🟢' : t.outcome === 'No' ? '🔴' : '⚪';
-  const pnlSign      = (whale.pnl || 0) >= 0 ? '+' : '';
-  const rankStr      = whale.rank ? `#${whale.rank} on Polymarket` : 'unranked';
-  const pnlStr       = whale.pnl !== null && whale.pnl !== undefined ? `${pnlSign}${fmtUSD(whale.pnl)}` : 'n/a';
+  // Guard against null/NaN rank (API sometimes returns null as string or number)
+  const rankValid    = whale.rank && whale.rank !== 'null' && whale.rank !== '—' && !isNaN(Number(whale.rank));
+  const rankStr      = rankValid ? `#${whale.rank} on Polymarket` : 'unranked';
+  // Guard against NaN P&L (parseFloat failure on missing API field)
+  const safePnl      = (whale.pnl !== null && whale.pnl !== undefined && !isNaN(whale.pnl)) ? whale.pnl : null;
+  const pnlSign      = (safePnl || 0) >= 0 ? '+' : '';
+  const pnlStr       = safePnl !== null ? `${pnlSign}${fmtUSD(safePnl)}` : 'n/a';
   const link         = polymarketLink(t.slug);
 
   const wrLine = wr.rate !== null && wr.total >= 3
