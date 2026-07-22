@@ -190,6 +190,136 @@
     .stat-value { font-size: 26px; font-weight: 700; color: var(--text); }
     .stat-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
 
+    /* ===== LIVE FEED CARDS ===== */
+    .live-feed-section { margin-top: 24px; margin-bottom: 8px; }
+
+    .live-feed-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .live-feed-header h2 { font-size: 18px; font-weight: 600; color: var(--text); }
+
+    .live-pulse {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 700; color: #3fb950; letter-spacing: 0.5px;
+    }
+    .live-pulse-dot {
+      width: 7px; height: 7px; background: #3fb950; border-radius: 50%;
+      animation: livePulse 1.4s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.35; transform:scale(0.65); }
+    }
+
+    .alert-cards { display: flex; flex-direction: column; gap: 10px; }
+
+    .alert-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+      animation: alertSlideIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .alert-card:hover {
+      border-color: rgba(88,166,255,0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    @keyframes alertSlideIn {
+      from { opacity:0; transform:translateX(48px) scale(0.97); }
+      to   { opacity:1; transform:translateX(0) scale(1); }
+    }
+    .alert-card::before {
+      content:'';
+      position:absolute; top:0; left:-100%; width:55%; height:100%;
+      background: linear-gradient(90deg,transparent,rgba(88,166,255,0.07),transparent);
+      animation: alertSweep 1s ease 0.25s both;
+    }
+    @keyframes alertSweep {
+      from { left:-100%; }
+      to   { left:160%; }
+    }
+
+    /* Size accent border */
+    .alert-card.alert-mega  { border-left: 3px solid #f0c040; }
+    .alert-card.alert-large { border-left: 3px solid #58a6ff; }
+    .alert-card.alert-mid   { border-left: 3px solid #3fb950; }
+
+    .alert-card-top {
+      display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;
+    }
+    .alert-whale-info { display:flex; align-items:center; gap:9px; }
+    .alert-emoji { font-size:20px; animation: alertBob 3s ease-in-out infinite; display:inline-block; }
+    @keyframes alertBob {
+      0%,100% { transform:translateY(0) rotate(-4deg); }
+      50%      { transform:translateY(-4px) rotate(4deg); }
+    }
+    .alert-whale-name { font-weight:700; color:var(--text); font-size:13px; }
+    .alert-whale-rank { font-size:11px; color:var(--text2); margin-top:1px; }
+
+    .alert-amount {
+      font-size:24px; font-weight:800; letter-spacing:-0.5px;
+      margin-bottom:5px; font-variant-numeric:tabular-nums;
+    }
+    .alert-amount.alert-mega  { color:#f0c040; }
+    .alert-amount.alert-large { color:#58a6ff; }
+    .alert-amount.alert-mid   { color:var(--text); }
+
+    .alert-market {
+      font-size:12px; color:var(--text2); margin-bottom:10px; line-height:1.4;
+    }
+
+    .alert-outcome-row {
+      display:flex; align-items:center; gap:8px; margin-bottom:11px;
+    }
+    .alert-outcome-badge {
+      font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; flex-shrink:0;
+    }
+    .alert-outcome-badge.yes {
+      background:rgba(63,185,80,0.15); color:#3fb950; border:1px solid rgba(63,185,80,0.3);
+    }
+    .alert-outcome-badge.no {
+      background:rgba(248,81,73,0.15); color:#f85149; border:1px solid rgba(248,81,73,0.3);
+    }
+    .alert-bar-wrap {
+      flex:1; height:5px; background:rgba(255,255,255,0.06); border-radius:10px; overflow:hidden;
+    }
+    .alert-bar {
+      height:100%; border-radius:10px;
+      transition: width 1.1s cubic-bezier(0.34,1.56,0.64,1);
+      width: 0%;
+    }
+    .alert-bar.yes { background: linear-gradient(90deg,#238636,#3fb950); }
+    .alert-bar.no  { background: linear-gradient(90deg,#b91c1c,#f85149); }
+    .alert-price-pct { font-size:11px; font-weight:700; color:var(--text); min-width:28px; text-align:right; }
+
+    .alert-footer {
+      display:flex; align-items:center; gap:14px;
+      padding-top:9px; border-top:1px solid var(--border);
+    }
+    .alert-stat { display:flex; flex-direction:column; gap:1px; }
+    .alert-stat-label { font-size:10px; color:var(--text3,#484f58); text-transform:uppercase; letter-spacing:0.4px; }
+    .alert-stat-value { font-size:12px; font-weight:700; color:var(--text2); }
+    .alert-stat-value.green { color:#3fb950; }
+    .alert-stat-value.gold  { color:#f0c040; }
+
+    .alert-copy-btn {
+      margin-left:auto;
+      background:#1f6feb; color:#fff; border:none; border-radius:8px;
+      padding:5px 12px; font-size:11px; font-weight:700; cursor:pointer;
+      transition:background 0.2s, transform 0.1s; text-decoration:none;
+      display:inline-flex; align-items:center; gap:4px;
+    }
+    .alert-copy-btn:hover  { background:#388bfd; }
+    .alert-copy-btn:active { transform:scale(0.95); }
+
     /* ===== SECTION HEADERS ===== */
     .section-header {
       display: flex;
@@ -615,6 +745,18 @@
     </div>
   </div>
 
+  <!-- LIVE ALERT CARDS -->
+  <div class="live-feed-section">
+    <div class="live-feed-header">
+      <h2>🐋 Live Whale Alerts</h2>
+      <div class="live-pulse"><div class="live-pulse-dot"></div>LIVE</div>
+      <span class="badge" id="liveFeedBadge" style="margin-left:auto">Loading...</span>
+    </div>
+    <div class="alert-cards" id="alertCards">
+      <div class="loading"><div class="spinner"></div>Loading live alerts...</div>
+    </div>
+  </div>
+
   <!-- WHALE CONSENSUS -->
   <div class="section-header" style="margin-top:8px">
     <h2>🚨 Whale Consensus</h2>
@@ -956,6 +1098,90 @@ async function fetchConsensus() {
     if (!res.ok) return [];
     return await res.json();
   } catch (e) { return []; }
+}
+
+// ===== RENDER LIVE ALERT CARDS =====
+function renderLiveFeed(activity) {
+  const container = document.getElementById('alertCards');
+  const badge     = document.getElementById('liveFeedBadge');
+
+  // Take top 4 by size, min $1K
+  const big = (activity || [])
+    .filter(t => t.usdcSize >= 1000)
+    .sort((a, b) => b.usdcSize - a.usdcSize)
+    .slice(0, 4);
+
+  if (!big.length) {
+    badge.textContent = 'no alerts';
+    container.innerHTML = '<div class="empty">No big whale bets in the last hour 👀</div>';
+    return;
+  }
+
+  badge.textContent = big.length + ' alert' + (big.length !== 1 ? 's' : '');
+
+  container.innerHTML = big.map((t, i) => {
+    const size = t.usdcSize;
+    const sizeClass = size >= 100000 ? 'alert-mega' : size >= 20000 ? 'alert-large' : 'alert-mid';
+    const amtClass  = size >= 100000 ? 'alert-mega' : size >= 20000 ? 'alert-large' : 'alert-mid';
+    const emoji     = size >= 100000 ? '🐋' : size >= 20000 ? '🐬' : '🐟';
+    const usd       = size >= 1000000 ? '$' + (size/1000000).toFixed(1) + 'M'
+                    : size >= 1000    ? '$' + Math.round(size/1000) + 'K'
+                    : '$' + Math.round(size);
+    const outcome   = (t.outcome || 'Yes');
+    const outClass  = outcome === 'Yes' ? 'yes' : 'no';
+    const pricePct  = Math.round((t.price || 0.5) * 100);
+    const delay     = i * 120;
+    const marketLink = marketUrl ? marketUrl(t.slug) : '#';
+
+    return `
+      <div class="alert-card ${sizeClass}" style="animation-delay:${delay}ms">
+        <div class="alert-card-top">
+          <div class="alert-whale-info">
+            <span class="alert-emoji" style="animation-delay:${i*0.4}s">${emoji}</span>
+            <div>
+              <div class="alert-whale-name">${t.whale || 'Unknown Whale'}</div>
+              <div class="alert-whale-rank">${timeAgo(t.timestamp)}</div>
+            </div>
+          </div>
+          <div class="live-pulse"><div class="live-pulse-dot"></div>LIVE</div>
+        </div>
+
+        <div class="alert-amount ${amtClass}" data-target="${size}" data-idx="${i}">${usd}</div>
+        <div class="alert-market">${truncate(t.title, 65)}</div>
+
+        <div class="alert-outcome-row">
+          <span class="alert-outcome-badge ${outClass}">${outcome.toUpperCase()}</span>
+          <div class="alert-bar-wrap">
+            <div class="alert-bar ${outClass}" data-pct="${pricePct}" style="width:0%"></div>
+          </div>
+          <span class="alert-price-pct">${pricePct}¢</span>
+        </div>
+
+        <div class="alert-footer">
+          <div class="alert-stat">
+            <span class="alert-stat-label">Side</span>
+            <span class="alert-stat-value">${t.side === 'BUY' ? '🟢 Buy' : '🔴 Sell'}</span>
+          </div>
+          <div class="alert-stat">
+            <span class="alert-stat-label">Size</span>
+            <span class="alert-stat-value green">${usd}</span>
+          </div>
+          <div class="alert-stat">
+            <span class="alert-stat-label">Price</span>
+            <span class="alert-stat-value">${pricePct}¢</span>
+          </div>
+          <a href="${marketLink}" target="_blank" rel="noopener" class="alert-copy-btn">📋 Copy Bet</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Animate price bars after DOM inserts
+  requestAnimationFrame(() => {
+    container.querySelectorAll('.alert-bar[data-pct]').forEach(bar => {
+      setTimeout(() => { bar.style.width = bar.dataset.pct + '%'; }, 350);
+    });
+  });
 }
 
 // ===== RENDER WHALE CONSENSUS =====
@@ -1458,6 +1684,7 @@ async function loadAll() {
     renderBattles(battles);
     renderMatchBets(matchBets);
     cachedActivity = activity;
+    renderLiveFeed(activity);
     applyActivityFilter();
     checkBigTrades(activity);
     renderMovers(markets);
@@ -1754,6 +1981,7 @@ async function refreshActivity() {
   try {
     const activity = await fetchActivity();
     cachedActivity = activity;
+    renderLiveFeed(activity);
     applyActivityFilter();
     checkBigTrades(activity);
   } catch(e) {}
