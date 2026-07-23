@@ -1105,10 +1105,22 @@ function renderLiveFeed(activity) {
   const container = document.getElementById('alertCards');
   const badge     = document.getElementById('liveFeedBadge');
 
-  // Take top 4 by size, min $1K
+  // Only BUY trades from named whales (not raw 0x addresses), deduped by market
+  const seen = new Set();
   const big = (activity || [])
-    .filter(t => t.usdcSize >= 1000)
+    .filter(t => {
+      const name = (t.whale || '').toLowerCase();
+      const isNamed = name.length > 0 && !name.startsWith('0x');
+      const isClean = !/(retard|nigger|faggot|slur|racist|porn|xxx|fuck|shit|cunt|bitch|bastard)/i.test(name);
+      return t.usdcSize >= 1000 && t.side === 'BUY' && isNamed && isClean;
+    })
     .sort((a, b) => b.usdcSize - a.usdcSize)
+    .filter(t => {
+      const key = (t.slug || t.title || '') + '|' + (t.outcome || '');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
     .slice(0, 4);
 
   if (!big.length) {
@@ -1127,6 +1139,11 @@ function renderLiveFeed(activity) {
     const usd       = size >= 1000000 ? '$' + (size/1000000).toFixed(1) + 'M'
                     : size >= 1000    ? '$' + Math.round(size/1000) + 'K'
                     : '$' + Math.round(size);
+    // Truncate raw wallet addresses — show 0x1234…abcd
+    const whaleName = (t.whale || 'Unknown');
+    const displayName = whaleName.startsWith('0x') && whaleName.length > 12
+      ? whaleName.slice(0, 6) + '…' + whaleName.slice(-4)
+      : whaleName;
     const outcome   = (t.outcome || 'Yes');
     const outClass  = outcome === 'Yes' ? 'yes' : 'no';
     const pricePct  = Math.round((t.price || 0.5) * 100);
@@ -1139,7 +1156,7 @@ function renderLiveFeed(activity) {
           <div class="alert-whale-info">
             <span class="alert-emoji" style="animation-delay:${i*0.4}s">${emoji}</span>
             <div>
-              <div class="alert-whale-name">${t.whale || 'Unknown Whale'}</div>
+              <div class="alert-whale-name">${displayName}</div>
               <div class="alert-whale-rank">${timeAgo(t.timestamp)}</div>
             </div>
           </div>
@@ -1171,6 +1188,7 @@ function renderLiveFeed(activity) {
             <span class="alert-stat-value">${pricePct}¢</span>
           </div>
           <a href="${marketLink}" target="_blank" rel="noopener" class="alert-copy-btn">📋 Copy Bet</a>
+          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#8b949e;text-decoration:none;text-align:center;display:block;margin-top:4px;" data-affiliate>No account? Sign up free →</a>
         </div>
       </div>
     `;
@@ -1474,6 +1492,7 @@ function renderActivity(items) {
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
           <div class="feed-time">${timeAgo(t.timestamp)}</div>
           <a href="${marketUrl(t.slug)}" target="_blank" rel="noopener" class="feed-trade-link">Copy Bet →</a>
+          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#484f58;text-decoration:none;text-align:right;display:block;" data-affiliate>No account? Sign up →</a>
         </div>
       </div>
     `;
