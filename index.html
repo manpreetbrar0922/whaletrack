@@ -698,6 +698,7 @@
   <div class="nav-right">
     <span class="last-updated"><span class="live-dot"></span><span id="lastUpdated">Loading...</span></span>
     <a href="/worldcup" style="font-size:13px;font-weight:700;color:var(--green);text-decoration:none;padding:7px 14px;border:1px solid rgba(63,185,80,0.35);border-radius:8px;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(63,185,80,0.1)'" onmouseout="this.style.background='transparent'">⚽ World Cup</a>
+    <a href="/champions-league" style="font-size:13px;font-weight:700;color:#93c5fd;text-decoration:none;padding:7px 14px;border:1px solid rgba(26,86,219,0.4);border-radius:8px;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(26,86,219,0.15)'" onmouseout="this.style.background='transparent'">🏆 UCL</a>
     <a href="/crypto" style="font-size:13px;font-weight:700;color:#f7931a;text-decoration:none;padding:7px 14px;border:1px solid rgba(247,147,26,0.35);border-radius:8px;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(247,147,26,0.1)'" onmouseout="this.style.background='transparent'">₿ Crypto</a>
     <a href="/sports" style="font-size:13px;font-weight:700;color:#58a6ff;text-decoration:none;padding:7px 14px;border:1px solid rgba(88,166,255,0.35);border-radius:8px;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(88,166,255,0.1)'" onmouseout="this.style.background='transparent'">🏆 Sports</a>
     <a href="/politics" style="font-size:13px;font-weight:700;color:#da8fff;text-decoration:none;padding:7px 14px;border:1px solid rgba(218,143,255,0.35);border-radius:8px;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(218,143,255,0.1)'" onmouseout="this.style.background='transparent'">🗳️ Politics</a>
@@ -916,7 +917,32 @@
 <footer>
   <p>🐋 WhaleTrack — Smart Money Intelligence for Polymarket</p>
   <p style="margin-top:6px;">Data refreshed every 5 minutes. Not financial advice.</p>
+  <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
+    <p style="font-size:13px;color:var(--text);margin-bottom:10px;">Ready to copy a whale bet? Trade on the world's biggest prediction market.</p>
+    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" data-affiliate
+       style="display:inline-block;background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:9px 22px;border-radius:8px;text-decoration:none;transition:opacity 0.2s;"
+       onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+      Trade on Polymarket →
+    </a>
+  </div>
 </footer>
+
+<!-- MOBILE STICKY CTA (only shows on small screens) -->
+<div id="mobileCta" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:10px 16px;z-index:200;align-items:center;justify-content:space-between;gap:10px;">
+  <span style="font-size:12px;color:var(--text2);">Copy whale bets on Polymarket</span>
+  <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" data-affiliate
+     style="background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;flex-shrink:0;">
+    Trade Free →
+  </a>
+</div>
+<script>
+(function(){
+  if(window.innerWidth <= 768) {
+    var bar = document.getElementById('mobileCta');
+    if(bar) bar.style.display = 'flex';
+  }
+})();
+</script>
 
 <script>
 // ===== JS ERROR TRACKER =====
@@ -948,6 +974,8 @@
   var _ignorePatterns = [
     'Script error', 'script error',
     'provider is disc', 'provider disconnected',       // MetaMask / wallet extensions
+    'Failed to connect to MetaMask', 'Failed to connect to',  // MetaMask extension errors
+    'MetaMask', 'Web3', 'ethereum',                    // wallet extension noise
     'sseError', 'sseError not',                        // wallet SSE errors
     'Invalid call to runtime', 'runtime.lastError',    // Chrome extension runtime
     'ResizeObserver loop', 'ResizeObserver Loop',      // benign browser warning
@@ -1112,7 +1140,7 @@ function renderLiveFeed(activity) {
       const name = (t.whale || '').toLowerCase();
       const isNamed = name.length > 0 && !name.startsWith('0x');
       const isClean = !/(retard|nigger|faggot|slur|racist|porn|xxx|fuck|shit|cunt|bitch|bastard)/i.test(name);
-      return t.usdcSize >= 1000 && t.side === 'BUY' && isNamed && isClean;
+      return t.usdcSize >= 10000 && t.side === 'BUY' && isNamed && isClean;
     })
     .sort((a, b) => b.usdcSize - a.usdcSize)
     .filter(t => {
