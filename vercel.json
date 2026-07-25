@@ -1,9 +1,12 @@
 {
   "rewrites": [
-    { "source": "/worldcup", "destination": "/worldcup.html" },
-    { "source": "/crypto",   "destination": "/crypto.html"   },
-    { "source": "/sports",   "destination": "/sports.html"   },
-    { "source": "/politics", "destination": "/politics.html" }
+    { "source": "/polymarket-whale-tracker", "destination": "/polymarket-whale-tracker.html" },
+    { "source": "/worldcup",         "destination": "/worldcup.html"         },
+    { "source": "/crypto",           "destination": "/crypto.html"           },
+    { "source": "/sports",           "destination": "/sports.html"           },
+    { "source": "/politics",         "destination": "/politics.html"         },
+    { "source": "/premium-success",     "destination": "/premium-success.html"     },
+    { "source": "/champions-league",   "destination": "/champions-league.html"   }
   ],
   "crons": [
     { "path": "/api/daily-email",  "schedule": "0 14 * * *" },
