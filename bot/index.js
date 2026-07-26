@@ -320,10 +320,12 @@ async function refreshWhales() {
 async function checkTradeAlerts() {
   try {
     const activity  = await fetchAllActivity();
+    const twoHoursAgo = Math.floor(Date.now() / 1000) - 7200;
     const bigTrades = activity.filter(t =>
       t.usdcSize >= TRADE_ALERT_MIN &&
       t.side === 'BUY' &&
       t.price > 0.02 && t.price < 0.98 &&   // skip resolved markets (price = 0 or 1)
+      t.timestamp > twoHoursAgo &&            // only recent trades — prevent stale alerts on restart
       !seenTrades.has(`${t.address}-${t.timestamp}`)
     );
 
