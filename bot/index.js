@@ -322,6 +322,7 @@ async function checkTradeAlerts() {
     const bigTrades = activity.filter(t =>
       t.usdcSize >= TRADE_ALERT_MIN &&
       t.side === 'BUY' &&
+      t.price > 0.02 && t.price < 0.98 &&   // skip resolved markets (price = 0 or 1)
       !seenTrades.has(`${t.address}-${t.timestamp}`)
     );
 
