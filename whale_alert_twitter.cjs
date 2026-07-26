@@ -352,6 +352,164 @@ async function fetchActivity(address, limit = 5) {
   } catch (e) { return []; }
 }
 
+// ── SMART HASHTAG BUILDER ─────────────────────────────────────────────
+function buildHashtags(title) {
+  const t = title.toLowerCase();
+  const tags = [];
+
+  // ── UFC / MMA / Boxing ──
+  const isUFC = t.includes('ufc') || t.includes(' mma') || t.includes('boxing');
+  if (isUFC) {
+    tags.push('#UFC', '#MMA');
+    const ufcNum = title.match(/UFC\s*(\d+)/i);
+    if (ufcNum) tags.push(`#UFC${ufcNum[1]}`);
+    const fighters = {
+      'jones':       '#JonJones',    'miocic':      '#StipeMiocic',
+      'adesanya':    '#Adesanya',    'makhachev':   '#Makhachev',
+      'poirier':     '#DustinPoirier','mcgregor':   '#McGregor',
+      'conor':       '#McGregor',    'pereira':     '#AlexPereira',
+      'topuria':     '#Topuria',     'volkanovski': '#Volkanovski',
+      'usman':       '#KamaruUsman', 'aspinall':    '#TomAspinall',
+      'holloway':    '#MaxHolloway', 'strickland':  '#Strickland',
+      'oliveira':    '#Oliveira',    'gaethje':     '#Gaethje',
+      'khabib':      '#Khabib',      'du plessis':  '#DricusDuPlessis',
+      'chimaev':     '#Chimaev',     'diaz':        '#NateDiaz',
+      'omalley':     '#SeanOMalley', 'shevchenko':  '#Shevchenko',
+    };
+    for (const [key, tag] of Object.entries(fighters)) {
+      if (t.includes(key) && !tags.includes(tag)) tags.push(tag);
+    }
+    return tags.slice(0, 5);
+  }
+
+  // ── NBA / Basketball ──
+  const isNBA = t.includes('nba') || t.includes('basketball') ||
+    ['lakers','warriors','celtics','nuggets','bucks','heat','suns','sixers','76ers',
+     'knicks','thunder','mavericks','mavs','grizzlies','timberwolves','spurs',
+     'pelicans','hawks','clippers','cavaliers','cavs','kings','magic','pacers',
+     'hornets','pistons','rockets','jazz','raptors','nets'].some(k => t.includes(k));
+  if (isNBA) {
+    tags.push('#NBA');
+    const teams = {
+      'lakers':       ['#Lakers',       '#LeBronJames'    ],
+      'warriors':     ['#Warriors',     '#StephCurry'     ],
+      'celtics':      ['#Celtics',      '#JaysonTatum'    ],
+      'nuggets':      ['#Nuggets',      '#Jokic'          ],
+      'bucks':        ['#Bucks',        '#Giannis'        ],
+      'heat':         ['#Heat',         '#JimmyButler'    ],
+      'suns':         ['#Suns',         '#KD'             ],
+      '76ers':        ['#Sixers',       '#Embiid'         ],
+      'sixers':       ['#Sixers',       '#Embiid'         ],
+      'knicks':       ['#Knicks',       '#Brunson'        ],
+      'thunder':      ['#Thunder',      '#SGA'            ],
+      'mavericks':    ['#Mavs',         '#Luka'           ],
+      'mavs':         ['#Mavs',         '#Luka'           ],
+      'grizzlies':    ['#Grizzlies',    '#JaMorant'       ],
+      'timberwolves': ['#Wolves',       '#AnthonyEdwards' ],
+      'spurs':        ['#Spurs',        '#Wembanyama'     ],
+      'pelicans':     ['#Pelicans',     '#Zion'           ],
+      'hawks':        ['#Hawks',        '#TraeYoung'      ],
+      'clippers':     ['#Clippers',     '#KawhiLeonard'   ],
+      'cavaliers':    ['#Cavs',         '#DonovanMitchell'],
+      'cavs':         ['#Cavs',         '#DonovanMitchell'],
+      'kings':        ['#Kings',        '#DeAaronFox'     ],
+      'magic':        ['#Magic',        '#Banchero'       ],
+      'pacers':       ['#Pacers',       '#Haliburton'     ],
+      'hornets':      ['#Hornets',      '#LaMelo'         ],
+      'rockets':      ['#Rockets',      '#Sengun'         ],
+      'raptors':      ['#Raptors',      '#ScottieBarnes'  ],
+    };
+    for (const [team, teamTags] of Object.entries(teams)) {
+      if (t.includes(team)) { tags.push(...teamTags); break; }
+    }
+    // Second team for matchups
+    let found = 0;
+    for (const [team, teamTags] of Object.entries(teams)) {
+      if (t.includes(team)) { found++; if (found === 2) { tags.push(teamTags[0]); break; } }
+    }
+    if (t.includes('finals'))    tags.push('#NBAFinals');
+    if (t.includes('playoff'))   tags.push('#NBAPlayoffs');
+    if (t.includes('mvp'))       tags.push('#MVP');
+    if (t.includes('champion'))  tags.push('#NBAChampionship');
+    return tags.slice(0, 5);
+  }
+
+  // ── NFL / American Football ──
+  if (t.includes('nfl') || t.includes('super bowl') || t.includes('chiefs') || t.includes('football')) {
+    tags.push('#NFL');
+    if (t.includes('super bowl')) tags.push('#SuperBowl');
+    if (t.includes('chiefs'))     tags.push('#Chiefs', '#PatrickMahomes');
+    if (t.includes('49ers'))      tags.push('#49ers');
+    if (t.includes('eagles'))     tags.push('#Eagles');
+    if (t.includes('ravens'))     tags.push('#Ravens', '#LamarJackson');
+    return tags.slice(0, 4);
+  }
+
+  // ── Soccer / Football ──
+  if (t.includes('world cup') || t.includes('champions league') || t.includes('premier league') ||
+      t.includes('real madrid') || t.includes('barcelona') || t.includes('arsenal') ||
+      t.includes('manchester') || t.includes('soccer')) {
+    tags.push('#Soccer', '#Football');
+    if (t.includes('world cup'))        tags.push('#WorldCup');
+    if (t.includes('champions league')) tags.push('#UCL', '#ChampionsLeague');
+    if (t.includes('premier league'))   tags.push('#PremierLeague');
+    if (t.includes('real madrid'))      tags.push('#RealMadrid');
+    if (t.includes('barcelona'))        tags.push('#Barcelona');
+    if (t.includes('arsenal'))          tags.push('#Arsenal');
+    if (t.includes('manchester city'))  tags.push('#ManCity');
+    if (t.includes('manchester united'))tags.push('#MUFC');
+    return tags.slice(0, 4);
+  }
+
+  // ── F1 ──
+  if (t.includes(' f1') || t.includes('formula 1') || t.includes('grand prix')) {
+    tags.push('#F1', '#Formula1');
+    if (t.includes('verstappen')) tags.push('#Verstappen');
+    if (t.includes('hamilton'))   tags.push('#Hamilton');
+    if (t.includes('norris'))     tags.push('#Norris');
+    return tags.slice(0, 4);
+  }
+
+  // ── Politics ──
+  const isPolitics = ['president', 'election', 'trump', 'biden', 'harris', 'congress',
+    'senate', 'vote', 'republican', 'democrat', 'modi', 'macron', 'putin', 'zelensky',
+    'political', 'governor', 'party'].some(k => t.includes(k));
+  if (isPolitics) {
+    tags.push('#Politics', '#Polymarket');
+    if (t.includes('trump'))       { tags.push('#Trump', '#Republican'); }
+    else if (t.includes('biden'))  { tags.push('#Biden', '#Democrat'); }
+    else if (t.includes('harris')) { tags.push('#KamalaHarris', '#Democrat'); }
+    else if (t.includes('modi'))   { tags.push('#Modi', '#India', '#BJP'); }
+    else if (t.includes('macron')) { tags.push('#Macron', '#France'); }
+    else if (t.includes('putin'))  { tags.push('#Putin', '#Russia'); }
+    else if (t.includes('zelensky')) { tags.push('#Zelensky', '#Ukraine'); }
+    else { tags.push('#Election', '#Politics'); }
+    if (t.includes('election'))    tags.push('#Election2028');
+    if (t.includes('republican'))  tags.push('#Republican');
+    if (t.includes('democrat'))    tags.push('#Democrat');
+    return tags.slice(0, 5);
+  }
+
+  // ── Crypto ──
+  const isCrypto = ['bitcoin','btc','ethereum','eth','solana','sol','crypto','xrp',
+    'doge','bnb','matic','avax','blockchain','defi','nft'].some(k => t.includes(k));
+  if (isCrypto) {
+    tags.push('#Crypto');
+    if (t.includes('bitcoin')  || t.includes('btc'))     tags.push('#Bitcoin', '#BTC');
+    if (t.includes('ethereum') || t.includes('eth'))     tags.push('#Ethereum', '#ETH');
+    if (t.includes('solana')   || t.includes('sol'))     tags.push('#Solana', '#SOL');
+    if (t.includes('xrp'))                               tags.push('#XRP');
+    if (t.includes('doge'))                              tags.push('#Dogecoin', '#DOGE');
+    if (t.includes('bnb'))                               tags.push('#BNB');
+    if (t.includes('defi'))                              tags.push('#DeFi');
+    if (t.includes('nft'))                               tags.push('#NFT');
+    if (t.includes('all-time high') || t.includes('ath'))tags.push('#ATH');
+    return tags.slice(0, 5);
+  }
+
+  return []; // default — no extra tags for generic markets
+}
+
 // ── TWEET FORMAT ──────────────────────────────────────────────────────
 // ── ORDER BOOK CONTEXT ────────────────────────────────────────────────
 // Fetches live ask depth so followers know if they can still copy the bet
@@ -403,10 +561,11 @@ function buildTweet(t, obContext) {
     ? cleanTitle.slice(0, maxTitle - 1) + '…'
     : cleanTitle;
 
-  // Tag @Polymarket on big trades only ($50K+) to avoid looking spammy
-  const tags = t.usdcSize >= 50000
-    ? `📋 Copy this bet → whaletrack.app | @Polymarket #Polymarket #PredictionMarkets`
-    : `📋 Copy this bet → whaletrack.app | #Polymarket #PredictionMarkets`;
+  // Smart hashtags based on market category
+  const extraTags  = buildHashtags(rawTitle);
+  const baseTag    = t.usdcSize >= 50000 ? '@Polymarket #Polymarket' : '#Polymarket';
+  const allTags    = [baseTag, '#PredictionMarkets', ...extraTags].join(' ');
+  const tags       = `📋 Copy this bet → whaletrack.app | ${allTags}`;
 
   // Show whale's total profit if available
   const addrKey = (t.proxyWallet || '').toLowerCase();
@@ -442,6 +601,8 @@ function buildWinTweet(t) {
   const addrKey = (t.proxyWallet || '').toLowerCase();
   const pnl = whalePnl[addrKey];
   const pnlStr = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)} total)` : '';
+  const extraTags = buildHashtags(rawTitle);
+  const allTags   = ['#Polymarket', '#PredictionMarkets', ...extraTags].join(' ');
   return [
     `✅ Whale Win!`,
     ``,
@@ -449,7 +610,7 @@ function buildWinTweet(t) {
     ``,
     `Think they'll bet big again? 👇`,
     ``,
-    `📋 Copy their next bet → whaletrack.app | #Polymarket #PredictionMarkets`,
+    `📋 Copy their next bet → whaletrack.app | ${allTags}`,
   ].join('\n');
 }
 
