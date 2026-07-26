@@ -593,6 +593,30 @@ function buildTweet(t, obContext) {
   return lines.join('\n');
 }
 
+// ── EXIT TWEET (whale sold/exited a position) ─────────────────────────
+function buildExitTweet(t) {
+  const rawTitle   = t.title || 'Unknown Market';
+  const cleanTitle = rawTitle.replace(/\s+on\s+\d{4}-\d{2}-\d{2}\??$/i, '?').trim();
+  const title      = cleanTitle.length > 60 ? cleanTitle.slice(0, 59) + '…' : cleanTitle;
+  const extraTags  = buildHashtags(rawTitle);
+  const allTags    = ['#Polymarket', '#PredictionMarkets', ...extraTags].join(' ');
+  const addrKey    = (t.proxyWallet || '').toLowerCase();
+  const pnl        = whalePnl[addrKey];
+  const pnlStr     = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)} total)` : '';
+  const price      = Math.round((t.price || 0) * 100);
+  return [
+    `🚨 Whale Exit Alert!`,
+    ``,
+    `${t.whaleName}${pnlStr} just SOLD their position @ ${price}¢`,
+    ``,
+    `📊 ${title}`,
+    ``,
+    `⚠️ If you copied this bet — watch your position closely.`,
+    ``,
+    `📋 Track next move → whaletrack.app | ${allTags}`,
+  ].join('\n');
+}
+
 // ── WIN TWEET ─────────────────────────────────────────────────────────
 function buildWinTweet(t) {
   const rawTitle = t.title || 'Unknown Market';
@@ -641,11 +665,30 @@ async function checkAndTweet() {
     const results = await Promise.allSettled(addresses.map(a => fetchActivity(a, 10)));
 
     const bigTrades = [];
-    const bigWins = [];
+    const bigWins   = [];
+    const bigExits  = [];
     for (let i = 0; i < results.length; i++) {
       if (results[i].status !== 'fulfilled') continue;
       const addr = addresses[i];
       for (const t of results[i].value) {
+        // Detect exits (SELL >= $10K within last 24h)
+        if (t.side === 'SELL' && parseFloat(t.usdcSize || 0) >= 10000) {
+          const tsMs   = t.timestamp > 1e12 ? t.timestamp : t.timestamp * 1000;
+          if (Date.now() - tsMs <= 86400000) {
+            const exitKey = `exit-${(t.proxyWallet || addr).toLowerCase()}-${t.timestamp}`;
+            if (!seenTrades.has(exitKey)) {
+              bigExits.push({
+                key:        exitKey,
+                whaleName:  KNOWN_NAMES[(t.proxyWallet || addr).toLowerCase()] || KNOWN_NAMES[addr] || formatWhaleName(t.name, t.proxyWallet || addr),
+                usdcSize:   parseFloat(t.usdcSize || 0),
+                price:      parseFloat(t.price    || 0),
+                title:      t.title || 'Unknown Market',
+                proxyWallet: t.proxyWallet || addr,
+                timestamp:  t.timestamp || 0,
+              });
+            }
+          }
+        }
         // Detect wins (REDEEM = collected winnings)
         if (t.type === 'REDEEM' && parseFloat(t.usdcSize || 0) >= 100000) {
           const tsMs = t.timestamp > 1e12 ? t.timestamp : t.timestamp * 1000;
@@ -696,15 +739,44 @@ async function checkAndTweet() {
     });
     const toTweet = deduped.slice(0, 3); // max 3 per cycle to avoid rate limits
 
-    // Alternate bet and win tweets each cycle
+    // Cycle: bet → exit → win → bet → exit → win ...
     const lastCycle = getLastCycleType();
-    const doWinThisCycle = lastCycle === 'bet';
+    const cycleMap  = { bet: 'exit', exit: 'win', win: 'bet' };
+    const thisCycle = cycleMap[lastCycle] || 'bet';
 
     if (!canTweetToday()) {
       console.log(`  ⚠️ Daily limit (${DAILY_LIMIT}) reached — skipping until tomorrow.`);
     } else if (!canTweetNow()) {
       // cooldown message already logged inside canTweetNow()
-    } else if (doWinThisCycle) {
+    } else if (thisCycle === 'exit') {
+      // EXIT cycle — tweet a whale sell/exit
+      bigExits.sort((a, b) => b.usdcSize - a.usdcSize);
+      const ex = bigExits[0];
+      if (ex) {
+        try {
+          const text    = buildExitTweet(ex);
+          const mediaId = await getCardMediaId({ title: ex.title, outcome: 'No', amount: fmtUSD(ex.usdcSize), price: ex.price, whaleName: ex.whaleName });
+          console.log(`  → Exit Tweet${mediaId ? ' 🖼️' : ''}: ${ex.whaleName} exited ${fmtUSD(ex.usdcSize)} | ${text.length} chars`);
+          const result = await postTweet(text, mediaId);
+          const tweetId = result?.data?.id;
+          const todayCount = incrementDailyCount();
+          console.log(`  ✅ Exit: https://twitter.com/i/web/status/${tweetId} [${todayCount}/${DAILY_LIMIT} today]`);
+          seenTrades.add(ex.key);
+          saveSeen();
+          saveLastCycleType('exit');
+          saveLastTweetTime();
+        } catch (e) { console.error(`  ❌ Exit tweet failed: ${e.message}`); }
+      } else {
+        console.log(`  No new exits — falling back to bet tweet.`);
+        const t = toTweet[0];
+        if (t) {
+          try { await tweetBet(t, 'Bet (fallback)'); }
+          catch (e) { console.error(`  ❌ Failed: ${e.message}`); }
+        } else {
+          console.log(`  No new ${fmtUSD(TWEET_MIN)}+ trades found either.`);
+        }
+      }
+    } else if (thisCycle === 'win') {
       // WIN cycle — tweet 1 win (with card)
       bigWins.sort((a, b) => b.timestamp - a.timestamp);
       const w = bigWins[0];

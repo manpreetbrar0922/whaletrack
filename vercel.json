@@ -1,12 +1,17 @@
 {
   "rewrites": [
     { "source": "/polymarket-whale-tracker", "destination": "/polymarket-whale-tracker.html" },
-    { "source": "/worldcup",         "destination": "/worldcup.html"         },
-    { "source": "/crypto",           "destination": "/crypto.html"           },
-    { "source": "/sports",           "destination": "/sports.html"           },
-    { "source": "/politics",         "destination": "/politics.html"         },
-    { "source": "/premium-success",     "destination": "/premium-success.html"     },
-    { "source": "/champions-league",   "destination": "/champions-league.html"   }
+    { "source": "/worldcup",               "destination": "/worldcup.html"               },
+    { "source": "/crypto",                 "destination": "/crypto.html"                 },
+    { "source": "/sports",                 "destination": "/sports.html"                 },
+    { "source": "/politics",               "destination": "/politics.html"               },
+    { "source": "/premium-success",        "destination": "/premium-success.html"        },
+    { "source": "/champions-league",       "destination": "/champions-league.html"       },
+    { "source": "/whale/somalianking",     "destination": "/whale-somalianking.html"     },
+    { "source": "/whale/deeddit",          "destination": "/whale-deeddit.html"          },
+    { "source": "/whale/bettguy",          "destination": "/whale-bettguy.html"          },
+    { "source": "/whale/candlehammerdrums","destination": "/whale-candlehammerdrums.html"},
+    { "source": "/whale/coldsway",         "destination": "/whale-coldsway.html"         }
   ],
   "crons": [
     { "path": "/api/daily-email",  "schedule": "0 14 * * *" },
