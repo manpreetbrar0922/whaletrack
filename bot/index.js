@@ -246,6 +246,7 @@ function buildFreeAlert(t) {
 }
 
 function buildPremiumAlert(t, whale, wr) {
+  const outcomeDisplay = t.outcome && t.outcome !== '—' ? t.outcome : 'Position';
   const outcomeEmoji = t.outcome === 'Yes' ? '🟢' : t.outcome === 'No' ? '🔴' : '⚪';
   // Guard against null/NaN rank (API sometimes returns null as string or number)
   const rankValid    = whale.rank && whale.rank !== 'null' && whale.rank !== '—' && !isNaN(Number(whale.rank));
@@ -258,13 +259,13 @@ function buildPremiumAlert(t, whale, wr) {
 
   const wrLine = wr.rate !== null && wr.total >= 3
     ? `• Win rate: <b>${wr.rate}%</b> (${wr.total} resolved trades)`
-    : `• Win rate: calculating…`;
+    : `• Win rate: <b>tracking</b> (not enough resolved trades yet)`;
 
   return [
     `⚡ <b>PREMIUM Whale Alert</b>`,
     ``,
     `<b>${t.whale}</b> just bet ${fmtUSD(t.usdcSize)}`,
-    `${outcomeEmoji} <b>${t.outcome}</b> @ ${(t.price * 100).toFixed(0)}¢`,
+    `${outcomeEmoji} <b>${outcomeDisplay}</b> @ ${(t.price * 100).toFixed(0)}¢`,
     ``,
     `📊 <i>${t.title}</i>`,
     ``,
