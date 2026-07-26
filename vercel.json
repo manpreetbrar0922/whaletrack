@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/polymarket-whale-tracker", "destination": "/polymarket-whale-tracker.html" },
+    { "source": "/polymarket-leaderboard",   "destination": "/polymarket-leaderboard.html"   },
+    { "source": "/polymarket-copy-trading",  "destination": "/polymarket-copy-trading.html"  },
     { "source": "/worldcup",               "destination": "/worldcup.html"               },
     { "source": "/crypto",                 "destination": "/crypto.html"                 },
     { "source": "/sports",                 "destination": "/sports.html"                 },
