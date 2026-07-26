@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Champions League Whale Tracker — Smart Money on UCL 2026-27 | WhaleTrack</title>
+
+  <meta name="description" content="See where the biggest Polymarket traders are betting on the Champions League. Real-time whale positions, UCL winner odds, and copy bet buttons."/>
+  <meta name="keywords" content="Champions League, Polymarket, whale tracker, UCL 2026, UCL 2027, prediction market, smart money, football betting, Real Madrid, Manchester City, PSG, Bayern"/>
+  <link rel="canonical" href="https://whaletrack.app/champions-league"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐋</text></svg>"/>
+
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://whaletrack.app/champions-league"/>
+  <meta property="og:title" content="Champions League Whale Tracker — Where Smart Money is Going on UCL"/>
+  <meta property="og:description" content="Track the biggest Polymarket traders betting on the Champions League. Real-time whale positions and copy bet buttons."/>
+  <meta property="og:image" content="https://whaletrack.app/og-image.png"/>
+
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Champions League Whale Tracker — Smart Money on UCL 2026-27"/>
+  <meta name="twitter:description" content="See where top Polymarket whales are betting on the Champions League. Real-time positions + copy bet."/>
+  <meta name="twitter:image" content="https://whaletrack.app/og-image.png"/>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Champions League Whale Tracker — Smart Money on UCL 2026-27",
+    "url": "https://whaletrack.app/champions-league",
+    "description": "See where the biggest Polymarket traders are betting on the Champions League. Real-time whale positions and copy bet buttons.",
+    "isPartOf": { "@type": "WebSite", "name": "WhaleTrack", "url": "https://whaletrack.app" },
+    "about": { "@type": "SportsEvent", "name": "UEFA Champions League 2026-27", "sport": "Soccer" },
+    "keywords": "Champions League, Polymarket, UCL whale tracker, smart money football"
+  }
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RN22NVFVP"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6RN22NVFVP');
+  </script>
+
+  <style>
+    :root[data-theme="dark"] {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #d29922;
+      --purple: #bc8cff;
+      --ucl: #1a56db;
+      --ucl-gold: #f5c518;
+      --card-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    :root[data-theme="light"] {
+      --bg: #f6f8fa;
+      --bg2: #ffffff;
+      --bg3: #f0f2f4;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --text2: #656d76;
+      --accent: #0969da;
+      --green: #1a7f37;
+      --red: #cf222e;
+      --yellow: #9a6700;
+      --purple: #8250df;
+      --ucl: #1a56db;
+      --ucl-gold: #b8860b;
+      --card-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    nav {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 20px; font-weight: 700; color: var(--accent); text-decoration: none; }
+    .logo span { color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-btn {
+      font-size: 13px; color: var(--text2); text-decoration: none;
+      padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+      transition: border-color 0.2s;
+    }
+    .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-trade-btn {
+      font-size: 13px; font-weight: 600; color: #fff; text-decoration: none;
+      padding: 7px 14px; background: var(--ucl); border-radius: 6px;
+      transition: opacity 0.2s;
+    }
+    .nav-trade-btn:hover { opacity: 0.85; }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 14px;
+    }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(160deg, #0d1117 0%, #0f1f4a 50%, #0d1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 56px 24px 48px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(26,86,219,0.2); border: 1px solid rgba(26,86,219,0.4);
+      color: #93c5fd; font-size: 11px; font-weight: 700;
+      padding: 4px 12px; border-radius: 20px; margin-bottom: 18px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .hero h1 {
+      font-size: clamp(26px, 5vw, 42px); font-weight: 800;
+      color: var(--text); margin-bottom: 12px; line-height: 1.2;
+    }
+    .hero h1 span { color: var(--ucl-gold); }
+    .hero-sub { font-size: 15px; color: var(--text2); max-width: 540px; margin: 0 auto 28px; line-height: 1.6; }
+    .hero-stats { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+    .stat-pill {
+      background: var(--bg2); border: 1px solid var(--border);
+      padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; color: var(--text);
+    }
+    .stat-pill span { color: var(--text2); font-weight: 400; margin-left: 4px; }
+    .hero-btns { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .hero-btn-primary {
+      display: inline-block; padding: 12px 24px; background: var(--ucl);
+      color: #fff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 14px;
+      transition: opacity 0.2s;
+    }
+    .hero-btn-primary:hover { opacity: 0.85; }
+    .hero-btn-secondary {
+      display: inline-block; padding: 12px 24px; background: transparent;
+      border: 1px solid var(--border); color: var(--text); text-decoration: none;
+      border-radius: 8px; font-weight: 600; font-size: 14px; transition: border-color 0.2s;
+    }
+    .hero-btn-secondary:hover { border-color: var(--accent); }
+
+    /* UCL ODDS WIDGET */
+    .odds-widget {
+      max-width: 700px; margin: 32px auto;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; box-shadow: var(--card-shadow);
+    }
+    .odds-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
+    }
+    .odds-title {
+      font-size: 12px; font-weight: 700; color: var(--text2);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .odds-live-badge {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(26,86,219,0.15); border: 1px solid rgba(26,86,219,0.3);
+      color: #93c5fd; font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .odds-live-dot {
+      width: 6px; height: 6px; background: #93c5fd; border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .team-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .team-flag { font-size: 20px; width: 28px; text-align: center; }
+    .team-name { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; }
+    .team-pct { font-size: 13px; font-weight: 800; color: var(--ucl-gold); min-width: 38px; text-align: right; }
+    .team-bar-bg { flex: 2; height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+    .team-bar-fill { height: 100%; background: linear-gradient(90deg, var(--ucl), #60a5fa); border-radius: 4px; transition: width 0.5s ease; }
+    .odds-meta { font-size: 11px; color: var(--text2); margin-top: 14px; text-align: center; }
+    .odds-footer { display: flex; gap: 8px; margin-top: 16px; }
+    .odds-bet-btn {
+      flex: 1; display: block; padding: 10px; background: var(--ucl);
+      color: #fff; text-decoration: none; border-radius: 8px;
+      font-size: 13px; font-weight: 700; text-align: center;
+      transition: opacity 0.2s;
+    }
+    .odds-bet-btn:hover { opacity: 0.85; }
+    .odds-tweet-btn {
+      display: block; padding: 10px 14px; background: #1d9bf0;
+      color: #fff; text-decoration: none; border-radius: 8px;
+      font-size: 13px; font-weight: 700; white-space: nowrap;
+    }
+
+    /* MAIN LAYOUT */
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 16px; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .section-header h2 { font-size: 18px; font-weight: 700; }
+    .badge {
+      background: rgba(26,86,219,0.15); border: 1px solid rgba(26,86,219,0.3);
+      color: #93c5fd; font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+    }
+
+    /* MARKET CARDS */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 48px; }
+    .market-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px; box-shadow: var(--card-shadow);
+      transition: border-color 0.2s;
+    }
+    .market-card:hover { border-color: var(--ucl); }
+
+    /* ACTIVITY FEED */
+    .feed-wrapper { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 48px; }
+    .feed-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-item:hover { background: var(--bg3); }
+    .feed-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--ucl), #60a5fa);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .feed-body { flex: 1; min-width: 0; }
+    .feed-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; margin-bottom: 3px; }
+    .feed-whale { font-weight: 700; color: var(--text); }
+    .feed-action { color: var(--text2); }
+    .feed-outcome { font-weight: 700; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+    .feed-outcome.yes { background: rgba(63,185,80,0.15); color: var(--green); }
+    .feed-outcome.no  { background: rgba(248,81,73,0.15);  color: var(--red); }
+    .feed-size { font-weight: 700; color: var(--text); }
+    .feed-market { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-time { font-size: 11px; color: var(--text2); white-space: nowrap; }
+    .copy-link {
+      font-size: 11px; font-weight: 700; color: var(--ucl);
+      text-decoration: none; white-space: nowrap;
+      padding: 3px 8px; border: 1px solid rgba(26,86,219,0.3);
+      border-radius: 4px; transition: background 0.15s;
+    }
+    .copy-link:hover { background: rgba(26,86,219,0.1); }
+
+    .empty { text-align: center; padding: 48px 24px; color: var(--text2); font-size: 14px; }
+    .footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 12px; color: var(--text2); }
+
+    @media (max-width: 600px) {
+      .hero { padding: 36px 16px 32px; }
+      .hero-btns { flex-direction: column; align-items: center; }
+      .odds-footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="logo">🐋 Whale<span>Track</span></a>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    <a href="/" class="nav-btn">← All Markets</a>
+    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn">⚽ Bet on Polymarket →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🏆 UEFA Champions League 2026-27</div>
+  <h1>Champions League<br><span>Whale Tracker</span></h1>
+  <p class="hero-sub">Track the biggest Polymarket traders betting on the UCL. See their open positions, smart money signals, and copy their bets in one click.</p>
+
+  <div class="hero-stats">
+    <div class="stat-pill" id="heroWhales">— <span>whale wallets</span></div>
+    <div class="stat-pill" id="heroMarkets">— <span>markets tracked</span></div>
+    <div class="stat-pill">🏆 <span>UCL starts Sep 2026</span></div>
+  </div>
+
+  <div class="hero-btns">
+    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="hero-btn-primary">🏆 Bet on UCL →</a>
+    <a href="#markets" class="hero-btn-secondary">See Whale Positions ↓</a>
+  </div>
+</div>
+
+<!-- UCL WINNER ODDS WIDGET -->
+<div style="max-width:700px;margin:32px auto;padding:0 16px">
+  <div class="odds-widget">
+    <div class="odds-header">
+      <div class="odds-title">🏆 UCL WINNER ODDS · POLYMARKET SMART MONEY</div>
+      <div class="odds-live-badge">
+        <div class="odds-live-dot"></div>
+        LIVE
+      </div>
+    </div>
+
+    <div id="oddsGrid">
+      <div class="empty" style="padding:24px">Loading UCL winner odds from Polymarket...</div>
+    </div>
+
+    <div class="odds-meta" id="oddsMeta">Fetching live odds from Polymarket...</div>
+
+    <div class="odds-footer">
+      <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="odds-bet-btn" id="oddsBetBtn">🏆 Bet on Champions League →</a>
+      <a href="#" target="_blank" rel="noopener" class="odds-tweet-btn" id="oddsTweetBtn">🐦 Share</a>
+    </div>
+  </div>
+</div>
+
+<!-- WHALE POSITIONS -->
+<div class="container">
+  <div class="section-header" id="markets">
+    <h2>🏆 Whale Positions by Market</h2>
+    <span class="badge" id="marketsBadge">Loading...</span>
+  </div>
+  <div class="cards-grid" id="marketsGrid">
+    <div class="empty" style="grid-column:1/-1">Loading whale positions...</div>
+  </div>
+
+  <!-- ACTIVITY FEED -->
+  <div class="section-header">
+    <h2>📡 Live UCL Whale Activity</h2>
+    <span class="badge" id="activityBadge">Loading...</span>
+  </div>
+  <div class="feed-wrapper" id="activityFeed">
+    <div class="empty">Loading recent trades...</div>
+  </div>
+
+  <!-- CTA -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;text-align:center;margin-bottom:32px">
+    <div style="font-size:28px;margin-bottom:8px">🐋</div>
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)">Track All Whale Markets — Not Just UCL</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Follow smart money across crypto, politics, sports, and more.</p>
+    <a href="/" style="display:inline-block;padding:10px 22px;background:var(--ucl);color:#fff;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none">← Back to WhaleTrack</a>
+  </div>
+</div>
+
+<div class="footer">
+  <p>Data from Polymarket public API. Not financial advice. Refreshed every 5 minutes.</p>
+</div>
+
+<script>
+const AFFILIATE = 'https://polymarket.com?via=manpreet-singh-brar';
+
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.querySelector('.theme-toggle').textContent = isDark ? '☀️' : '🌙';
+}
+
+// ===== UCL WINNER ODDS =====
+const TEAM_FLAGS = {
+  'real madrid': '🇪🇸', 'manchester city': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'man city': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'psg': '🇫🇷', 'paris saint-germain': '🇫🇷', 'paris saint germain': '🇫🇷',
+  'bayern': '🇩🇪', 'bayern munich': '🇩🇪',
+  'arsenal': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'liverpool': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'barcelona': '🇪🇸', 'atletico': '🇪🇸',
+  'inter': '🇮🇹', 'inter milan': '🇮🇹', 'juventus': '🇮🇹',
+  'dortmund': '🇩🇪', 'borussia': '🇩🇪',
+  'chelsea': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+};
+
+function getFlag(name) {
+  const n = (name || '').toLowerCase();
+  for (const [key, flag] of Object.entries(TEAM_FLAGS)) {
+    if (n.includes(key)) return flag;
+  }
+  return '⚽';
+}
+
+async function fetchUCLOdds() {
+  try {
+    const r = await fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&limit=100&order=volume&ascending=false');
+    if (!r.ok) throw new Error('fetch failed');
+    const events = await r.json();
+
+    const clTerms = ['champions league', 'ucl', 'cl winner', 'cl 2026', 'cl 2027'];
+    const teams = {};
+    let bestSlug = '';
+
+    for (const ev of (Array.isArray(events) ? events : [])) {
+      const evTitle = (ev.title || '').toLowerCase();
+      const isCL = clTerms.some(t => evTitle.includes(t));
+      if (!isCL) continue;
+
+      for (const m of (ev.markets || [])) {
+        const q = (m.question || m.title || '').toLowerCase();
+        let outcomes, prices;
+        try {
+          outcomes = typeof m.outcomes === 'string' ? JSON.parse(m.outcomes) : (m.outcomes || []);
+          prices   = typeof m.outcomePrices === 'string' ? JSON.parse(m.outcomePrices) : (m.outcomePrices || []);
+        } catch(e) { continue; }
+
+        // "Will X win the Champions League?" style markets
+        if (q.includes('win') || q.includes('champion')) {
+          const yesIdx = outcomes.findIndex(o => (o||'').toLowerCase() === 'yes');
+          const price  = yesIdx !== -1 ? parseFloat(prices[yesIdx] || 0) : null;
+          if (!price || price <= 0.01) continue;
+
+          // Extract team name from question
+          const teamMatch = q.match(/will (.+?) win/i) || q.match(/^(.+?) (to )?win/i);
+          const teamName = teamMatch ? teamMatch[1].trim() : m.question || m.title;
+          if (!bestSlug) bestSlug = ev.slug || m.eventSlug || m.slug || '';
+          teams[teamName] = { price, slug: ev.slug || m.slug };
+        }
+      }
+    }
+
+    const sorted = Object.entries(teams)
+      .sort((a, b) => b[1].price - a[1].price)
+      .slice(0, 6);
+
+    if (!sorted.length) {
+      document.getElementById('oddsGrid').innerHTML = '<div class="empty" style="padding:20px;font-size:13px">UCL winner markets not yet listed on Polymarket. Check back closer to September.</div>';
+      document.getElementById('oddsMeta').textContent = 'Markets opening soon — UCL starts September 2026';
+      return;
+    }
+
+    const maxPrice = sorted[0][1].price;
+
+    document.getElementById('oddsGrid').innerHTML = sorted.map(([name, data]) => {
+      const pct = Math.round(data.price * 100);
+      const barW = Math.round((data.price / maxPrice) * 100);
+      return `
+        <div class="team-row">
+          <div class="team-flag">${getFlag(name)}</div>
+          <div class="team-name">${name.charAt(0).toUpperCase() + name.slice(1)}</div>
+          <div class="team-bar-bg"><div class="team-bar-fill" style="width:${barW}%"></div></div>
+          <div class="team-pct">${pct}%</div>
+        </div>
+      `;
+    }).join('');
+
+    const topTeam = sorted[0][0];
+    const topPct  = Math.round(sorted[0][1].price * 100);
+    const updatedAt = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('oddsMeta').textContent =
+      `Smart money favourite: ${getFlag(topTeam)} ${topTeam} at ${topPct}% · Polymarket UCL odds · Updated ${updatedAt}`;
+
+    document.getElementById('oddsBetBtn').href = bestSlug
+      ? `https://polymarket.com/event/${bestSlug}?via=manpreet-singh-brar`
+      : 'https://polymarket.com/sports?via=manpreet-singh-brar';
+
+    const tweetText = encodeURIComponent(
+      `🏆 Smart money on the Champions League winner (Polymarket):\n\n` +
+      sorted.slice(0, 3).map(([n, d]) => `${getFlag(n)} ${n} — ${Math.round(d.price*100)}%`).join('\n') +
+      `\n\nTrack whale bets → whaletrack.app/champions-league`
+    );
+    document.getElementById('oddsTweetBtn').href = `https://twitter.com/intent/tweet?text=${tweetText}`;
+
+  } catch(e) {
+    document.getElementById('oddsMeta').textContent = 'Error loading odds. Retrying...';
+  }
+}
+
+// ===== HELPERS =====
+function marketUrl(slug) {
+  return slug ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar` : AFFILIATE;
+}
+function fmtUSD(n) {
+  n = parseFloat(n);
+  if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000)    return '$' + (n/1000).toFixed(0) + 'K';
+  return '$' + n.toFixed(0);
+}
+function truncate(str, n) {
+  return str && str.length > n ? str.slice(0, n) + '…' : (str || '');
+}
+function timeAgo(ts) {
+  const diff = Math.floor(Date.now() / 1000) - ts;
+  if (diff < 60)    return diff + 's ago';
+  if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
+const CL_TERMS = [
+  'champions league', 'ucl', 'cl winner', 'cl 2026', 'cl 2027',
+  'champions league winner', 'champions league 2026', 'champions league 2027',
+  'real madrid', 'manchester city', 'psg', 'paris saint',
+  'arsenal champions', 'liverpool champions', 'barcelona champions',
+  'inter milan champions', 'dortmund champions', 'cl final', 'champions final',
+];
+
+function isCL(title) {
+  const t = (title || '').toLowerCase();
+  return CL_TERMS.some(term => t.includes(term));
+}
+
+// ===== RENDER MARKETS =====
+function renderMarkets(markets) {
+  const grid  = document.getElementById('marketsGrid');
+  const badge = document.getElementById('marketsBadge');
+
+  if (!markets || !markets.length) {
+    badge.textContent = '0 markets';
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No whale UCL positions found right now. Check back when the season starts in September 🏆</div>';
+    document.getElementById('heroMarkets').innerHTML = '0 <span>markets tracked</span>';
+    return;
+  }
+
+  badge.textContent = markets.length + ' market' + (markets.length !== 1 ? 's' : '');
+  document.getElementById('heroMarkets').innerHTML = markets.length + ' <span>markets tracked</span>';
+
+  grid.innerHTML = markets.map(m => {
+    const total      = m.totalValue || 0;
+    const yesPct     = total > 0 ? Math.round((m.yesValue / total) * 100) : 0;
+    const noPct      = 100 - yesPct;
+    const whaleCount = m.bets ? m.bets.length : 0;
+    const dominantSide  = m.yesValue >= m.noValue ? 'YES' : 'NO';
+    const dominantColor = dominantSide === 'YES' ? 'var(--green)' : 'var(--red)';
+
+    const tweetText = encodeURIComponent(
+      `🏆 Smart money on the Champions League:\n\n` +
+      `"${m.title.slice(0, 60)}"\n\n` +
+      `🐋 ${whaleCount} whale${whaleCount!==1?'s':''} · $${total.toLocaleString()} total\n` +
+      `YES: ${yesPct}% · NO: ${noPct}%\n\n` +
+      `Track whale money → whaletrack.app/champions-league`
+    );
+
+    return `
+      <div class="market-card">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.4">${truncate(m.title, 65)}</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:12px;color:var(--text2)">
+          <span>🐋 ${whaleCount} whale${whaleCount!==1?'s':''}</span>
+          <span>·</span>
+          <span style="color:var(--accent);font-weight:700">${fmtUSD(total)} at stake</span>
+          <span>·</span>
+          <span style="color:${dominantColor};font-weight:700">Smart money: ${dominantSide}</span>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+            <span style="color:var(--green);font-weight:700">YES — ${fmtUSD(m.yesValue)} (${yesPct}%)</span>
+            <span style="color:var(--red);font-weight:700">NO — ${fmtUSD(m.noValue)} (${noPct}%)</span>
+          </div>
+          <div style="display:flex;height:10px;border-radius:6px;overflow:hidden;gap:2px">
+            <div style="width:${yesPct}%;background:var(--green);border-radius:6px 0 0 6px;min-width:${yesPct>0?'4px':'0'}"></div>
+            <div style="width:${noPct}%;background:var(--red);border-radius:0 6px 6px 0;min-width:${noPct>0?'4px':'0'}"></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px">
+          ${(m.bets || []).map(b => `
+            <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${b.outcome==='Yes'?'rgba(63,185,80,0.15)':'rgba(248,81,73,0.15)'};color:${b.outcome==='Yes'?'var(--green)':'var(--red)'}">
+              ${b.whale} · ${b.outcome} · ${fmtUSD(b.value)}
+            </span>
+          `).join('')}
+        </div>
+        <div style="display:flex;gap:8px">
+          ${m.slug ? `<a href="${marketUrl(m.slug)}" target="_blank" rel="noopener" style="flex:1;display:block;padding:9px;background:rgba(26,86,219,0.1);border:1px solid rgba(26,86,219,0.3);border-radius:8px;font-size:12px;color:#93c5fd;text-align:center;text-decoration:none;font-weight:700">🏆 Copy Bet →</a>` : ''}
+          <a href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener" style="display:block;padding:9px 12px;background:#1d9bf0;border-radius:8px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;white-space:nowrap">🐦 Share</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== RENDER ACTIVITY =====
+function renderActivity(items) {
+  const feed  = document.getElementById('activityFeed');
+  const badge = document.getElementById('activityBadge');
+  const cl = items.filter(t => isCL(t.title));
+
+  if (!cl.length) {
+    badge.textContent = '0 trades';
+    feed.innerHTML = '<div class="empty" style="padding:32px">No recent whale UCL trades found — check back when the season kicks off in September ⚽</div>';
+    return;
+  }
+
+  badge.textContent = cl.length + ' recent trades';
+  feed.innerHTML = cl.map(t => {
+    const outcome = t.outcome || '—';
+    const outcomeClass = outcome === 'Yes' ? 'yes' : outcome === 'No' ? 'no' : '';
+    const sideEmoji = t.side === 'BUY' ? '🟢' : '🔴';
+    const sideText  = t.side === 'BUY' ? 'bought' : 'sold';
+    const initial   = (t.whale || '?')[0].toUpperCase();
+    const usd = t.usdcSize >= 1000 ? '$' + (t.usdcSize/1000).toFixed(1) + 'K' : '$' + t.usdcSize;
+
+    return `
+      <div class="feed-item">
+        <div class="feed-avatar">${initial}</div>
+        <div class="feed-body">
+          <div class="feed-top">
+            <span class="feed-whale">${t.whale}</span>
+            <span class="feed-action">${sideEmoji} ${sideText}</span>
+            <span class="feed-outcome ${outcomeClass}">${outcome}</span>
+            <span class="feed-size">${usd}</span>
+            <span class="feed-action">@ ${(t.price * 100).toFixed(0)}¢</span>
+          </div>
+          <div class="feed-market">${truncate(t.title, 75)}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <div class="feed-time">${timeAgo(t.timestamp)}</div>
+          <a href="${marketUrl(t.slug)}" target="_blank" rel="noopener" class="copy-link">Copy Bet →</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== LOAD =====
+async function loadAll() {
+  try {
+    const [clRes, activityRes] = await Promise.all([
+      fetch('/api/cl-matches'),
+      fetch('/api/activity'),
+    ]);
+    const markets  = clRes.ok      ? await clRes.json()      : [];
+    const activity = activityRes.ok ? await activityRes.json() : [];
+
+    const whaleCount = new Set((markets.flatMap(m => m.bets || [])).map(b => b.whale)).size;
+    document.getElementById('heroWhales').innerHTML = (whaleCount || '—') + ' <span>whale wallets</span>';
+
+    renderMarkets(markets);
+    renderActivity(activity);
+  } catch(e) {
+    document.getElementById('marketsGrid').innerHTML = '<div class="empty" style="grid-column:1/-1">Failed to load data. Please refresh.</div>';
+  }
+}
+
+fetchUCLOdds();
+loadAll();
+setInterval(loadAll, 5 * 60 * 1000);
+setInterval(fetchUCLOdds, 60 * 1000);
+</script>
+</body>
+</html>
