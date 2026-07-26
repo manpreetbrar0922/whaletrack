@@ -1,0 +1,153 @@
+/* WhaleTrack content script styles — injected on polymarket.com */
+
+#wt-launcher {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+#wt-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1f6feb, #3fb950);
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+  transition: transform .15s, box-shadow .15s;
+  position: relative;
+}
+#wt-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0,0,0,.6);
+}
+
+#wt-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: #f85149;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  display: none;
+}
+
+#wt-panel {
+  width: 320px;
+  max-height: 420px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.7);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+}
+#wt-panel.open { display: flex; }
+
+#wt-panel-header {
+  background: #0d1117;
+  border-bottom: 1px solid #30363d;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#wt-panel-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #58a6ff;
+}
+#wt-panel-close {
+  background: none;
+  border: none;
+  color: #8b949e;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+#wt-panel-close:hover { color: #e6edf3; }
+
+#wt-feed {
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+}
+
+.wt-trade {
+  padding: 10px 14px;
+  border-bottom: 1px solid #21262d;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  transition: background .12s;
+}
+.wt-trade:hover { background: #1c2128; }
+
+.wt-trade-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.wt-whale { font-size: 12px; font-weight: 700; color: #58a6ff; }
+.wt-time  { font-size: 10px; color: #8b949e; }
+.wt-title {
+  font-size: 11px;
+  color: #c9d1d9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.wt-meta { display: flex; justify-content: space-between; align-items: center; }
+.wt-outcome {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+.wt-yes { background: rgba(63,185,80,.15); color: #3fb950; }
+.wt-no  { background: rgba(248,81,73,.15);  color: #f85149; }
+.wt-size { font-size: 11px; font-weight: 800; color: #e6edf3; }
+
+#wt-footer {
+  background: #0d1117;
+  border-top: 1px solid #30363d;
+  padding: 8px 14px;
+  text-align: center;
+}
+#wt-footer a {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3fb950;
+  text-decoration: none;
+}
+#wt-footer a:hover { text-decoration: underline; }
+
+.wt-loading {
+  text-align: center;
+  padding: 24px;
+  color: #8b949e;
+  font-size: 12px;
+}

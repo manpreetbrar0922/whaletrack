@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width"/>
+  <title>WhaleTrack</title>
+  <link rel="stylesheet" href="popup.css"/>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">Whale<span>Track</span></div>
+    <div class="live-dot">LIVE</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="feed">🐋 Live Feed</button>
+    <button class="tab" data-tab="whales">👤 Whales</button>
+  </div>
+
+  <!-- Live Feed Panel -->
+  <div id="panel-feed" class="panel active">
+    <div class="feed-wrap" id="feed-list">
+      <div class="empty-state">
+        <div class="spinner"></div>
+        Loading whale trades…
+      </div>
+    </div>
+    <div class="last-updated" id="last-updated"></div>
+  </div>
+
+  <!-- Whales Panel -->
+  <div id="panel-whales" class="panel">
+    <div class="whale-list">
+      <a href="https://whaletrack.app/whale/somalianking" target="_blank" class="whale-row">
+        <div class="whale-avatar" style="background:linear-gradient(135deg,#1f6feb,#388bfd)">👑</div>
+        <div class="whale-info">
+          <div class="whale-name">somalianKing</div>
+          <div class="whale-spec">🏛️ Politics specialist</div>
+        </div>
+        <span class="whale-link">Profile →</span>
+      </a>
+      <a href="https://whaletrack.app/whale/deeddit" target="_blank" class="whale-row">
+        <div class="whale-avatar" style="background:linear-gradient(135deg,#8957e5,#bc8cff)">🔥</div>
+        <div class="whale-info">
+          <div class="whale-name">DEEDDIT</div>
+          <div class="whale-spec">🪙 Crypto &amp; Sports</div>
+        </div>
+        <span class="whale-link">Profile →</span>
+      </a>
+      <a href="https://whaletrack.app/whale/bettguy" target="_blank" class="whale-row">
+        <div class="whale-avatar" style="background:linear-gradient(135deg,#F7931A,#FF6B00)">🎯</div>
+        <div class="whale-info">
+          <div class="whale-name">bettguy</div>
+          <div class="whale-spec">🎲 Diversified high-volume</div>
+        </div>
+        <span class="whale-link">Profile →</span>
+      </a>
+      <a href="https://whaletrack.app/whale/candlehammerdrums" target="_blank" class="whale-row">
+        <div class="whale-avatar" style="background:linear-gradient(135deg,#00c6ff,#0072ff)">🥁</div>
+        <div class="whale-info">
+          <div class="whale-name">CandleHammerDrums</div>
+          <div class="whale-spec">🏈 Sports specialist</div>
+        </div>
+        <span class="whale-link">Profile →</span>
+      </a>
+      <a href="https://whaletrack.app/whale/coldsway" target="_blank" class="whale-row">
+        <div class="whale-avatar" style="background:linear-gradient(135deg,#a855f7,#6366f1)">❄️</div>
+        <div class="whale-info">
+          <div class="whale-name">coldsway</div>
+          <div class="whale-spec">🔮 Crypto &amp; Politics</div>
+        </div>
+        <span class="whale-link">Profile →</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <a href="https://whaletrack.app" target="_blank" class="footer-btn btn-primary">🐋 Open WhaleTrack</a>
+    <a href="https://buy.stripe.com/14A5kDd4Nfod4734NjfUQ00" target="_blank" class="footer-btn btn-green">⚡ Go Premium $9/mo</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

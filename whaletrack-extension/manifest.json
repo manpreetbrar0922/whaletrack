@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "WhaleTrack — Polymarket Whale Alerts",
+  "short_name": "WhaleTrack",
+  "version": "1.0.0",
+  "description": "See when top Polymarket traders bet in real time. Live whale feed, market alerts, and one-click copy-trade links.",
+  "permissions": ["storage", "alarms", "notifications"],
+  "host_permissions": ["https://data-api.polymarket.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://polymarket.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "WhaleTrack — Polymarket Whale Alerts",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

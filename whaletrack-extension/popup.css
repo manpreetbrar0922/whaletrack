@@ -1,0 +1,157 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 380px;
+  min-height: 460px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.header {
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo { font-size: 16px; font-weight: 800; color: #58a6ff; }
+.logo span { color: #e6edf3; }
+.live-dot {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: #3fb950;
+}
+.live-dot::before {
+  content: '';
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #3fb950;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .5; transform: scale(.8); }
+}
+
+/* ── Tabs ────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  background: #0d1117;
+  border-bottom: 1px solid #21262d;
+}
+.tab {
+  flex: 1; padding: 9px 12px;
+  font-size: 12px; font-weight: 600; color: #8b949e;
+  border: none; background: none; cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+.tab:hover:not(.active) { color: #e6edf3; }
+
+/* ── Feed ────────────────────────────────────────────────── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+.feed-wrap {
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+}
+.feed-wrap::-webkit-scrollbar { width: 4px; }
+.feed-wrap::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+.trade-item {
+  padding: 11px 16px;
+  border-bottom: 1px solid #21262d;
+  cursor: pointer;
+  transition: background .12s;
+  text-decoration: none;
+  display: block;
+  color: inherit;
+}
+.trade-item:hover { background: #161b22; }
+.trade-item.new { border-left: 2px solid #3fb950; padding-left: 14px; }
+
+.trade-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 3px;
+}
+.trade-whale {
+  font-size: 12px; font-weight: 700; color: #58a6ff;
+  display: flex; align-items: center; gap: 4px;
+}
+.trade-time { font-size: 11px; color: #8b949e; }
+.trade-title {
+  font-size: 12px; color: #c9d1d9;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 330px;
+  margin-bottom: 4px;
+}
+.trade-meta {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.trade-outcome {
+  font-size: 11px; font-weight: 700; padding: 1px 7px;
+  border-radius: 10px;
+}
+.outcome-yes { background: rgba(63,185,80,.15); color: #3fb950; border: 1px solid rgba(63,185,80,.3); }
+.outcome-no  { background: rgba(248,81,73,.15);  color: #f85149; border: 1px solid rgba(248,81,73,.3); }
+.trade-size  { font-size: 12px; font-weight: 800; color: #e6edf3; }
+
+.empty-state {
+  text-align: center; padding: 36px 20px; color: #8b949e;
+}
+.empty-state .spinner {
+  width: 24px; height: 24px; border: 2px solid #30363d;
+  border-top-color: #58a6ff; border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Whales panel ────────────────────────────────────────── */
+.whale-list { padding: 8px 0; max-height: 320px; overflow-y: auto; }
+.whale-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid #21262d;
+  text-decoration: none;
+  transition: background .12s;
+}
+.whale-row:hover { background: #161b22; }
+.whale-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.whale-info { flex: 1; min-width: 0; }
+.whale-name { font-size: 13px; font-weight: 700; color: #e6edf3; margin-bottom: 1px; }
+.whale-spec { font-size: 11px; color: #8b949e; }
+.whale-link { font-size: 11px; font-weight: 600; color: #58a6ff; white-space: nowrap; }
+
+/* ── Footer ──────────────────────────────────────────────── */
+.footer {
+  background: #161b22;
+  border-top: 1px solid #30363d;
+  padding: 10px 12px;
+  display: flex; gap: 8px;
+}
+.footer-btn {
+  flex: 1; padding: 8px 0;
+  border-radius: 8px; border: none;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;
+  transition: opacity .15s;
+}
+.footer-btn:hover { opacity: .85; }
+.btn-primary { background: #21262d; color: #58a6ff; border: 1px solid #30363d; }
+.btn-green   { background: #3fb950; color: #fff; }
+
+/* ── Last updated ────────────────────────────────────────── */
+.last-updated { text-align: center; padding: 6px; font-size: 10px; color: #484f58; }
