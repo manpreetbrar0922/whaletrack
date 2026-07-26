@@ -55,6 +55,20 @@ const KNOWN_NAMES = {
   '0x50f0a0fc7364d3c10fc4578b9b1d955368335355': 'bettguy',
 };
 
+// ── WHALE PROFILE SLUGS (for rich OG card links) ────────────────────
+const WHALE_SLUGS = {
+  '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': 'somalianking',
+  '0x09b428f7c2b469786286214aa5c90dd9015f7320': 'deeddit',
+  '0x50f0a0fc7364d3c10fc4578b9b1d955368335355': 'bettguy',
+  '0x7c1ee865a785de4c00ee90ed86a38489fb8bbab3': 'candlehammerdrums',
+  '0x640de3430e9a05e1b1fe04b42d651da1abe99a4c': 'coldsway',
+};
+
+function whaleProfileUrl(address) {
+  const slug = WHALE_SLUGS[(address || '').toLowerCase()];
+  return slug ? `https://whaletrack.app/whale/${slug}` : 'https://whaletrack.app';
+}
+
 // ── PERSISTENCE ──────────────────────────────────────────────────────
 let seenTrades = new Set();
 
@@ -287,10 +301,11 @@ function buildTweet(t, obContext) {
     ? cleanTitle.slice(0, maxTitle - 1) + '…'
     : cleanTitle;
 
-  // Tag @Polymarket on big trades only ($50K+) to avoid looking spammy
+  // Use whale profile URL for rich OG card, fallback to homepage
+  const profileUrl = whaleProfileUrl(t.proxyWallet || '');
   const tags = t.usdcSize >= 50000
-    ? `📋 Copy this bet → whaletrack.app | @Polymarket #Polymarket #PredictionMarkets`
-    : `📋 Copy this bet → whaletrack.app | #Polymarket #PredictionMarkets`;
+    ? `📋 Copy this bet → ${profileUrl} | @Polymarket #Polymarket #PredictionMarkets`
+    : `📋 Copy this bet → ${profileUrl} | #Polymarket #PredictionMarkets`;
 
   // Show whale's total profit if available
   const addrKey = (t.proxyWallet || '').toLowerCase();
@@ -333,7 +348,7 @@ function buildWinTweet(t) {
     ``,
     `Think they'll bet big again? 👇`,
     ``,
-    `📋 Copy their next bet → whaletrack.app | #Polymarket #PredictionMarkets`,
+    `📋 Copy their next bet → ${whaleProfileUrl(t.proxyWallet || '')} | #Polymarket #PredictionMarkets`,
   ].join('\n');
 }
 
