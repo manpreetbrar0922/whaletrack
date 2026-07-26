@@ -7,6 +7,7 @@
     { "source": "/crypto",                 "destination": "/crypto.html"                 },
     { "source": "/sports",                 "destination": "/sports.html"                 },
     { "source": "/politics",               "destination": "/politics.html"               },
+    { "source": "/premium",                "destination": "/premium.html"                },
     { "source": "/premium-success",        "destination": "/premium-success.html"        },
     { "source": "/champions-league",       "destination": "/champions-league.html"       },
     { "source": "/whale/somalianking",     "destination": "/whale-somalianking.html"     },

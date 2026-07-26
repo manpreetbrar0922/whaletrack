@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhaleTrack Premium — Real-Time Polymarket Whale Alerts</title>
+  <meta name="description" content="Get Telegram alerts within 2 minutes when top Polymarket whales place bets. Know before the odds move. $9/month, cancel anytime.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://whaletrack.app/premium">
+  <link rel="icon" href="https://whaletrack.app/og-image.png" type="image/png">
+
+  <!-- OG -->
+  <meta property="og:title" content="WhaleTrack Premium — Whale Alerts Before Odds Move">
+  <meta property="og:description" content="Get Telegram alerts within 2 minutes when top Polymarket whales bet big. $9/month.">
+  <meta property="og:url" content="https://whaletrack.app/premium">
+  <meta property="og:type" content="website">
+
+  <!-- GA4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px 60px;
+    }
+
+    /* NAV */
+    .nav {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 0;
+      margin-bottom: 16px;
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 800;
+      color: #e6edf3;
+      text-decoration: none;
+    }
+    .nav-logo span { color: #2563eb; }
+    .nav-back {
+      font-size: 13px;
+      color: #8b949e;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: #e6edf3; }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      max-width: 480px;
+      margin-bottom: 32px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(37,99,235,0.15);
+      border: 1px solid rgba(37,99,235,0.35);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #93c5fd;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+    }
+    .hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 14px;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 16px;
+      color: #8b949e;
+      line-height: 1.6;
+    }
+
+    /* CARD */
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      padding: 32px 28px;
+      max-width: 460px;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+
+    /* PRICE */
+    .price-block {
+      text-align: center;
+      padding: 24px 0 28px;
+      border-bottom: 1px solid #21262d;
+      margin-bottom: 28px;
+    }
+    .price-amount {
+      font-size: 52px;
+      font-weight: 900;
+      color: #e6edf3;
+      line-height: 1;
+    }
+    .price-amount sup {
+      font-size: 22px;
+      vertical-align: top;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    .price-period {
+      font-size: 16px;
+      color: #8b949e;
+      margin-top: 6px;
+    }
+    .price-note {
+      font-size: 12px;
+      color: #3fb950;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    /* FEATURES */
+    .features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: #c9d1d9;
+      line-height: 1.5;
+    }
+    .feat-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .feat-icon.blue  { background: rgba(37,99,235,0.15); }
+    .feat-icon.green { background: rgba(63,185,80,0.15); }
+    .feat-icon.purple{ background: rgba(168,85,247,0.15); }
+    .feat-icon.orange{ background: rgba(247,147,26,0.15); }
+    .feat-title { font-weight: 700; color: #e6edf3; display: block; }
+    .feat-desc  { color: #8b949e; font-size: 13px; }
+
+    /* CTA */
+    .cta-btn {
+      display: block;
+      width: 100%;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.3px;
+    }
+    .cta-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .cta-btn:active { transform: translateY(0); }
+
+    .cta-sub {
+      text-align: center;
+      font-size: 12px;
+      color: #6e7681;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+    .cta-sub a { color: #8b949e; text-decoration: underline; }
+
+    /* SOCIAL PROOF */
+    .proof {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+    }
+    .proof-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6e7681;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .proof-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .proof-item:last-child { margin-bottom: 0; }
+    .proof-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #21262d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .proof-text { font-size: 13px; color: #c9d1d9; line-height: 1.4; }
+    .proof-text strong { color: #e6edf3; }
+    .proof-time { font-size: 11px; color: #6e7681; margin-top: 2px; }
+
+    /* ALERT EXAMPLE */
+    .alert-example {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+    }
+    .alert-example-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6e7681;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+    .tg-msg {
+      background: #161b22;
+      border-radius: 12px;
+      padding: 14px 16px;
+      border-left: 3px solid #2563eb;
+    }
+    .tg-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .tg-icon {
+      width: 32px;
+      height: 32px;
+      background: #2563eb;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .tg-from { font-size: 13px; font-weight: 700; color: #93c5fd; }
+    .tg-time { font-size: 11px; color: #6e7681; }
+    .tg-body { font-size: 13px; color: #c9d1d9; line-height: 1.6; }
+    .tg-body strong { color: #e6edf3; }
+    .tg-body .green { color: #3fb950; font-weight: 700; }
+    .tg-body .blue  { color: #58a6ff; font-weight: 700; }
+
+    /* FAQ */
+    .faq { max-width: 460px; width: 100%; }
+    .faq-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #e6edf3;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .faq-item {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+    }
+    .faq-q { font-size: 14px; font-weight: 700; color: #e6edf3; margin-bottom: 6px; }
+    .faq-a { font-size: 13px; color: #8b949e; line-height: 1.5; }
+    .faq-a a { color: #58a6ff; text-decoration: none; }
+
+    /* FOOTER */
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: #6e7681;
+    }
+    .footer a { color: #6e7681; text-decoration: none; }
+    .footer a:hover { color: #8b949e; }
+
+    /* PULSE ANIMATION */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .live-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: #3fb950;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="/" class="nav-logo">Whale<span>Track</span></a>
+    <a href="/" class="nav-back">← Back to tracker</a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge"><span class="live-dot"></span> &nbsp;LIVE ALERTS ACTIVE</div>
+    <h1>Know <em>before</em><br>the odds move</h1>
+    <p>Get Telegram alerts within 2 minutes when top Polymarket whales place big bets — before the market reacts.</p>
+  </div>
+
+  <!-- MAIN CARD -->
+  <div class="card">
+
+    <!-- PRICE -->
+    <div class="price-block">
+      <div class="price-amount"><sup>$</sup>9</div>
+      <div class="price-period">per month</div>
+      <div class="price-note">✓ Cancel anytime · No contract</div>
+    </div>
+
+    <!-- ALERT EXAMPLE -->
+    <div class="alert-example">
+      <div class="alert-example-label">📱 Example alert you'll receive</div>
+      <div class="tg-msg">
+        <div class="tg-header">
+          <div class="tg-icon">🐋</div>
+          <div>
+            <div class="tg-from">WhaleTrack Alert</div>
+            <div class="tg-time">Just now</div>
+          </div>
+        </div>
+        <div class="tg-body">
+          🚨 <strong>somalianKing</strong> just placed a big bet<br>
+          📌 <strong>Will Trump win in 2026?</strong><br>
+          🎯 Outcome: <span class="green">YES</span> @ <span class="blue">0.62</span><br>
+          💰 Amount: <strong>$24,500</strong><br>
+          ⏱ <em>2 min ago — odds now 0.65</em>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <ul class="features">
+      <li>
+        <div class="feat-icon blue">⚡</div>
+        <div>
+          <span class="feat-title">Real-time Telegram alerts</span>
+          <span class="feat-desc">Notified within 2 minutes of every whale bet ≥$5K. While others are still refreshing the feed, you already know.</span>
+        </div>
+      </li>
+      <li>
+        <div class="feat-icon green">👑</div>
+        <div>
+          <span class="feat-title">5 top whales tracked</span>
+          <span class="feat-desc">somalianKing, DEEDDIT, bettguy, CandleHammerDrums & coldsway — Polymarket's most profitable public wallets.</span>
+        </div>
+      </li>
+      <li>
+        <div class="feat-icon purple">📊</div>
+        <div>
+          <span class="feat-title">Market + outcome + amount</span>
+          <span class="feat-desc">Every alert includes exactly what they bet, which outcome, and how much — so you can decide in seconds.</span>
+        </div>
+      </li>
+      <li>
+        <div class="feat-icon orange">🎯</div>
+        <div>
+          <span class="feat-title">Before odds shift</span>
+          <span class="feat-desc">somalianKing's last big bet moved odds by 4%. You want to be in before that move, not after.</span>
+        </div>
+      </li>
+    </ul>
+
+    <!-- SOCIAL PROOF -->
+    <div class="proof">
+      <div class="proof-label">🗣 What members say</div>
+      <div class="proof-item">
+        <div class="proof-avatar">H</div>
+        <div>
+          <div class="proof-text"><strong>@hoyt</strong> — "Caught somalianKing's YES on the rate cut market. Was in at 0.58, market moved to 0.71."</div>
+          <div class="proof-time">Verified member · Jul 2026</div>
+        </div>
+      </div>
+      <div class="proof-item">
+        <div class="proof-avatar">A</div>
+        <div>
+          <div class="proof-text"><strong>Anonymous</strong> — "Worth every cent. I check the Telegram before I even open Polymarket now."</div>
+          <div class="proof-time">Member since Jun 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <a
+      href="https://buy.stripe.com/14A5kDd4Nfod4734NjfUQ00"
+      target="_blank"
+      class="cta-btn"
+      onclick="gtag('event','premium_click',{'page':'premium-landing'})"
+    >
+      ⚡ Get Premium — $9/mo
+    </a>
+    <p class="cta-sub">
+      Powered by Stripe · Secure checkout<br>
+      After payment, you'll receive a Telegram invite link · <a href="/">Back to free tracker</a>
+    </p>
+
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq">
+    <div class="faq-title">Common questions</div>
+
+    <div class="faq-item">
+      <div class="faq-q">How do I receive alerts?</div>
+      <div class="faq-a">After payment, you'll get a Telegram invite link. Join the channel and you'll start receiving real-time whale alerts immediately. No app installs beyond Telegram.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">How fast are the alerts?</div>
+      <div class="faq-a">Typically within 2 minutes of the whale placing their bet on Polymarket. Odds often start shifting 5–10 minutes after a big bet, so you have a window to act.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Which whales are tracked?</div>
+      <div class="faq-a">We track 5 of Polymarket's top public wallets: <a href="/whale/somalianking">somalianKing</a>, <a href="/whale/deeddit">DEEDDIT</a>, <a href="/whale/bettguy">bettguy</a>, <a href="/whale/candlehammerdrums">CandleHammerDrums</a>, and <a href="/whale/coldsway">coldsway</a>. Combined they've placed millions in bets.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can I cancel anytime?</div>
+      <div class="faq-a">Yes — cancel through Stripe at any time, no questions asked. Your access continues until the end of the billing period.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Is this financial advice?</div>
+      <div class="faq-a">No. WhaleTrack provides on-chain data and information only. Prediction market trading involves risk. Never bet more than you can afford to lose.</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p><a href="/">WhaleTrack</a> · <a href="/polymarket-leaderboard">Leaderboard</a> · <a href="/polymarket-copy-trading">Copy Trading Guide</a></p>
+    <p style="margin-top:8px;">© 2026 WhaleTrack · Not affiliated with Polymarket</p>
+  </div>
+
+</body>
+</html>
