@@ -142,6 +142,7 @@
       .hero { flex-direction:column; text-align:center; }
       h1 { font-size:22px; }
     }
+    .cat-section{margin:32px 0}.cat-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}.cat-icon{font-size:16px;width:24px;text-align:center;flex-shrink:0}.cat-label{font-size:13px;font-weight:600;color:#c9d1d9;width:64px;flex-shrink:0}.cat-bar-wrap{flex:1;background:#21262d;border-radius:4px;height:8px;overflow:hidden}.cat-bar{height:8px;border-radius:4px;width:0;transition:width .9s ease}.cat-winrate{font-size:13px;font-weight:700;width:40px;text-align:right;flex-shrink:0}.cat-stats{font-size:11px;color:#8b949e;width:55px;text-align:right;flex-shrink:0}.cat-section h2{font-size:20px;font-weight:700;margin:0 0 16px;padding-top:32px;border-top:1px solid #21262d}
   </style>
 </head>
 <body>
@@ -213,6 +214,8 @@
   <div class="trades-list" id="trades-list">
     <div class="trade-card" style="text-align:center; color:#8b949e;">Loading live trades...</div>
   </div>
+
+  <div id="cat-breakdown" class="cat-section"></div>
 
   <div class="cta-box">
     <h3>🐋 Copy somalianKing's Next Bet</h3>
@@ -323,8 +326,12 @@ async function loadTrades() {
   }
 }
 
+const CAT_CFG={politics:{label:'Politics',icon:'🏛️',color:'#58a6ff'},crypto:{label:'Crypto',icon:'🪙',color:'#F7931A'},sports:{label:'Sports',icon:'🏈',color:'#3fb950'},tech:{label:'Tech',icon:'💻',color:'#a855f7'},other:{label:'Other',icon:'❓',color:'#8b949e'}};
+function detectCat(t){t=(t||'').toLowerCase();if(/bitcoin|btc|eth|ethereum|crypto|solana|\bsol\b|doge|xrp|\bcoin\b|token|defi|binance/.test(t))return'crypto';if(/trump|biden|harris|election|president|senate|democrat|republican|congress|\bvote\b|political|tariff/.test(t))return'politics';if(/\bnba\b|\bnfl\b|\bnhl\b|\bmlb\b|ufc|mma|\bfight\b|soccer|football|basketball|sport|champion|world.cup|super.bowl|playoffs|tennis|golf|\bf1\b|formula/.test(t))return'sports';if(/\bai\b|gpt|openai|microsoft|apple|google|tesla|elon|musk|spacex|tech/.test(t))return'tech';return'other';}
+async function loadCategoryBreakdown(){const el=document.getElementById('cat-breakdown');if(!el)return;try{const r=await fetch(`https://data-api.polymarket.com/activity?user=${ADDR}&limit=200`);const trades=await r.json();if(!Array.isArray(trades)||!trades.length)return;const mkts={};for(const t of trades){const k=(t.title||'?').slice(0,120);if(!mkts[k])mkts[k]={cat:detectCat(k),buys:[],sells:[]};if(t.side==='BUY')mkts[k].buys.push(parseFloat(t.price)||0);if(t.side==='SELL')mkts[k].sells.push(parseFloat(t.price)||0);}const cats={};for(const[k,m]of Object.entries(mkts)){const c=m.cat;if(!cats[c])cats[c]={w:0,l:0};if(!m.buys.length)continue;const ab=m.buys.reduce((a,b)=>a+b,0)/m.buys.length;if(m.sells.length){const as2=m.sells.reduce((a,b)=>a+b,0)/m.sells.length;if(as2>ab+0.05||as2>=0.95)cats[c].w++;else cats[c].l++;}else{if(Math.max(...m.buys)>=0.95)cats[c].w++;}}const rows=Object.entries(CAT_CFG).filter(([k])=>cats[k]&&(cats[k].w+cats[k].l>0)).map(([k,cfg])=>{const{w,l}=cats[k];const tot=w+l;const pct=tot?Math.round(w/tot*100):0;const col=pct>=60?'#3fb950':pct>=45?'#F7931A':'#f85149';return`<div class="cat-row"><span class="cat-icon">${cfg.icon}</span><span class="cat-label">${cfg.label}</span><div class="cat-bar-wrap"><div class="cat-bar" style="width:${pct}%;background:${cfg.color}"></div></div><span class="cat-winrate" style="color:${col}">${pct}%</span><span class="cat-stats">${w}W ${l}L</span></div>`;}).join('');if(rows)el.innerHTML=`<h2>Performance by Category</h2>${rows}`;}catch(e){}}
 loadStats();
 loadTrades();
+loadCategoryBreakdown();
 </script>
 
 </body>
