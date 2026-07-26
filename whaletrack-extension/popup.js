@@ -54,10 +54,8 @@ function renderFeed(trades, lastFetch) {
       const outcomeClass = outcome === 'yes' ? 'outcome-yes' : 'outcome-no';
       const outcomeLabel = outcome === 'yes' ? '🟢 YES' : '🔴 NO';
       const slug = WHALE_SLUGS[t.whale] || '';
-      const profileUrl = slug ? `https://whaletrack.app/whale/${slug}` : 'https://whaletrack.app';
-      const pmUrl = t.slug
-        ? `https://polymarket.com/event/${t.slug}`
-        : `https://polymarket.com`;
+      // Link to whale profile — avoids 404s on resolved/archived Polymarket market pages
+      const pmUrl = slug ? `https://whaletrack.app/whale/${slug}` : 'https://whaletrack.app';
 
       return `<a href="${pmUrl}" target="_blank" class="trade-item${isNew ? ' new' : ''}">
         <div class="trade-top">

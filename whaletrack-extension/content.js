@@ -82,9 +82,9 @@
       const outcome = (t.outcome || '').toLowerCase();
       const cls = outcome === 'yes' ? 'wt-yes' : 'wt-no';
       const label = outcome === 'yes' ? '🟢 YES' : '🔴 NO';
-      const pmUrl = t.slug
-        ? `https://polymarket.com/event/${t.slug}`
-        : 'https://polymarket.com';
+      const SLUGS = { somalianKing:'somalianking', DEEDDIT:'deeddit', bettguy:'bettguy', CandleHammerDrums:'candlehammerdrums', coldsway:'coldsway' };
+      const wSlug = SLUGS[t.whale] || '';
+      const pmUrl = wSlug ? `https://whaletrack.app/whale/${wSlug}` : 'https://whaletrack.app';
 
       return `<a href="${pmUrl}" target="_blank" class="wt-trade">
         <div class="wt-trade-top">
