@@ -958,15 +958,23 @@
     var body = _errors.slice(0, 5).map(function(e) {
       return e.msg + '\n  at ' + e.src + ':' + e.line + '\n  ' + new Date(e.ts).toISOString();
     }).join('\n\n');
+    var payload = {
+      message: body,
+      page: location.pathname,
+      url: location.href,
+      userAgent: navigator.userAgent.slice(0, 120)
+    };
+    // Primary: instant Telegram alert via our own API
+    fetch('/api/report-error', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(function(){});
+    // Fallback: Formspree email
     fetch('https://formspree.io/f/mnjykrka', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        _subject: '🚨 WhaleTrack JS Error on ' + location.hostname,
-        message: body,
-        url: location.href,
-        userAgent: navigator.userAgent.slice(0, 120)
-      })
+      body: JSON.stringify(Object.assign({ _subject: '🚨 WhaleTrack JS Error on ' + location.hostname }, payload))
     }).catch(function(){});
   }
 
