@@ -994,6 +994,7 @@ async function generateCard(options) {
   const browser = await puppeteer.launch({
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    protocolTimeout: 60000,
   });
   try {
     const page = await browser.newPage();

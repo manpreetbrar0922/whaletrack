@@ -156,6 +156,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: force cache refresh (called by auto_fix.sh)
+  if (url === '/api/refresh') {
+    cache.lastFetch = 0; // expire cache
+    refreshCache();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, markets: cache.markets.length, whales: cache.whales.length, ts: Date.now() }));
+    return;
+  }
+
+  // API: health check (called by auto_fix.sh)
+  if (url === '/api/health') {
+    const age = Math.round((Date.now() - cache.lastFetch) / 1000);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, cache_age_s: age, markets: (cache.markets||[]).length, whales: (cache.whales||[]).length }));
+    return;
+  }
+
   // Serve static files
   let filePath = path.join(__dirname, url === '/' ? 'index.html' : url);
   if (!fs.existsSync(filePath)) {

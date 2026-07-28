@@ -24,13 +24,122 @@ if (!API_KEY || !API_SECRET || !ACCESS_TOKEN || !ACCESS_TOKEN_SECRET) {
   process.exit(1);
 }
 
-const TWEET_MIN      = parseInt(process.env.TWEET_MIN     || '15000');   // $15K
-const POLL_INTERVAL  = parseInt(process.env.POLL_INTERVAL || '300000');  // 5 min
-const DAILY_LIMIT    = parseInt(process.env.DAILY_LIMIT   || '50');      // max tweets/day (pay-per-use)
-const COOLDOWN_MS    = 25 * 60 * 1000;                                   // 25 min between tweets
-const SEEN_FILE      = process.env.SEEN_FILE || path.join(__dirname, 'twitter_seen_trades.json');
-const COUNTER_FILE   = path.join(__dirname, 'twitter_daily_count.json');
-const LAST_TWEET_FILE = path.join(__dirname, 'twitter_last_tweet.json');
+const TWEET_MIN           = parseInt(process.env.TWEET_MIN        || '15000');  // $15K
+const POLL_INTERVAL       = parseInt(process.env.POLL_INTERVAL     || '60000');  // 60s continuous
+const DAILY_LIMIT         = parseInt(process.env.DAILY_LIMIT       || '50');     // max tweets/day
+const COOLDOWN_MS         = 25 * 60 * 1000;                                      // 25 min between tweets
+const SPORTS_COOLDOWN_MS  =  3 * 60 * 1000;                                      // 3 min for sports (fast markets)
+const TELEGRAM_DELAY_MS   = parseInt(process.env.TELEGRAM_DELAY_MS || '600000'); // 10 min Telegram → Twitter gap
+const SEEN_FILE           = process.env.SEEN_FILE || path.join(__dirname, 'twitter_seen_trades.json');
+const COUNTER_FILE        = path.join(__dirname, 'twitter_daily_count.json');
+const LAST_TWEET_FILE     = path.join(__dirname, 'twitter_last_tweet.json');
+
+// ── TELEGRAM CONFIG ──────────────────────────────────────────────────
+const BOT_TOKEN          = process.env.BOT_TOKEN          || '';
+const PREMIUM_CHANNEL_ID = process.env.PREMIUM_CHANNEL_ID || '';
+const ADMIN_CHAT_ID      = process.env.ADMIN_CHAT_ID      || '';
+
+// ── WEBHOOK CUSTOMERS ────────────────────────────────────────────────
+// Each customer: { name, url, minSize, markets: ['crypto'|'sports'|'all'] }
+// Add new B2B customers here — or load from WEBHOOK_CUSTOMERS_FILE
+const WEBHOOK_CUSTOMERS_FILE = path.join(__dirname, 'webhook_customers.json');
+function loadWebhookCustomers() {
+  try {
+    if (fs.existsSync(WEBHOOK_CUSTOMERS_FILE)) {
+      return JSON.parse(fs.readFileSync(WEBHOOK_CUSTOMERS_FILE, 'utf8'));
+    }
+  } catch (e) {}
+  return [];
+}
+
+const CRYPTO_TERMS = ['bitcoin','btc','ethereum','eth','solana','sol','xrp','ripple',
+  'dogecoin','doge','bnb','binance','hype','hyperliquid','crypto','blockchain',
+  'defi','altcoin','cardano','ada','avalanche','avax','polkadot','dot',
+  'chainlink','link','uniswap','aave','sui','aptos','ton','pepe','shib'];
+
+function isCryptoMarket(title) {
+  const t = (title || '').toLowerCase();
+  return CRYPTO_TERMS.some(k => t.includes(k));
+}
+
+function matchesCustomerFilter(t, customer) {
+  const markets = customer.markets || ['all'];
+  if (markets.includes('all')) return true;
+  if (markets.includes('crypto') && isCryptoMarket(t.title)) return true;
+  if (markets.includes('sports') && isSportsTrade(t.title)) return true;
+  return false;
+}
+
+function postWebhook(customer, payload) {
+  if (!customer.url) return Promise.resolve();
+  return new Promise((resolve) => {
+    try {
+      const body   = JSON.stringify(payload);
+      const urlObj = new URL(customer.url);
+      const opts   = {
+        hostname: urlObj.hostname,
+        port:     urlObj.port || (urlObj.protocol === 'https:' ? 443 : 80),
+        path:     urlObj.pathname + urlObj.search,
+        method:   'POST',
+        headers:  {
+          'Content-Type':   'application/json',
+          'Content-Length': Buffer.byteLength(body),
+          'X-WhaleTrack-Key': customer.apiKey || '',
+        },
+      };
+      const mod = urlObj.protocol === 'https:' ? https : require('http');
+      const req = mod.request(opts, (res) => {
+        let d = '';
+        res.on('data', c => d += c);
+        res.on('end', () => {
+          console.log(`  🔗 Webhook → ${customer.name} [${res.statusCode}]`);
+          resolve();
+        });
+      });
+      req.setTimeout(10000, () => { req.destroy(); resolve(); });
+      req.on('error', (e) => {
+        console.log(`  ⚠️ Webhook → ${customer.name} failed: ${e.message}`);
+        resolve();
+      });
+      req.write(body);
+      req.end();
+    } catch (e) {
+      console.log(`  ⚠️ Webhook → ${customer.name} error: ${e.message}`);
+      resolve();
+    }
+  });
+}
+
+async function fireWebhooks(trades) {
+  const customers = loadWebhookCustomers();
+  if (!customers.length) return;
+
+  for (const t of trades) {
+    const webhookKey = `webhook-${t.key}`;
+    if (seenTrades.has(webhookKey)) continue;
+    seenTrades.add(webhookKey);
+
+    const payload = {
+      event:     'whale_bet',
+      whale:     t.whaleName,
+      market:    t.title,
+      outcome:   t.outcome,
+      size_usd:  Math.round(t.usdcSize),
+      price:     parseFloat(t.price.toFixed(4)),
+      price_pct: Math.round(t.price * 100),
+      timestamp: t.timestamp,
+      slug:      t.slug || null,
+      source:    'whaletrack.app',
+    };
+
+    for (const customer of customers) {
+      const minSize = customer.minSize || 10000;
+      if (t.usdcSize < minSize) continue;
+      if (!matchesCustomerFilter(t, customer)) continue;
+      postWebhook(customer, payload).catch(() => {});
+    }
+  }
+}
 
 // ── KNOWN WHALE NAMES ────────────────────────────────────────────────
 const KNOWN_NAMES = {
@@ -124,11 +233,21 @@ function saveLastTweetTime() {
   try { fs.writeFileSync(LAST_TWEET_FILE, JSON.stringify({ ts: Date.now() })); } catch (e) {}
 }
 
-function canTweetNow() {
-  const elapsed = Date.now() - getLastTweetTime();
-  if (elapsed < COOLDOWN_MS) {
-    const waitMin = Math.ceil((COOLDOWN_MS - elapsed) / 60000);
-    console.log(`  ⏳ Cooldown active — next tweet in ~${waitMin}min`);
+function isSportsTrade(title) {
+  const t = (title || '').toLowerCase();
+  return ['ufc', 'mma', 'boxing', 'nba', 'nfl', 'nhl', 'mlb', 'tennis', 'soccer',
+    'football', 'cricket', 'golf', 'wimbledon', 'f1', 'grand prix', 'formula 1',
+    'super bowl', 'world cup', 'champions league', 'premier league', 'match',
+    'game', 'championship', 'open', 'tournament', 'series'].some(k => t.includes(k));
+}
+
+function canTweetNow(title = '') {
+  const elapsed  = Date.now() - getLastTweetTime();
+  const sports   = isSportsTrade(title);
+  const cooldown = sports ? SPORTS_COOLDOWN_MS : COOLDOWN_MS;
+  if (elapsed < cooldown) {
+    const waitMin = Math.ceil((cooldown - elapsed) / 60000);
+    console.log(`  ⏳ Cooldown active — next tweet in ~${waitMin}min${sports ? ' (sports priority)' : ''}`);
     return false;
   }
   return true;
@@ -145,6 +264,79 @@ function fetchJson(url, timeoutMs = 30000) {
     req.on('error', reject);
     req.setTimeout(timeoutMs, () => { req.destroy(); reject(new Error('timeout')); });
   });
+}
+
+// ── TELEGRAM SENDER ──────────────────────────────────────────────────
+function sendTelegram(chatId, text) {
+  if (!BOT_TOKEN || !chatId) return Promise.resolve();
+  return new Promise((resolve) => {
+    const body = JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true });
+    const req = https.request({
+      hostname: 'api.telegram.org',
+      path:     `/bot${BOT_TOKEN}/sendMessage`,
+      method:   'POST',
+      headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+    }, (res) => { let d = ''; res.on('data', c => d += c); res.on('end', () => resolve()); });
+    req.on('error', () => resolve()); // never block a tweet on Telegram failure
+    req.write(body);
+    req.end();
+  });
+}
+
+function buildTelegramAlert(t, type = 'bet') {
+  const outcomeEmoji = t.outcome === 'Yes' ? '🟢' : t.outcome === 'No' ? '🔴' : '⚪';
+  const price        = Math.round((t.price || 0) * 100);
+  const addrKey      = (t.proxyWallet || '').toLowerCase();
+  const pnl          = whalePnl[addrKey];
+  const pnlStr       = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)})` : '';
+  const title        = (t.title || 'Unknown Market').slice(0, 80);
+
+  if (type === 'exit') {
+    return [
+      `🚨 <b>Whale Exit — ${t.whaleName}${pnlStr}</b>`,
+      ``,
+      `Just SOLD their position @ ${price}¢`,
+      ``,
+      `📊 <i>${title}</i>`,
+      ``,
+      `⚠️ If you copied this bet — watch your position.`,
+      `🐋 <a href="https://whaletrack.app">whaletrack.app</a>`,
+    ].join('\n');
+  }
+
+  if (type === 'win') {
+    return [
+      `✅ <b>Whale Win — ${t.whaleName}${pnlStr}</b>`,
+      ``,
+      `Just collected <b>${fmtUSD(t.usdcSize)}</b>`,
+      ``,
+      `📊 <i>${title}</i>`,
+      ``,
+      `🐋 <a href="https://whaletrack.app">Copy their next bet → whaletrack.app</a>`,
+    ].join('\n');
+  }
+
+  // default: bet
+  return [
+    `⚡ <b>Whale Alert — ${t.whaleName}${pnlStr}</b>`,
+    ``,
+    `${outcomeEmoji} <b>${t.outcome}</b> ${fmtUSD(t.usdcSize)} @ ${price}¢`,
+    ``,
+    `📊 <i>${title}</i>`,
+    ``,
+    `🐋 <a href="https://whaletrack.app">Copy this bet → whaletrack.app</a>`,
+    `⏱ <i>Twitter alert in 10 min — you're early 🐋</i>`,
+  ].join('\n');
+}
+
+async function sendTelegramAlerts(t, type = 'bet') {
+  if (!BOT_TOKEN) return;
+  const msg = buildTelegramAlert(t, type);
+  const sends = [];
+  if (PREMIUM_CHANNEL_ID) sends.push(sendTelegram(PREMIUM_CHANNEL_ID, msg));
+  if (ADMIN_CHAT_ID)      sends.push(sendTelegram(ADMIN_CHAT_ID, msg));
+  await Promise.allSettled(sends);
+  console.log(`  📱 Telegram sent → channel${ADMIN_CHAT_ID ? ' + admin' : ''}`);
 }
 
 // ── OAUTH 1.0a SIGNING ────────────────────────────────────────────────
@@ -261,6 +453,15 @@ function postTweet(text, mediaId = null) {
 
 // ── TWEET A BET (shared helper used in both BET and fallback paths) ──
 async function tweetBet(t, label = 'Bet') {
+  // 1. Telegram FIRST
+  await sendTelegramAlerts(t, 'bet');
+
+  // 2. Wait before going public on Twitter
+  if (TELEGRAM_DELAY_MS > 0) {
+    console.log(`  ⏳ Holding 10min for Telegram subscribers before Twitter...`);
+    await new Promise(r => setTimeout(r, TELEGRAM_DELAY_MS));
+  }
+
   const obContext = getOrderBookContext(t.slug, t.outcome, t.price);
   const text      = buildTweet(t, obContext);
 
@@ -288,6 +489,8 @@ async function tweetBet(t, label = 'Bet') {
 
 // ── TWEET A WIN ──────────────────────────────────────────────────────
 async function tweetWin(w) {
+  await sendTelegramAlerts(w, 'win');
+  if (TELEGRAM_DELAY_MS > 0) await new Promise(r => setTimeout(r, TELEGRAM_DELAY_MS));
   const text = buildWinTweet(w);
 
   // Win card — use WHALE category (no outcome/price for wins)
@@ -729,6 +932,10 @@ async function checkAndTweet() {
     }
 
     bigTrades.sort((a, b) => b.timestamp - a.timestamp);
+
+    // ── WEBHOOKS: fire immediately, no cooldown, before Twitter/Telegram ──
+    await fireWebhooks(bigTrades);
+
     // Deduplicate within this cycle by market key (same whale, same market)
     const seenThisCycle = new Set();
     const deduped = bigTrades.filter(t => {
@@ -744,9 +951,12 @@ async function checkAndTweet() {
     const cycleMap  = { bet: 'exit', exit: 'win', win: 'bet' };
     const thisCycle = cycleMap[lastCycle] || 'bet';
 
+    // Pick the top candidate title to check cooldown against (sports = shorter wait)
+    const topTitle = toTweet[0]?.title || bigExits[0]?.title || bigWins[0]?.title || '';
+
     if (!canTweetToday()) {
       console.log(`  ⚠️ Daily limit (${DAILY_LIMIT}) reached — skipping until tomorrow.`);
-    } else if (!canTweetNow()) {
+    } else if (!canTweetNow(topTitle)) {
       // cooldown message already logged inside canTweetNow()
     } else if (thisCycle === 'exit') {
       // EXIT cycle — tweet a whale sell/exit
@@ -754,6 +964,8 @@ async function checkAndTweet() {
       const ex = bigExits[0];
       if (ex) {
         try {
+          await sendTelegramAlerts(ex, 'exit');
+          if (TELEGRAM_DELAY_MS > 0) await new Promise(r => setTimeout(r, TELEGRAM_DELAY_MS));
           const text    = buildExitTweet(ex);
           const mediaId = await getCardMediaId({ title: ex.title, outcome: 'No', amount: fmtUSD(ex.usdcSize), price: ex.price, whaleName: ex.whaleName });
           console.log(`  → Exit Tweet${mediaId ? ' 🖼️' : ''}: ${ex.whaleName} exited ${fmtUSD(ex.usdcSize)} | ${text.length} chars`);
@@ -808,6 +1020,7 @@ async function checkAndTweet() {
   }
 }
 
-// ── START (one-shot, runs via cron every 5 min) ───────────────────────
+// ── START (continuous daemon — polls every 60s) ───────────────────────
 loadSeen();
 checkAndTweet();
+setInterval(checkAndTweet, POLL_INTERVAL);

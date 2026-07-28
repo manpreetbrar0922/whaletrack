@@ -127,7 +127,7 @@ async function fetchWhales() {
     const seen = new Set();
     const whales = [];
 
-    for (const t of lb.slice(0, 10)) {
+    for (const t of lb.slice(0, 15)) {
       const addr = (t.proxyWallet || '').toLowerCase();
       if (!addr || seen.has(addr)) continue;
       seen.add(addr);
@@ -313,7 +313,8 @@ async function refreshWhales() {
   }
 
   cachedWhales = whales;
-  await checkTradeAlerts();
+  // Trade alerts now handled by whale_alert_twitter.cjs daemon (Telegram + Twitter unified)
+  // checkTradeAlerts() disabled to prevent duplicate Telegram messages
   console.log(`[WhaleTrack] ${whales.length} whales | ${Object.keys(subs).length} free subs | ${premiumSubs.length} premium`);
 }
 

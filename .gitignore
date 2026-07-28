@@ -1,2 +1,11 @@
 .env
 node_modules/
+.vercel
+webhook_customers.json
+twitter_seen_trades.json
+twitter_daily_count.json
+twitter_last_tweet.json
+twitter_cycle.json
+tweet_queue.json
+*.log
+.DS_Store
