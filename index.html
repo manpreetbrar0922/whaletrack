@@ -1065,6 +1065,28 @@ function fmtUSD(n) {
 function truncate(str, n) { return str && str.length > n ? str.slice(0, n) + '…' : str; }
 function addrShort(addr) { return addr ? addr.slice(0,6) + '…' + addr.slice(-4) : ''; }
 
+// Whale profile page mapping
+const WHALE_PROFILES = {
+  'somalianking': '/whale-somalianking',
+  'somalianKing': '/whale-somalianking',
+  'bettguy':      '/whale-bettguy',
+  'candlehammerdrums': '/whale-candlehammerdrums',
+  'CandleHammerDrums': '/whale-candlehammerdrums',
+  'coldsway':     '/whale-coldsway',
+  'deeddit':      '/whale-deeddit',
+  'DEEDDIT':      '/whale-deeddit',
+};
+function whaleProfileUrl(name) {
+  if (!name) return null;
+  const key = Object.keys(WHALE_PROFILES).find(k => k.toLowerCase() === name.toLowerCase());
+  return key ? WHALE_PROFILES[key] : null;
+}
+function whaleLink(name, displayName, cssClass) {
+  const url = whaleProfileUrl(name);
+  if (url) return `<a href="${url}" class="${cssClass}" style="text-decoration:none" title="View ${name}'s profile">${displayName} 👤</a>`;
+  return `<span class="${cssClass}">${displayName}</span>`;
+}
+
 // ===== FETCH FROM POLYMARKET PUBLIC API =====
 async function fetchMarkets() {
   let res;
@@ -1193,7 +1215,7 @@ function renderLiveFeed(activity) {
           <div class="alert-whale-info">
             <span class="alert-emoji" style="animation-delay:${i*0.4}s">${emoji}</span>
             <div>
-              <div class="alert-whale-name">${displayName}</div>
+              ${whaleLink(whaleName, displayName, 'alert-whale-name')}
               <div class="alert-whale-rank">${timeAgo(t.timestamp)}</div>
             </div>
           </div>
@@ -1518,7 +1540,7 @@ function renderActivity(items) {
         <div class="feed-avatar">${initial}</div>
         <div class="feed-body">
           <div class="feed-top">
-            <span class="feed-whale">${t.whale}</span>
+            ${whaleLink(t.whale, t.whale, 'feed-whale')}
             <span class="feed-action">${sideEmoji} ${sideText}</span>
             <span class="feed-outcome ${outcomeClass}">${outcome}</span>
             <span class="feed-size">${usd}</span>
@@ -1585,7 +1607,7 @@ function renderWhales(whales) {
       <div class="whale-card" onclick="showPositions('${w.address}', '${safeName}')">
         <div class="whale-card-header">
           <div style="display:flex;align-items:center;gap:7px;min-width:0">
-            <span class="whale-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.name}</span>
+            ${whaleProfileUrl(w.name) ? `<a href="${whaleProfileUrl(w.name)}" class="whale-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none" onclick="event.stopPropagation()" title="View ${w.name}'s profile">${w.name} 👤</a>` : `<span class="whale-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.name}</span>`}
             <span title="${reliDesc}" style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;background:${reliBg};color:${reliColor};white-space:nowrap;flex-shrink:0;letter-spacing:0.5px">${reliGrade}</span>
           </div>
           <span class="whale-pnl ${pnlClass}">${pnlDisplay}</span>
