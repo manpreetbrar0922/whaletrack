@@ -453,6 +453,14 @@ function postTweet(text, mediaId = null) {
 
 // ── TWEET A BET (shared helper used in both BET and fallback paths) ──
 async function tweetBet(t, label = 'Bet') {
+  // ── Claim this slot immediately: mark seen + lock cooldown ──
+  // This prevents concurrent poll cycles from queuing another tweet during the 10-min hold.
+  const marketKey = `market-${t.key.split('-')[0]}-${t.slug || t.title || ''}`;
+  seenTrades.add(t.key);
+  seenTrades.add(marketKey);
+  saveSeen();
+  saveLastTweetTime(); // reserves the cooldown window right now
+
   // 1. Telegram FIRST
   await sendTelegramAlerts(t, 'bet');
 
@@ -479,16 +487,17 @@ async function tweetBet(t, label = 'Bet') {
   const tweetId  = result?.data?.id;
   const todayCount = incrementDailyCount();
   console.log(`  ✅ https://twitter.com/i/web/status/${tweetId} [${todayCount}/${DAILY_LIMIT} today]`);
-  seenTrades.add(t.key);
-  const marketKey = `market-${t.key.split('-')[0]}-${t.slug || t.title || ''}`;
-  seenTrades.add(marketKey);
-  saveSeen();
   saveLastCycleType('bet');
   saveLastTweetTime();
 }
 
 // ── TWEET A WIN ──────────────────────────────────────────────────────
 async function tweetWin(w) {
+  // Claim slot immediately — mark seen + lock cooldown
+  seenTrades.add(w.key);
+  saveSeen();
+  saveLastTweetTime();
+
   await sendTelegramAlerts(w, 'win');
   if (TELEGRAM_DELAY_MS > 0) await new Promise(r => setTimeout(r, TELEGRAM_DELAY_MS));
   const text = buildWinTweet(w);
@@ -507,8 +516,6 @@ async function tweetWin(w) {
   const tweetId  = result?.data?.id;
   const todayCount = incrementDailyCount();
   console.log(`  ✅ Win: https://twitter.com/i/web/status/${tweetId} [${todayCount}/${DAILY_LIMIT} today]`);
-  seenTrades.add(w.key);
-  saveSeen();
   saveLastCycleType('win');
   saveLastTweetTime();
 }
@@ -768,7 +775,8 @@ function buildTweet(t, obContext) {
   const extraTags  = buildHashtags(rawTitle);
   const baseTag    = t.usdcSize >= 50000 ? '@Polymarket #Polymarket' : '#Polymarket';
   const allTags    = [baseTag, '#PredictionMarkets', ...extraTags].join(' ');
-  const tags       = `📋 Copy this bet → whaletrack.app | ${allTags}`;
+  const pageUrl    = isSportsTrade(rawTitle) ? 'whaletrack.app/sports' : 'whaletrack.app';
+  const tags       = `📋 Copy this bet → ${pageUrl} | ${allTags}`;
 
   // Show whale's total profit if available
   const addrKey = (t.proxyWallet || '').toLowerCase();
@@ -816,7 +824,7 @@ function buildExitTweet(t) {
     ``,
     `⚠️ If you copied this bet — watch your position closely.`,
     ``,
-    `📋 Track next move → whaletrack.app | ${allTags}`,
+    `📋 Track next move → ${isSportsTrade(rawTitle) ? 'whaletrack.app/sports' : 'whaletrack.app'} | ${allTags}`,
   ].join('\n');
 }
 
@@ -837,7 +845,7 @@ function buildWinTweet(t) {
     ``,
     `Think they'll bet big again? 👇`,
     ``,
-    `📋 Copy their next bet → whaletrack.app | ${allTags}`,
+    `📋 Copy their next bet → ${isSportsTrade(rawTitle) ? 'whaletrack.app/sports' : 'whaletrack.app'} | ${allTags}`,
   ].join('\n');
 }
 
@@ -964,6 +972,10 @@ async function checkAndTweet() {
       const ex = bigExits[0];
       if (ex) {
         try {
+          // Claim slot immediately — mark seen + lock cooldown
+          seenTrades.add(ex.key);
+          saveSeen();
+          saveLastTweetTime();
           await sendTelegramAlerts(ex, 'exit');
           if (TELEGRAM_DELAY_MS > 0) await new Promise(r => setTimeout(r, TELEGRAM_DELAY_MS));
           const text    = buildExitTweet(ex);
@@ -973,8 +985,6 @@ async function checkAndTweet() {
           const tweetId = result?.data?.id;
           const todayCount = incrementDailyCount();
           console.log(`  ✅ Exit: https://twitter.com/i/web/status/${tweetId} [${todayCount}/${DAILY_LIMIT} today]`);
-          seenTrades.add(ex.key);
-          saveSeen();
           saveLastCycleType('exit');
           saveLastTweetTime();
         } catch (e) { console.error(`  ❌ Exit tweet failed: ${e.message}`); }

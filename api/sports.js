@@ -43,7 +43,7 @@ export default async function handler(req, res) {
   const seen = new Set();
   const whales = [];
 
-  for (const t of leaderboard.slice(0, 10)) {
+  for (const t of leaderboard.slice(0, 15)) {
     const addr = (t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
