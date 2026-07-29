@@ -241,6 +241,29 @@ function isSportsTrade(title) {
     'game', 'championship', 'open', 'tournament', 'series'].some(k => t.includes(k));
 }
 
+function isPoliticsTrade(title) {
+  const t = (title || '').toLowerCase();
+  return ['election', 'president', 'senate', 'congress', 'republican', 'democrat',
+    'trump', 'biden', 'harris', 'vance', 'fed rate', 'rate cut', 'rate hike',
+    'federal reserve', 'fomc', 'supreme court', 'white house', 'nato', 'ukraine',
+    'tariff', 'sanctions', 'governor', 'prime minister', 'chancellor',
+    '2026 election', '2028 election'].some(k => t.includes(k));
+}
+
+function isCryptoTrade(title) {
+  const t = (title || '').toLowerCase();
+  if (['bitcoin', 'ethereum', 'solana', 'dogecoin', 'crypto', 'blockchain',
+    'coinbase', 'binance', 'altcoin', 'halving', 'hyperliquid'].some(k => t.includes(k))) return true;
+  return ['btc', 'eth', 'sol', 'xrp', 'bnb', 'doge'].some(k => new RegExp(`\\b${k}\\b`).test(t));
+}
+
+function getPageUrl(title) {
+  if (isSportsTrade(title))   return 'whaletrack.app/sports';
+  if (isPoliticsTrade(title)) return 'whaletrack.app/politics';
+  if (isCryptoTrade(title))   return 'whaletrack.app/crypto';
+  return 'whaletrack.app';
+}
+
 function canTweetNow(title = '') {
   const elapsed  = Date.now() - getLastTweetTime();
   const sports   = isSportsTrade(title);
@@ -775,8 +798,7 @@ function buildTweet(t, obContext) {
   const extraTags  = buildHashtags(rawTitle);
   const baseTag    = t.usdcSize >= 50000 ? '@Polymarket #Polymarket' : '#Polymarket';
   const allTags    = [baseTag, '#PredictionMarkets', ...extraTags].join(' ');
-  const pageUrl    = isSportsTrade(rawTitle) ? 'whaletrack.app/sports' : 'whaletrack.app';
-  const tags       = `📋 Copy this bet → ${pageUrl} | ${allTags}`;
+  const tags       = `📋 Copy this bet → ${getPageUrl(rawTitle)} | ${allTags}`;
 
   // Show whale's total profit if available
   const addrKey = (t.proxyWallet || '').toLowerCase();
@@ -824,7 +846,7 @@ function buildExitTweet(t) {
     ``,
     `⚠️ If you copied this bet — watch your position closely.`,
     ``,
-    `📋 Track next move → ${isSportsTrade(rawTitle) ? 'whaletrack.app/sports' : 'whaletrack.app'} | ${allTags}`,
+    `📋 Track next move → ${getPageUrl(rawTitle)} | ${allTags}`,
   ].join('\n');
 }
 
@@ -845,7 +867,7 @@ function buildWinTweet(t) {
     ``,
     `Think they'll bet big again? 👇`,
     ``,
-    `📋 Copy their next bet → ${isSportsTrade(rawTitle) ? 'whaletrack.app/sports' : 'whaletrack.app'} | ${allTags}`,
+    `📋 Copy their next bet → ${getPageUrl(rawTitle)} | ${allTags}`,
   ].join('\n');
 }
 
