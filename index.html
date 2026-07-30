@@ -1907,12 +1907,12 @@ async function loadAll() {
 
     // If no data came back at all, auto-retry in 30s
     if (!anyData) {
-      setTimeout(loadData, 30000);
+      setTimeout(loadAll, 30000);
     }
   } catch (e) {
-    console.error('loadData error:', e);
+    console.error('loadAll error:', e);
     document.getElementById('lastUpdated').textContent = '⚠️ Connection issue — retrying in 30s';
-    setTimeout(loadData, 30000);
+    setTimeout(loadAll, 30000);
   }
 
   btn.disabled = false;
