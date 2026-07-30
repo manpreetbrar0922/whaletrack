@@ -331,12 +331,13 @@
     .feed-market { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .feed-time { font-size: 11px; color: var(--text2); flex-shrink: 0; white-space: nowrap; }
     .copy-link {
-      font-size: 11px; font-weight: 700; color: var(--crypto);
-      text-decoration: none; padding: 3px 8px;
-      border: 1px solid var(--crypto); border-radius: 5px;
-      white-space: nowrap; opacity: 0.8; transition: opacity 0.2s; flex-shrink: 0;
+      font-size: 13px; font-weight: 700; color: #fff;
+      text-decoration: none; padding: 8px 16px;
+      background: linear-gradient(135deg, #f7931a, #e67e00);
+      border-radius: 10px; white-space: nowrap; flex-shrink: 0;
+      transition: all 0.2s; box-shadow: 0 2px 8px rgba(247,147,26,0.4);
     }
-    .copy-link:hover { opacity: 1; }
+    .copy-link:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(247,147,26,0.55); opacity:1; }
 
     /* LIVE DOT */
     .live-dot {
@@ -849,7 +850,7 @@ function renderActivity(items) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
           <div class="feed-time">${timeAgo(t.timestamp)}</div>
-          <a href="${marketUrl(t.slug)}" target="_blank" rel="noopener" class="copy-link">Copy Bet →</a>
+          <a href="${marketUrl(t.slug)}" target="_blank" rel="noopener" class="copy-link">🎯 Copy This Bet →</a>
         </div>
       </div>
     `;
