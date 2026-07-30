@@ -47,14 +47,16 @@ function verifyStripeSignature(rawBody, signature, secret) {
 }
 
 // Generate a single-use Telegram invite link (expires in 24h)
-async function createInviteLink(customerName) {
+// Encodes email in the link name so we can match it when they join
+async function createInviteLink(customerName, email) {
   const expireDate = Math.floor(Date.now() / 1000) + 86400; // 24 hours
+  const linkName   = `sub::${email}::${customerName || 'subscriber'}`.slice(0, 32); // Telegram max 32 chars
   const r = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createChatInviteLink`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       chat_id:      PREMIUM_CHANNEL_ID,
-      name:         `Premium — ${customerName || 'subscriber'}`,
+      name:         linkName,
       expire_date:  expireDate,
       member_limit: 1, // single use
     }),
@@ -62,6 +64,32 @@ async function createInviteLink(customerName) {
   const data = await r.json();
   if (!data.ok) throw new Error(`Telegram API error: ${data.description}`);
   return data.result.invite_link;
+}
+
+// Kick a user from the premium channel
+async function kickMember(telegramUserId) {
+  // Ban then immediately unban = kick without permanent block
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/banChatMember`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: PREMIUM_CHANNEL_ID, user_id: telegramUserId }),
+  });
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/unbanChatMember`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: PREMIUM_CHANNEL_ID, user_id: telegramUserId, only_if_banned: true }),
+  });
+}
+
+// Notify admin on cancellation
+async function notifyAdminCancellation(email, name, telegramUserId) {
+  const kicked = telegramUserId ? '✅ Auto-kicked from channel.' : '⚠️ Telegram ID unknown — kick manually.';
+  const msg = `🚫 <b>Subscription Cancelled</b>\n\n📧 ${email}\n👤 ${name || 'Unknown'}\n\n${kicked}`;
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: msg, parse_mode: 'HTML' }),
+  });
 }
 
 // Send invite link email via Resend
@@ -106,6 +134,31 @@ async function sendInviteEmail(email, inviteLink, customerName) {
   });
 }
 
+// ── SUBSCRIBER MAPPING (Vercel KV or fallback) ───────────────────────
+// Stores email → Telegram user ID so we can kick on cancellation
+const KV_BASE = process.env.KV_REST_API_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+
+async function saveTelegramUserId(email, userId) {
+  if (!KV_BASE || !KV_TOKEN) return; // no KV configured — admin kicks manually
+  try {
+    await fetch(`${KV_BASE}/set/tg:${encodeURIComponent(email)}/${userId}`, {
+      headers: { Authorization: `Bearer ${KV_TOKEN}` },
+    });
+  } catch {}
+}
+
+async function getTelegramUserId(email) {
+  if (!KV_BASE || !KV_TOKEN || !email) return null;
+  try {
+    const r    = await fetch(`${KV_BASE}/get/tg:${encodeURIComponent(email)}`, {
+      headers: { Authorization: `Bearer ${KV_TOKEN}` },
+    });
+    const data = await r.json();
+    return data.result || null;
+  } catch { return null; }
+}
+
 // Notify admin on Telegram
 async function notifyAdmin(email, inviteLink) {
   const msg = `✅ <b>New Premium Subscriber!</b>\n\n📧 ${email}\n🔗 ${inviteLink}\n\n💰 $9/mo — manual kick needed if they cancel`;
@@ -137,31 +190,58 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  // Only handle completed checkouts
-  if (event.type !== 'checkout.session.completed') {
-    return res.status(200).json({ received: true, skipped: event.type });
+  // ── NEW SUBSCRIPTION ──────────────────────────────────────────────
+  if (event.type === 'checkout.session.completed') {
+    const session      = event.data.object;
+    const email        = session.customer_details?.email || session.customer_email;
+    const customerName = session.customer_details?.name || '';
+
+    if (!email) {
+      console.error('[stripe-webhook] No email in session');
+      return res.status(200).json({ received: true, error: 'No email' });
+    }
+
+    try {
+      const inviteLink = await createInviteLink(customerName, email);
+      await Promise.all([
+        sendInviteEmail(email, inviteLink, customerName),
+        notifyAdmin(email, inviteLink),
+      ]);
+      console.log(`[stripe-webhook] Invite sent to ${email}`);
+      return res.status(200).json({ received: true, email });
+    } catch (err) {
+      console.error('[stripe-webhook] Error:', err.message);
+      return res.status(200).json({ received: true, error: err.message });
+    }
   }
 
-  const session      = event.data.object;
-  const email        = session.customer_details?.email || session.customer_email;
-  const customerName = session.customer_details?.name || '';
+  // ── CANCELLATION / PAYMENT FAILED ─────────────────────────────────
+  if (event.type === 'customer.subscription.deleted' || event.type === 'invoice.payment_failed') {
+    const obj          = event.data.object;
+    const customerId   = obj.customer;
 
-  if (!email) {
-    console.error('[stripe-webhook] No email in session');
-    return res.status(200).json({ received: true, error: 'No email' });
+    // Fetch customer email from Stripe
+    let email = '', name = '';
+    try {
+      const r    = await fetch(`https://api.stripe.com/v1/customers/${customerId}`, {
+        headers: { 'Authorization': `Bearer ${process.env.STRIPE_SECRET_KEY}` },
+      });
+      const cust = await r.json();
+      email = cust.email || '';
+      name  = cust.name  || '';
+    } catch {}
+
+    // Look up Telegram user ID from our mapping store
+    const telegramUserId = await getTelegramUserId(email);
+
+    if (telegramUserId) {
+      await kickMember(telegramUserId);
+      console.log(`[stripe-webhook] Kicked ${email} (tg: ${telegramUserId})`);
+    }
+
+    await notifyAdminCancellation(email, name, telegramUserId);
+    return res.status(200).json({ received: true, kicked: !!telegramUserId });
   }
 
-  try {
-    const inviteLink = await createInviteLink(customerName);
-    await Promise.all([
-      sendInviteEmail(email, inviteLink, customerName),
-      notifyAdmin(email, inviteLink),
-    ]);
-    console.log(`[stripe-webhook] Invite sent to ${email}`);
-    return res.status(200).json({ received: true, email });
-  } catch (err) {
-    console.error('[stripe-webhook] Error:', err.message);
-    // Still return 200 so Stripe doesn't retry — log the error
-    return res.status(200).json({ received: true, error: err.message });
-  }
+  return res.status(200).json({ received: true, skipped: event.type });
 }
