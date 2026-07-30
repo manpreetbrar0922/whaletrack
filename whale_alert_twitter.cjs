@@ -770,9 +770,12 @@ function getOrderBookContext(slug, outcome, whaleFillPrice) {
     const depthStr   = depth >= 1000 ? `$${Math.round(depth / 1000)}K` : `$${Math.round(depth)}`;
     const priceMoved = bestCents - fillCents; // positive = price went up since whale filled
 
-    if (priceMoved > 2) {
-      // Price moved against followers — warn them
+    if (priceMoved >= 1) {
+      // Price moved — show the market impact hook
       return `💧 ${depthStr} left @ ${bestCents}¢ (whale got ${fillCents}¢ — moved +${priceMoved}¢)`;
+    } else if (priceMoved < 0) {
+      // Price dipped since whale filled — good entry for followers
+      return `💧 ${depthStr} available @ ${bestCents}¢ (whale got ${fillCents}¢ — price dipped ${Math.abs(priceMoved)}¢ 👀)`;
     } else {
       return `💧 ${depthStr} still available @ ${bestCents}¢`;
     }
@@ -797,8 +800,9 @@ function buildTweet(t, obContext) {
   // Smart hashtags based on market category
   const extraTags  = buildHashtags(rawTitle);
   const baseTag    = t.usdcSize >= 50000 ? '@Polymarket #Polymarket' : '#Polymarket';
-  const allTags    = [baseTag, '#PredictionMarkets', ...extraTags].join(' ');
-  const tags       = `📋 Copy this bet → ${getPageUrl(rawTitle)} | ${allTags}`;
+  const allTags    = [baseTag, ...extraTags].join(' ');
+  const tags       = `📋 Track live → ${getPageUrl(rawTitle)} | ${allTags}`;
+  const telegramCTA = `⚡ Get alerts 10min early → whaletrack.app/premium`;
 
   // Show whale's total profit if available
   const addrKey = (t.proxyWallet || '').toLowerCase();
@@ -821,6 +825,7 @@ function buildTweet(t, obContext) {
   lines.push(``);
   lines.push(`Would you copy this bet? 👇`);
   lines.push(``);
+  lines.push(telegramCTA);
   lines.push(tags);
 
   return lines.join('\n');
@@ -867,6 +872,7 @@ function buildWinTweet(t) {
     ``,
     `Think they'll bet big again? 👇`,
     ``,
+    `⚡ Get alerts 10min early → whaletrack.app/premium`,
     `📋 Copy their next bet → ${getPageUrl(rawTitle)} | ${allTags}`,
   ].join('\n');
 }
@@ -1052,7 +1058,94 @@ async function checkAndTweet() {
   }
 }
 
+// ── FED ANNOUNCEMENT AUTO-TWEET ──────────────────────────────────────
+// Monitors the Polymarket Fed rate market and auto-tweets when it resolves
+const FED_MARKET_SLUG  = 'fed-decision-in-july-181';
+const FED_ANNOUNCE_UTC = 18; // 2 PM ET = 18:00 UTC
+const FED_FIRED_FILE   = path.join(__dirname, 'fed_tweet_fired.json');
+
+function isFedTweetFired() {
+  try { return fs.existsSync(FED_FIRED_FILE); } catch { return false; }
+}
+function markFedTweetFired() {
+  try { fs.writeFileSync(FED_FIRED_FILE, JSON.stringify({ fired: true, at: new Date().toISOString() })); } catch {}
+}
+
+async function checkFedAnnouncement() {
+  if (isFedTweetFired()) return;
+
+  // Only start checking at 2 PM ET (18:00 UTC) on July 29 or later
+  const now = new Date();
+  const pastAnnouncement = now.getUTCFullYear() > 2026
+    || now.getUTCMonth() > 6  // past July (month is 0-indexed)
+    || now.getUTCDate() > 29
+    || (now.getUTCDate() === 29 && now.getUTCHours() >= FED_ANNOUNCE_UTC);
+  if (!pastAnnouncement) return;
+
+  try {
+    const data = await fetchJson(`https://gamma-api.polymarket.com/events?slug=${FED_MARKET_SLUG}`);
+    if (!data || !data.length) return;
+
+    const event   = data[0];
+    const markets = event.markets || [];
+
+    // Accept formally resolved OR price-settled (one outcome at 0, other at 1)
+    const settled = markets.find(m => {
+      if (m.resolved === true) return true;
+      try {
+        const prices = JSON.parse(m.outcomePrices || '[]').map(Number);
+        return prices.some(p => p >= 0.99) && prices.some(p => p <= 0.01);
+      } catch (e) { return false; }
+    });
+    if (!settled) return;
+
+    // Determine outcome — find the winner (price = 1.0)
+    const outcomes      = JSON.parse(settled.outcomes      || '[]');
+    const outcomePrices = JSON.parse(settled.outcomePrices || '[]');
+    const winnerIdx     = outcomePrices.findIndex(p => parseFloat(p) >= 0.99);
+    const winner        = winnerIdx >= 0 ? outcomes[winnerIdx] : null;
+
+    const hiked = winner && /hike|raise|25|50/i.test(winner);
+
+    let tweet;
+    if (hiked) {
+      tweet = [
+        `🚨 Fed just HIKED rates!`,
+        ``,
+        `Polymarket had this at just ~25% — whales who bet the hike just made a killing 🐋`,
+        ``,
+        `Catch the next whale move before it happens 👇`,
+        ``,
+        `⚡ Get alerts 10min early → whaletrack.app/premium`,
+        `📋 Track live → whaletrack.app/politics | #Fed #FOMC #Polymarket`,
+      ].join('\n');
+    } else {
+      tweet = [
+        `✅ Fed held rates as expected`,
+        ``,
+        `Polymarket whales were positioned on the hold all along — smart money wins again 🐋`,
+        ``,
+        `Catch the next whale move before it happens 👇`,
+        ``,
+        `⚡ Get alerts 10min early → whaletrack.app/premium`,
+        `📋 Track live → whaletrack.app/politics | #Fed #FOMC #Polymarket`,
+      ].join('\n');
+    }
+
+    await postTweet(tweet);
+    markFedTweetFired();
+    console.log(`✅ Fed announcement tweet posted! Outcome: ${winner || 'unknown'}`);
+  } catch (e) {
+    console.error(`[Fed Monitor] ${e.message}`);
+  }
+}
+
 // ── START (continuous daemon — polls every 60s) ───────────────────────
 loadSeen();
 checkAndTweet();
-setInterval(checkAndTweet, POLL_INTERVAL);
+setInterval(async () => {
+  await checkAndTweet();
+  await checkFedAnnouncement();
+}, POLL_INTERVAL);
+// Also run Fed check immediately on startup in case already past 2 PM ET
+checkFedAnnouncement();
