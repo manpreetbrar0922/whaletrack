@@ -894,7 +894,7 @@
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
     <button class="alert-btn" onclick="toggleAlerts()" id="alertBtn">🔔 Alerts Off</button>
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
-    <button class="wt-connect-btn" id="wtConnectBtn" onclick="openConnectModal()">🔌 Connect</button>
+    <button class="wt-connect-btn" id="wtConnectBtn" onclick="showComingSoon()" title="In-app trading coming soon!" style="opacity:0.7;cursor:default;position:relative">🔌 Connect <span style="font-size:9px;background:#f0883e;color:#000;padding:1px 5px;border-radius:4px;font-weight:800;letter-spacing:0.3px;vertical-align:middle;margin-left:3px">SOON</span></button>
     <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade →</a>
   </div>
 </nav>
@@ -2758,8 +2758,28 @@ setInterval(refreshActivity, 60 * 1000);
     }
   };
 
+  // ── Coming Soon ───────────────────────────────────────────────────────────
+  window.showComingSoon = function() {
+    // Temporary: in-app trading paused while we finish testing
+    const existing = document.getElementById('wtComingSoonToast');
+    if (existing) return;
+    const toast = document.createElement('div');
+    toast.id = 'wtComingSoonToast';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#21262d;border:1px solid #f0883e;color:#e6edf3;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.5);text-align:center;max-width:320px';
+    toast.innerHTML = '🚧 In-app trading coming soon!<br><span style="font-size:12px;color:#8b949e;font-weight:400">Use the Copy Bet buttons to trade on Polymarket directly.</span>';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  };
+
   // ── Trade Modal ────────────────────────────────────────────────────────────
   window.openTradeModal = function(dataset) {
+    // Temporary: in-app trading paused — redirect to Polymarket
+    const slug = dataset.slug || '';
+    const pmUrl = slug
+      ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
+      : 'https://polymarket.com?via=manpreet-singh-brar';
+    window.open(pmUrl, '_blank', 'noopener');
+    return;
     // If not connected → save pending trade + show connect modal
     if (!wt.address) {
       wt.pending = dataset;
