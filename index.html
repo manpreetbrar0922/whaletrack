@@ -737,6 +737,130 @@
       .stats-bar { grid-template-columns: 1fr; }
       .section-header h2 { font-size: 15px; }
     }
+
+    /* ===== WT IN-HOUSE TRADING ===== */
+    .wt-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.80);
+      backdrop-filter: blur(5px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .wt-modal-overlay.open { display: flex; }
+    .wt-modal-box {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.75);
+      position: relative;
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    .wt-modal-head {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid #21262d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: #161b22;
+      z-index: 1;
+    }
+    .wt-modal-head h3 { font-size: 16px; font-weight: 800; color: #e6edf3; margin: 0; }
+    .wt-modal-close { background: none; border: none; color: #8b949e; font-size: 20px; cursor: pointer; line-height: 1; padding: 0; transition: color 0.15s; }
+    .wt-modal-close:hover { color: #e6edf3; }
+    .wt-modal-body { padding: 18px 22px 22px; }
+    .wt-tabs { display: flex; border-bottom: 1px solid #21262d; margin-bottom: 18px; }
+    .wt-tab {
+      flex: 1; padding: 10px; background: none; border: none;
+      border-bottom: 2px solid transparent; color: #8b949e;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: color 0.15s, border-color 0.15s; margin-bottom: -1px;
+    }
+    .wt-tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+    .wt-tab-pane { display: none; }
+    .wt-tab-pane.active { display: block; }
+    .wt-label { font-size: 12px; color: #8b949e; font-weight: 600; margin-bottom: 5px; display: block; }
+    .wt-input {
+      width: 100%; padding: 10px 12px; border: 1px solid #30363d; border-radius: 8px;
+      background: #0d1117; color: #e6edf3; font-size: 14px; outline: none;
+      transition: border-color 0.15s; box-sizing: border-box;
+    }
+    .wt-input:focus { border-color: #58a6ff; }
+    .wt-input-group { margin-bottom: 12px; }
+    .wt-btn {
+      display: block; width: 100%; padding: 13px; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s; text-align: center;
+    }
+    .wt-btn:active { transform: scale(0.98); }
+    .wt-btn-primary { background: #2563eb; color: #fff; }
+    .wt-btn-primary:hover { opacity: 0.88; }
+    .wt-btn-green { background: #238636; color: #fff; }
+    .wt-btn-green:hover { opacity: 0.88; }
+    .wt-btn-metamask { background: #f6851b; color: #fff; }
+    .wt-btn-metamask:hover { opacity: 0.88; }
+    .wt-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .wt-outcome-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .wt-outcome-btn {
+      flex: 1; padding: 11px; border-radius: 8px; border: 2px solid transparent;
+      background: #0d1117; font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .wt-outcome-btn.yes { color: #3fb950; border-color: rgba(63,185,80,0.35); }
+    .wt-outcome-btn.yes.sel { border-color: #3fb950; background: rgba(63,185,80,0.13); }
+    .wt-outcome-btn.no  { color: #f85149; border-color: rgba(248,81,73,0.35); }
+    .wt-outcome-btn.no.sel  { border-color: #f85149; background: rgba(248,81,73,0.13); }
+    .wt-preset-row { display: flex; gap: 6px; margin-bottom: 12px; }
+    .wt-preset-btn {
+      flex: 1; padding: 7px 4px; background: #21262d; border: 1px solid #30363d;
+      border-radius: 6px; color: #8b949e; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .wt-preset-btn:hover { background: #30363d; color: #e6edf3; }
+    .wt-preset-btn.sel { background: rgba(88,166,255,0.15); border-color: #58a6ff; color: #58a6ff; }
+    .wt-payout-box {
+      background: #0d1117; border: 1px solid #21262d; border-radius: 8px;
+      padding: 12px 14px; margin-bottom: 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; color: #8b949e;
+    }
+    .wt-payout-win { font-size: 18px; font-weight: 800; color: #3fb950; }
+    .wt-status { text-align: center; padding: 20px 0 6px; }
+    .wt-status-icon { font-size: 44px; margin-bottom: 10px; }
+    .wt-status-title { font-size: 17px; font-weight: 800; color: #e6edf3; margin-bottom: 6px; }
+    .wt-status-sub { font-size: 13px; color: #8b949e; line-height: 1.5; margin-bottom: 18px; }
+    /* Nav connect btn */
+    .wt-connect-btn {
+      background: linear-gradient(135deg,#2563eb,#1d4ed8);
+      color: #fff; font-size: 13px; font-weight: 700;
+      padding: 7px 15px; border-radius: 8px; border: none;
+      cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
+    }
+    .wt-connect-btn:hover { opacity: 0.85; }
+    .wt-connect-btn.connected { background: linear-gradient(135deg,#238636,#1a7f37); }
+    /* Inline copy-bet button (positions table) */
+    .wt-copy-btn {
+      font-size: 11px; font-weight: 700; color: var(--green); padding: 3px 8px;
+      border: 1px solid var(--green); border-radius: 5px; white-space: nowrap;
+      background: none; cursor: pointer; transition: background 0.15s;
+    }
+    .wt-copy-btn:hover { background: rgba(63,185,80,0.1); }
+    /* Feed copy-bet button */
+    .wt-feed-copy-btn {
+      font-size: 11px; font-weight: 700; color: var(--accent); padding: 4px 10px;
+      border: 1px solid rgba(88,166,255,0.4); border-radius: 6px; background: none;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+      opacity: 0.75;
+    }
+    .wt-feed-copy-btn:hover { opacity: 1; background: rgba(88,166,255,0.1); }
   </style>
 </head>
 <body>
@@ -770,7 +894,8 @@
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
     <button class="alert-btn" onclick="toggleAlerts()" id="alertBtn">🔔 Alerts Off</button>
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
-    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade on Polymarket →</a>
+    <button class="wt-connect-btn" id="wtConnectBtn" onclick="openConnectModal()">🔌 Connect</button>
+    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade →</a>
   </div>
 </nav>
 
@@ -941,6 +1066,148 @@
     </div>
     <div id="modalBody">
       <div class="loading"><div class="spinner"></div>Loading positions...</div>
+    </div>
+  </div>
+</div>
+
+<!-- WT CONNECT WALLET MODAL -->
+<div class="wt-modal-overlay" id="wtConnectModal" onclick="if(event.target===this)closeConnectModal()">
+  <div class="wt-modal-box">
+    <div class="wt-modal-head">
+      <h3>🔌 Connect Polymarket</h3>
+      <button class="wt-modal-close" onclick="closeConnectModal()">✕</button>
+    </div>
+    <div class="wt-modal-body">
+      <p style="font-size:13px;color:#8b949e;margin:0 0 16px;line-height:1.5">Connect your Polymarket account to copy whale bets directly from WhaleTrack — no separate tab needed.</p>
+
+      <div class="wt-tabs">
+        <button class="wt-tab active" id="wtTabMM" onclick="switchConnectTab('metamask')">🦊 MetaMask</button>
+        <button class="wt-tab" id="wtTabAPI" onclick="switchConnectTab('apikey')">🔑 API Key</button>
+      </div>
+
+      <!-- MetaMask pane -->
+      <div class="wt-tab-pane active" id="wtPaneMM">
+        <div style="text-align:center;padding:8px 0 18px">
+          <div style="font-size:52px;margin-bottom:12px">🦊</div>
+          <div style="font-size:15px;font-weight:700;color:#e6edf3;margin-bottom:8px">Connect with MetaMask</div>
+          <div style="font-size:13px;color:#8b949e;margin-bottom:20px;line-height:1.6">Sign a free message to prove wallet ownership. Zero gas fees.</div>
+          <button class="wt-btn wt-btn-metamask" id="wtBtnMM" onclick="connectMetaMask()">Connect MetaMask</button>
+          <div id="wtMMStatus" style="margin-top:12px;font-size:12px;color:#8b949e;min-height:18px;line-height:1.5"></div>
+        </div>
+        <div style="padding-top:14px;border-top:1px solid #21262d;text-align:center;font-size:12px;color:#484f58">
+          No MetaMask? <a href="https://metamask.io" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Download here →</a>
+        </div>
+      </div>
+
+      <!-- API Key pane -->
+      <div class="wt-tab-pane" id="wtPaneAPI">
+        <p style="font-size:12px;color:#8b949e;margin:0 0 14px;line-height:1.6">
+          Enter your Polymarket CLOB API credentials.
+          <a href="https://polymarket.com/profile" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Get them at polymarket.com/profile →</a>
+        </p>
+        <div class="wt-input-group">
+          <label class="wt-label">Your Wallet Address</label>
+          <input class="wt-input" id="wtAPIAddr" type="text" placeholder="0x…" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="wt-input-group">
+          <label class="wt-label">API Key</label>
+          <input class="wt-input" id="wtAPIKey" type="password" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" />
+        </div>
+        <div class="wt-input-group">
+          <label class="wt-label">API Secret <span style="color:#484f58;font-weight:400">(if required)</span></label>
+          <input class="wt-input" id="wtAPISecret" type="password" placeholder="Secret" autocomplete="off" />
+        </div>
+        <div class="wt-input-group" style="margin-bottom:16px">
+          <label class="wt-label">API Passphrase <span style="color:#484f58;font-weight:400">(if required)</span></label>
+          <input class="wt-input" id="wtAPIPassphrase" type="password" placeholder="Passphrase" autocomplete="off" />
+        </div>
+        <button class="wt-btn wt-btn-primary" id="wtBtnAPI" onclick="connectApiKey()">Save Credentials</button>
+        <div id="wtAPIStatus" style="margin-top:12px;font-size:12px;min-height:18px;text-align:center;color:#8b949e"></div>
+        <div style="margin-top:14px;padding:10px 12px;background:#0d1117;border:1px solid #21262d;border-radius:8px;font-size:11px;color:#484f58;line-height:1.6">
+          🔒 Credentials are stored encrypted for 30 days and are only used when you click "Confirm Bet". We never trade without your action.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WT TRADE MODAL -->
+<div class="wt-modal-overlay" id="wtTradeModal" onclick="if(event.target===this)closeTradeModal()">
+  <div class="wt-modal-box">
+    <div class="wt-modal-head">
+      <h3>⚡ Copy Bet</h3>
+      <button class="wt-modal-close" onclick="closeTradeModal()">✕</button>
+    </div>
+    <div class="wt-modal-body">
+
+      <!-- FORM STATE -->
+      <div id="wtTradeForm">
+        <div id="wtTradeTitle" style="font-size:13px;font-weight:700;color:#e6edf3;margin-bottom:6px;line-height:1.4">—</div>
+        <div style="font-size:12px;color:#8b949e;margin-bottom:18px">Current price: <span id="wtTradePriceLabel" style="color:#e6edf3;font-weight:700">—</span></div>
+
+        <div style="font-size:11px;color:#8b949e;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">Pick your side</div>
+        <div class="wt-outcome-row">
+          <button class="wt-outcome-btn yes" id="wtOutcomeYes" onclick="selectOutcome('Yes')">✅ YES</button>
+          <button class="wt-outcome-btn no"  id="wtOutcomeNo"  onclick="selectOutcome('No')">❌ NO</button>
+        </div>
+
+        <div style="font-size:11px;color:#8b949e;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">Bet amount</div>
+        <div class="wt-preset-row">
+          <button class="wt-preset-btn" onclick="setTradeAmount(10)">$10</button>
+          <button class="wt-preset-btn" onclick="setTradeAmount(25)">$25</button>
+          <button class="wt-preset-btn" onclick="setTradeAmount(50)">$50</button>
+          <button class="wt-preset-btn" onclick="setTradeAmount(100)">$100</button>
+        </div>
+        <div class="wt-input-group">
+          <div style="position:relative">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8b949e;font-weight:700;font-size:14px;pointer-events:none">$</span>
+            <input class="wt-input" id="wtTradeAmt" type="number" min="1" max="1000" value="10"
+              style="padding-left:26px" oninput="updatePayout();clearPresets()" />
+          </div>
+          <div style="font-size:11px;color:#484f58;margin-top:5px">Min $1 · Max $1,000 per bet</div>
+        </div>
+
+        <div class="wt-payout-box">
+          <div>
+            <div id="wtPayoutLabel" style="font-size:11px;margin-bottom:4px">If YES wins, you get</div>
+            <div class="wt-payout-win" id="wtPayoutWin">$—</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;margin-bottom:4px">Potential ROI</div>
+            <div style="font-size:15px;font-weight:800;color:#58a6ff" id="wtPayoutROI">—</div>
+          </div>
+        </div>
+
+        <button class="wt-btn wt-btn-green" id="wtConfirmBtn" onclick="executeTrade()">Confirm Bet</button>
+        <div style="font-size:11px;color:#484f58;text-align:center;margin-top:10px">Executes on Polymarket · No extra fees</div>
+      </div>
+
+      <!-- LOADING STATE -->
+      <div id="wtTradeLoading" style="display:none" class="wt-status">
+        <div class="wt-status-icon">⏳</div>
+        <div class="wt-status-title">Placing your bet…</div>
+        <div class="wt-status-sub">Submitting to Polymarket. Hang tight — this takes a few seconds.</div>
+      </div>
+
+      <!-- SUCCESS STATE -->
+      <div id="wtTradeSuccess" style="display:none" class="wt-status">
+        <div class="wt-status-icon">🎉</div>
+        <div class="wt-status-title">Bet Placed!</div>
+        <div class="wt-status-sub" id="wtSuccessMsg">Your bet was submitted successfully.</div>
+        <button class="wt-btn wt-btn-green" onclick="closeTradeModal()">Done</button>
+      </div>
+
+      <!-- ERROR STATE -->
+      <div id="wtTradeError" style="display:none" class="wt-status">
+        <div class="wt-status-icon">⚠️</div>
+        <div class="wt-status-title">Trade Failed</div>
+        <div class="wt-status-sub" id="wtErrorMsg" style="color:#f85149">Something went wrong.</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="wt-btn wt-btn-primary" style="max-width:140px" onclick="wtShowForm()">Try Again</button>
+          <button class="wt-btn" style="max-width:120px;background:#21262d;color:#e6edf3" onclick="closeTradeModal()">Cancel</button>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1673,7 +1940,12 @@ function renderActivity(items) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
           <div class="feed-time">${timeAgo(t.timestamp)}</div>
-          <a href="${marketUrl(t.slug)}" target="_blank" rel="noopener" class="feed-trade-link">Copy Bet →</a>
+          <button class="wt-feed-copy-btn"
+            data-slug="${t.slug}"
+            data-outcome="${t.outcome || 'Yes'}"
+            data-price="${t.price || 0}"
+            data-title="${(t.title || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
+            onclick="openTradeModal(this.dataset)">Copy Bet →</button>
           <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#484f58;text-decoration:none;text-align:right;display:block;" data-affiliate>No account? Sign up →</a>
         </div>
       </div>
@@ -2138,8 +2410,14 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
           const isOpen = p.redeemable === false && size > 0.5;
           const isWon  = p.redeemable === true;
           const isLost = p.redeemable === false && size <= 0.5;
+          const safeTitle = title.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
           const actionCell = isOpen
-            ? `<a href="${marketUrl(p.eventSlug || p.slug || p.conditionId)}" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;color:var(--green);text-decoration:none;padding:3px 8px;border:1px solid var(--green);border-radius:5px;white-space:nowrap;">Copy Bet →</a>`
+            ? `<button class="wt-copy-btn"
+                data-slug="${p.eventSlug || p.slug || p.conditionId}"
+                data-outcome="${outcome}"
+                data-price="${avgPrice}"
+                data-title="${safeTitle}"
+                onclick="openTradeModal(this.dataset)">Copy Bet →</button>`
             : isWon
             ? `<span style="font-size:11px;font-weight:700;color:var(--green);padding:3px 8px;border:1px solid rgba(63,185,80,0.3);border-radius:5px;white-space:nowrap;">✅ Cashed</span>`
             : `<span style="font-size:11px;font-weight:700;color:var(--red);padding:3px 8px;border:1px solid rgba(248,81,73,0.3);border-radius:5px;white-space:nowrap;">📉 Lost</span>`;
@@ -2225,6 +2503,353 @@ async function refreshActivity() {
 loadAll();
 setInterval(loadAll, 5 * 60 * 1000);
 setInterval(refreshActivity, 60 * 1000);
+</script>
+
+<!-- ===== WT IN-HOUSE TRADING SYSTEM ===== -->
+<script>
+(function() {
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  const wt = {
+    address:  null,
+    method:   null,
+    slug:     null,
+    outcome:  null,
+    price:    0,
+    title:    '',
+  };
+
+  // ── Init: restore session from localStorage ────────────────────────────────
+  function init() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('wt_wallet') || 'null');
+      if (saved && saved.address) {
+        wt.address = saved.address;
+        wt.method  = saved.method;
+        updateNavBtn();
+        // Silently verify the KV key still exists (don't block UI)
+        verifySession(saved.address);
+      }
+    } catch(e) {}
+  }
+
+  async function verifySession(addr) {
+    try {
+      const r = await fetch('/api/connect-wallet?address=' + encodeURIComponent(addr));
+      const d = await r.json();
+      if (!d.connected) resetWallet();
+    } catch(e) {}
+  }
+
+  function resetWallet() {
+    wt.address = null;
+    wt.method  = null;
+    localStorage.removeItem('wt_wallet');
+    updateNavBtn();
+  }
+
+  function updateNavBtn() {
+    const btn = document.getElementById('wtConnectBtn');
+    if (!btn) return;
+    if (wt.address) {
+      const short = wt.address.slice(0,6) + '…' + wt.address.slice(-4);
+      btn.textContent = '✅ ' + short;
+      btn.classList.add('connected');
+      btn.title = wt.address + '\nClick to disconnect';
+      btn.onclick = askDisconnect;
+    } else {
+      btn.textContent = '🔌 Connect';
+      btn.classList.remove('connected');
+      btn.title = 'Connect your Polymarket wallet to copy whale bets';
+      btn.onclick = openConnectModal;
+    }
+  }
+
+  function askDisconnect() {
+    if (confirm('Disconnect wallet from WhaleTrack?')) resetWallet();
+  }
+
+  // ── Connect Modal ──────────────────────────────────────────────────────────
+  window.openConnectModal = function() {
+    document.getElementById('wtConnectModal').classList.add('open');
+    document.getElementById('wtMMStatus').textContent = '';
+    document.getElementById('wtAPIStatus').textContent = '';
+    document.getElementById('wtBtnMM').disabled = false;
+    document.getElementById('wtBtnMM').textContent = 'Connect MetaMask';
+    document.getElementById('wtBtnAPI').disabled = false;
+    document.getElementById('wtBtnAPI').textContent = 'Save Credentials';
+    switchConnectTab('metamask');
+  };
+
+  window.closeConnectModal = function() {
+    document.getElementById('wtConnectModal').classList.remove('open');
+  };
+
+  window.switchConnectTab = function(tab) {
+    ['MM','API'].forEach(id => {
+      document.getElementById('wtTab' + id).classList.toggle('active', (id === 'MM') === (tab === 'metamask'));
+      document.getElementById('wtPane' + id).classList.toggle('active', (id === 'MM') === (tab === 'metamask'));
+    });
+  };
+
+  // ── MetaMask Connect ───────────────────────────────────────────────────────
+  window.connectMetaMask = async function() {
+    const btn    = document.getElementById('wtBtnMM');
+    const status = document.getElementById('wtMMStatus');
+
+    if (!window.ethereum) {
+      setStatus(status, '❌ MetaMask not found. Please install it first.', 'err');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Connecting…';
+    setStatus(status, 'Requesting wallet access…', 'info');
+
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const address  = (accounts[0] || '').toLowerCase();
+      if (!address) throw new Error('No account returned');
+
+      setStatus(status, 'Signing message to verify ownership…', 'info');
+
+      // Signature proves they own the wallet — free, no gas
+      const msg = `Sign in to WhaleTrack\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
+      await window.ethereum.request({ method: 'personal_sign', params: [msg, address] });
+
+      setStatus(status, 'Saving to server…', 'info');
+
+      const r = await fetch('/api/connect-wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method: 'wallet', address }),
+      });
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Server error');
+
+      // Persist
+      wt.address = address;
+      wt.method  = 'wallet';
+      localStorage.setItem('wt_wallet', JSON.stringify({ address, method: 'wallet' }));
+      updateNavBtn();
+
+      setStatus(status, '✅ Connected! You can now copy whale bets directly.', 'ok');
+      setTimeout(closeConnectModal, 1300);
+
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = 'Connect MetaMask';
+      if (e.code === 4001) {
+        setStatus(status, '❌ Signature rejected — you cancelled.', 'err');
+      } else {
+        setStatus(status, '❌ ' + (e.message || 'Connection failed'), 'err');
+      }
+    }
+  };
+
+  // ── API Key Connect ────────────────────────────────────────────────────────
+  window.connectApiKey = async function() {
+    const btn        = document.getElementById('wtBtnAPI');
+    const status     = document.getElementById('wtAPIStatus');
+    const address    = (document.getElementById('wtAPIAddr').value || '').trim();
+    const apiKey     = (document.getElementById('wtAPIKey').value || '').trim();
+    const secret     = (document.getElementById('wtAPISecret').value || '').trim();
+    const passphrase = (document.getElementById('wtAPIPassphrase').value || '').trim();
+
+    if (!address) { setStatus(status, '❌ Wallet address is required', 'err'); return; }
+    if (!/^0x[0-9a-fA-F]{40}$/.test(address)) { setStatus(status, '❌ Invalid Ethereum address format', 'err'); return; }
+    if (!apiKey)  { setStatus(status, '❌ API Key is required', 'err'); return; }
+    if (apiKey.length < 10) { setStatus(status, '❌ API Key looks too short', 'err'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    setStatus(status, 'Saving credentials securely…', 'info');
+
+    try {
+      const r = await fetch('/api/connect-wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method: 'apikey', address: address.toLowerCase(), apiKey, secret, passphrase }),
+      });
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error || 'Failed to save');
+
+      wt.address = address.toLowerCase();
+      wt.method  = 'apikey';
+      localStorage.setItem('wt_wallet', JSON.stringify({ address: wt.address, method: 'apikey' }));
+      updateNavBtn();
+
+      setStatus(status, '✅ Saved! You can now copy whale bets directly.', 'ok');
+      setTimeout(closeConnectModal, 1300);
+
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = 'Save Credentials';
+      setStatus(status, '❌ ' + (e.message || 'Failed to save'), 'err');
+    }
+  };
+
+  // ── Trade Modal ────────────────────────────────────────────────────────────
+  window.openTradeModal = function(dataset) {
+    // If not connected → show connect modal first
+    if (!wt.address) {
+      openConnectModal();
+      return;
+    }
+
+    wt.slug    = dataset.slug    || '';
+    wt.outcome = dataset.outcome || 'Yes';
+    wt.price   = parseFloat(dataset.price) || 0;
+    wt.title   = dataset.title   || 'Unknown Market';
+
+    // Populate
+    document.getElementById('wtTradeTitle').textContent = wt.title;
+    document.getElementById('wtTradePriceLabel').textContent =
+      wt.price > 0 ? (wt.price * 100).toFixed(1) + '¢' : '—';
+
+    // Preset amount reset
+    document.getElementById('wtTradeAmt').value = '10';
+    clearPresets();
+    selectOutcome(wt.outcome);
+    updatePayout();
+    wtShowForm();
+
+    document.getElementById('wtTradeModal').classList.add('open');
+    if (typeof gtag !== 'undefined') gtag('event', 'trade_modal_open', { slug: wt.slug });
+  };
+
+  window.closeTradeModal = function() {
+    document.getElementById('wtTradeModal').classList.remove('open');
+  };
+
+  window.wtShowForm = function() {
+    document.getElementById('wtTradeForm').style.display    = 'block';
+    document.getElementById('wtTradeLoading').style.display = 'none';
+    document.getElementById('wtTradeSuccess').style.display = 'none';
+    document.getElementById('wtTradeError').style.display   = 'none';
+    document.getElementById('wtConfirmBtn').disabled    = false;
+    document.getElementById('wtConfirmBtn').textContent = 'Confirm Bet';
+  };
+
+  window.selectOutcome = function(outcome) {
+    wt.outcome = outcome;
+    document.getElementById('wtOutcomeYes').classList.toggle('sel', outcome === 'Yes');
+    document.getElementById('wtOutcomeNo').classList.toggle('sel',  outcome === 'No');
+    // Update payout label
+    const lbl = document.getElementById('wtPayoutLabel');
+    if (lbl) lbl.textContent = 'If ' + outcome + ' wins, you get';
+    updatePayout();
+  };
+
+  window.setTradeAmount = function(amt) {
+    document.getElementById('wtTradeAmt').value = amt;
+    clearPresets();
+    document.querySelectorAll('.wt-preset-btn').forEach(b => {
+      b.classList.toggle('sel', parseInt(b.textContent.replace('$','')) === amt);
+    });
+    updatePayout();
+  };
+
+  window.clearPresets = function() {
+    document.querySelectorAll('.wt-preset-btn').forEach(b => b.classList.remove('sel'));
+  };
+
+  window.updatePayout = function() {
+    const amt   = parseFloat(document.getElementById('wtTradeAmt').value) || 0;
+    const price = wt.price;
+    if (price > 0 && amt > 0) {
+      const payout = (amt / price).toFixed(2);
+      const roi    = ((1 / price - 1) * 100).toFixed(0);
+      document.getElementById('wtPayoutWin').textContent = '$' + payout;
+      document.getElementById('wtPayoutROI').textContent = '+' + roi + '%';
+    } else {
+      document.getElementById('wtPayoutWin').textContent = '$—';
+      document.getElementById('wtPayoutROI').textContent = '—';
+    }
+  };
+
+  // ── Execute Trade ──────────────────────────────────────────────────────────
+  window.executeTrade = async function() {
+    const amount  = parseFloat(document.getElementById('wtTradeAmt').value);
+    const outcome = wt.outcome;
+    const slug    = wt.slug;
+    const address = wt.address;
+
+    // Validate
+    if (!slug)    { showTradeErr('No market selected. Please close and try again.'); return; }
+    if (!outcome) { showTradeErr('Please select YES or NO.'); return; }
+    if (!amount || amount < 1)   { showTradeErr('Minimum bet amount is $1.'); return; }
+    if (amount > 1000) { showTradeErr('Maximum bet per trade is $1,000.'); return; }
+    if (!address) { closeTradeModal(); openConnectModal(); return; }
+
+    // Show loading
+    document.getElementById('wtTradeForm').style.display    = 'none';
+    document.getElementById('wtTradeLoading').style.display = 'block';
+    document.getElementById('wtConfirmBtn').disabled = true;
+
+    try {
+      const r = await fetch('/api/trade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, slug, outcome, amount }),
+      });
+      const d = await r.json();
+
+      document.getElementById('wtTradeLoading').style.display = 'none';
+
+      if (d.ok) {
+        document.getElementById('wtTradeSuccess').style.display = 'block';
+        document.getElementById('wtSuccessMsg').textContent =
+          d.message || 'Your $' + amount.toFixed(2) + ' ' + outcome + ' bet was submitted to Polymarket.';
+        if (typeof gtag !== 'undefined') gtag('event', 'trade_executed', { slug, outcome, amount });
+      } else if (d.code === 'NEED_APIKEY') {
+        // MetaMask wallet — redirect to connect with API key
+        document.getElementById('wtTradeLoading').style.display = 'none';
+        document.getElementById('wtTradeError').style.display = 'block';
+        document.getElementById('wtErrorMsg').textContent =
+          'MetaMask-only connection can\'t execute trades directly. Connect via API Key to enable 1-click betting.';
+        // Replace Try Again button with "Connect API Key" action
+        document.getElementById('wtErrorMsg').insertAdjacentHTML('afterend',
+          '<button class="wt-btn wt-btn-primary" style="max-width:180px;margin:8px auto 0" ' +
+          'onclick="closeTradeModal();openConnectModal();setTimeout(()=>switchConnectTab(\'apikey\'),100)">' +
+          '🔑 Connect API Key</button>' +
+          (d.fallbackUrl ? '<div style="margin-top:10px"><a href="' + d.fallbackUrl +
+          '" target="_blank" style="font-size:12px;color:#58a6ff;text-decoration:none">Open on Polymarket instead →</a></div>' : '')
+        );
+      } else {
+        // If auth failed — clear wallet so user reconnects
+        if (r.status === 401) resetWallet();
+        showTradeErr(d.error || 'Trade failed. Please try again.');
+      }
+
+    } catch(e) {
+      document.getElementById('wtTradeLoading').style.display = 'none';
+      showTradeErr('Network error — check your connection and try again.');
+    }
+  };
+
+  function showTradeErr(msg) {
+    document.getElementById('wtTradeForm').style.display    = 'none';
+    document.getElementById('wtTradeLoading').style.display = 'none';
+    document.getElementById('wtTradeError').style.display   = 'block';
+    document.getElementById('wtErrorMsg').textContent = msg;
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function setStatus(el, msg, type) {
+    el.textContent = msg;
+    el.style.color = type === 'err' ? '#f85149' : type === 'ok' ? '#3fb950' : '#8b949e';
+  }
+
+  // Close both modals on Escape (don't re-register the positions modal listener)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeConnectModal(); closeTradeModal(); }
+  });
+
+  // ── Boot ───────────────────────────────────────────────────────────────────
+  init();
+
+})();
 </script>
 
 <!-- ── Alert Premium Modal ─────────────────────────────────────────────────── -->
