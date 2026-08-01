@@ -1644,7 +1644,12 @@ function renderLiveFeed(activity) {
             <span class="alert-stat-label">Price</span>
             <span class="alert-stat-value">${pricePct}¢</span>
           </div>
-          <a href="${marketLink}" target="_blank" rel="noopener" class="alert-copy-btn" data-affiliate>🎯 Copy This Bet →</a>
+          <button class="alert-copy-btn"
+            data-slug="${t.slug}"
+            data-outcome="${outcome}"
+            data-price="${t.price}"
+            data-title="${(t.title||'').replace(/"/g,'&quot;')}"
+            onclick="openTradeModal(this.dataset)">🎯 Copy This Bet →</button>
           <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#3fb950;text-decoration:none;text-align:center;display:block;margin-top:5px;font-weight:600;" data-affiliate>✨ New? Get started free →</a>
         </div>
       </div>
