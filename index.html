@@ -875,7 +875,7 @@
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-    <a id="whaleAlertLink" href="#" target="_blank" rel="noopener" style="background:#00ff88;color:#000;font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;text-decoration:none;white-space:nowrap">Copy Bet →</a>
+    <button id="whaleAlertLink" onclick="openTradeModal(this.dataset)" style="background:#00ff88;color:#000;font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;border:none;cursor:pointer;white-space:nowrap">Copy Bet →</button>
     <a id="whaleAlertTweet" href="#" target="_blank" rel="noopener" style="background:#1d9bf0;color:#fff;font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;text-decoration:none;white-space:nowrap">🐦 Tweet</a>
     <button onclick="dismissWhaleAlert()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:13px;cursor:pointer;padding:5px 10px;border-radius:6px;line-height:1;white-space:nowrap">Dismiss</button>
   </div>
@@ -1751,7 +1751,7 @@ function renderConsensus(items) {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px">
-          ${c.slug ? `<a href="${marketUrl(c.slug)}" target="_blank" rel="noopener" style="flex:1;display:block;padding:8px;background:${bgColor};border:1px solid ${borderColor};border-radius:8px;font-size:12px;color:${sideColor};text-align:center;text-decoration:none;font-weight:700">Copy ${c.side} Bet →</a>` : ''}
+          ${c.slug ? `<button data-slug="${c.slug}" data-outcome="${c.side}" data-price="${c.price || 0}" data-title="${(c.title||'').replace(/"/g,'&quot;')}" onclick="openTradeModal(this.dataset)" style="flex:1;display:block;padding:8px;background:${bgColor};border:1px solid ${borderColor};border-radius:8px;font-size:12px;color:${sideColor};text-align:center;text-decoration:none;font-weight:700;cursor:pointer">Copy ${c.side} Bet →</button>` : ''}
           <a href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener" style="display:block;padding:8px 12px;background:#1d9bf0;border-radius:8px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;white-space:nowrap">🐦 Tweet</a>
         </div>
       </div>
@@ -1823,7 +1823,7 @@ function renderBattles(battles) {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px">
-          ${b.slug ? `<a href="${marketUrl(b.slug)}" target="_blank" rel="noopener" style="flex:1;display:block;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--accent);text-align:center;text-decoration:none;font-weight:600">Copy Bet →</a>` : ''}
+          ${b.slug ? `<button data-slug="${b.slug}" data-outcome="Yes" data-price="0" data-title="${(b.title||'').replace(/"/g,'&quot;')}" onclick="openTradeModal(this.dataset)" style="flex:1;display:block;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--accent);text-align:center;font-weight:600;cursor:pointer">Copy Bet →</button>` : ''}
           <a href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener" style="display:block;padding:8px 12px;background:#1d9bf0;border-radius:8px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;white-space:nowrap">🐦 Tweet</a>
         </div>
       </div>
@@ -1897,7 +1897,7 @@ function renderMatchBets(markets) {
           `).join('')}
         </div>
 
-        ${slug ? `<a href="${marketUrl(slug)}" target="_blank" rel="noopener" class="view-positions" style="text-decoration:none;color:var(--green);border-color:rgba(63,185,80,0.4)">⚽ Copy Bet on Polymarket →</a>` : ''}
+        ${slug ? `<button data-slug="${slug}" data-outcome="Yes" data-price="0" data-title="${(m.title||'').replace(/"/g,'&quot;')}" onclick="openTradeModal(this.dataset)" class="view-positions" style="cursor:pointer;color:var(--green);border-color:rgba(63,185,80,0.4)">⚽ Copy Bet →</button>` : ''}
       </div>
     `;
   }).join('');
@@ -2261,10 +2261,10 @@ function showWhaleAlertBanner(trade) {
 
   document.getElementById('whaleAlertText').textContent = text;
   const link = document.getElementById('whaleAlertLink');
-  const marketLink = trade.slug
-    ? `https://polymarket.com/event/${trade.slug}?via=manpreet-singh-brar`
-    : `https://polymarket.com?via=manpreet-singh-brar`;
-  link.href = marketLink;
+  link.dataset.slug    = trade.slug    || '';
+  link.dataset.outcome = trade.outcome || 'Yes';
+  link.dataset.price   = trade.price   || 0;
+  link.dataset.title   = trade.title   || '';
 
   const tweetText = encodeURIComponent(`🐋 Whale Alert on Polymarket!\n\n${text}\n\nTrack smart money live → whaletrack.app`);
   document.getElementById('whaleAlertTweet').href = `https://twitter.com/intent/tweet?text=${tweetText}`;
