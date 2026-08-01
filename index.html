@@ -1089,21 +1089,29 @@
       <div class="wt-tab-pane active" id="wtPaneMM">
         <div style="text-align:center;padding:8px 0 18px">
           <div style="font-size:52px;margin-bottom:12px">🦊</div>
-          <div style="font-size:15px;font-weight:700;color:#e6edf3;margin-bottom:8px">Connect with MetaMask</div>
-          <div style="font-size:13px;color:#8b949e;margin-bottom:20px;line-height:1.6">Sign a free message to prove wallet ownership. Zero gas fees.</div>
-          <button class="wt-btn wt-btn-metamask" id="wtBtnMM" onclick="connectMetaMask()">Connect MetaMask</button>
+          <div style="font-size:15px;font-weight:700;color:#e6edf3;margin-bottom:8px">1-Tap Connect</div>
+          <div style="font-size:13px;color:#8b949e;margin-bottom:18px;line-height:1.6">Sign one free message with MetaMask — we automatically link your Polymarket account. No API keys needed, zero gas fees.</div>
+          <!-- Steps -->
+          <div style="text-align:left;background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:12px;color:#8b949e;line-height:1.8">
+            <div>1️⃣ MetaMask opens → approve connection</div>
+            <div>2️⃣ Sign one message → proves wallet ownership</div>
+            <div>3️⃣ Done → copy whale bets directly 🐋</div>
+          </div>
+          <button class="wt-btn wt-btn-metamask" id="wtBtnMM" onclick="connectMetaMask()">🦊 Connect MetaMask</button>
           <div id="wtMMStatus" style="margin-top:12px;font-size:12px;color:#8b949e;min-height:18px;line-height:1.5"></div>
         </div>
         <div style="padding-top:14px;border-top:1px solid #21262d;text-align:center;font-size:12px;color:#484f58">
-          No MetaMask? <a href="https://metamask.io" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Download here →</a>
+          Need MetaMask? <a href="https://metamask.io" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Download here →</a>
+          &nbsp;·&nbsp; No Polymarket account? <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Sign up free →</a>
         </div>
       </div>
 
       <!-- API Key pane -->
       <div class="wt-tab-pane" id="wtPaneAPI">
         <p style="font-size:12px;color:#8b949e;margin:0 0 14px;line-height:1.6">
-          Enter your Polymarket CLOB API credentials.
+          For advanced users — paste your Polymarket CLOB API credentials manually.
           <a href="https://polymarket.com/profile" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Get them at polymarket.com/profile →</a>
+          <br><span style="color:#484f58;font-size:11px;margin-top:4px;display:block">Most users should use the MetaMask tab instead.</span>
         </p>
         <div class="wt-input-group">
           <label class="wt-label">Your Wallet Address</label>
@@ -2593,12 +2601,14 @@ setInterval(refreshActivity, 60 * 1000);
   };
 
   // ── MetaMask Connect ───────────────────────────────────────────────────────
+  // Signs the Polymarket EIP-712 message → server auto-derives CLOB credentials.
+  // User never needs to manually create API keys on Polymarket.
   window.connectMetaMask = async function() {
     const btn    = document.getElementById('wtBtnMM');
     const status = document.getElementById('wtMMStatus');
 
     if (!window.ethereum) {
-      setStatus(status, '❌ MetaMask not found. Please install it first.', 'err');
+      setStatus(status, '❌ MetaMask not found. Please install it and refresh.', 'err');
       return;
     }
 
@@ -2607,42 +2617,80 @@ setInterval(refreshActivity, 60 * 1000);
     setStatus(status, 'Requesting wallet access…', 'info');
 
     try {
+      // Step 1: get account
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const address  = (accounts[0] || '').toLowerCase();
-      if (!address) throw new Error('No account returned');
+      const address  = accounts[0] || '';
+      if (!address) throw new Error('No account found');
 
-      setStatus(status, 'Signing message to verify ownership…', 'info');
+      setStatus(status, 'Sign the Polymarket message to link your account…', 'info');
 
-      // Signature proves they own the wallet — free, no gas
-      const msg = `Sign in to WhaleTrack\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
-      await window.ethereum.request({ method: 'personal_sign', params: [msg, address] });
+      // Step 2: sign Polymarket's EIP-712 ClobAuth message
+      // This is the EXACT same message Polymarket signs internally to derive API credentials.
+      // It's deterministic — same wallet always produces same CLOB credentials.
+      const timestamp = Math.floor(Date.now() / 1000);
+      const nonce     = 0;
+      const typedData = JSON.stringify({
+        domain: {
+          name: 'ClobAuthDomain',
+          version: '1',
+          chainId: 137,  // Polygon — signing for Polymarket regardless of current MetaMask chain
+        },
+        types: {
+          EIP712Domain: [
+            { name: 'name',    type: 'string'  },
+            { name: 'version', type: 'string'  },
+            { name: 'chainId', type: 'uint256' },
+          ],
+          ClobAuth: [
+            { name: 'address',   type: 'address' },
+            { name: 'timestamp', type: 'string'  },
+            { name: 'nonce',     type: 'uint256' },
+            { name: 'message',   type: 'string'  },
+          ],
+        },
+        primaryType: 'ClobAuth',
+        message: {
+          address:   address,
+          timestamp: String(timestamp),
+          nonce:     nonce,
+          message:   'This message attests that I control the given wallet',
+        },
+      });
 
-      setStatus(status, 'Saving to server…', 'info');
+      const signature = await window.ethereum.request({
+        method: 'eth_signTypedData_v4',
+        params: [address, typedData],
+      });
 
+      setStatus(status, 'Linking your Polymarket account…', 'info');
+
+      // Step 3: server derives + stores CLOB credentials automatically
       const r = await fetch('/api/connect-wallet', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method: 'wallet', address }),
+        body:    JSON.stringify({ method: 'wallet', address, signature, timestamp, nonce }),
       });
       const d = await r.json();
-      if (!d.ok) throw new Error(d.error || 'Server error');
+      if (!d.ok) throw new Error(d.error || 'Connection failed');
 
-      // Persist
-      wt.address = address;
+      // Step 4: persist locally
+      wt.address = address.toLowerCase();
       wt.method  = 'wallet';
-      localStorage.setItem('wt_wallet', JSON.stringify({ address, method: 'wallet' }));
+      localStorage.setItem('wt_wallet', JSON.stringify({ address: wt.address, method: 'wallet' }));
       updateNavBtn();
 
-      setStatus(status, '✅ Connected! You can now copy whale bets directly.', 'ok');
-      setTimeout(closeConnectModal, 1300);
+      setStatus(status, '✅ Connected! Your Polymarket account is linked. You can now copy whale bets.', 'ok');
+      setTimeout(closeConnectModal, 1600);
 
     } catch(e) {
       btn.disabled = false;
       btn.textContent = 'Connect MetaMask';
-      if (e.code === 4001) {
-        setStatus(status, '❌ Signature rejected — you cancelled.', 'err');
+      if (e.code === 4001 || e.code === 'ACTION_REJECTED') {
+        setStatus(status, '❌ Signature rejected — please try again.', 'err');
+      } else if ((e.message || '').includes('not registered') || (e.message || '').includes('polymarket.com')) {
+        setStatus(status, '❌ ' + e.message, 'err');
       } else {
-        setStatus(status, '❌ ' + (e.message || 'Connection failed'), 'err');
+        setStatus(status, '❌ ' + (e.message || 'Connection failed. Please try again.'), 'err');
       }
     }
   };
