@@ -1187,7 +1187,10 @@
         </div>
 
         <button class="wt-btn wt-btn-green" id="wtConfirmBtn" onclick="executeTrade()">Confirm Bet</button>
-        <div style="font-size:11px;color:#484f58;text-align:center;margin-top:10px">Executes on Polymarket · No extra fees</div>
+        <div style="font-size:11px;color:#484f58;text-align:center;margin-top:10px">
+          Executes on Polymarket · No extra fees &nbsp;·&nbsp;
+          <a id="wtPolymarketLink" href="#" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none;font-weight:600" data-affiliate>View on Polymarket →</a>
+        </div>
       </div>
 
       <!-- LOADING STATE -->
@@ -2759,6 +2762,10 @@ setInterval(refreshActivity, 60 * 1000);
     document.getElementById('wtTradeTitle').textContent = wt.title;
     document.getElementById('wtTradePriceLabel').textContent =
       wt.price > 0 ? (wt.price * 100).toFixed(1) + '¢' : '—';
+    const pmLink = document.getElementById('wtPolymarketLink');
+    if (pmLink) pmLink.href = wt.slug
+      ? `https://polymarket.com/event/${wt.slug}?via=manpreet-singh-brar`
+      : 'https://polymarket.com?via=manpreet-singh-brar';
 
     // Preset amount reset
     document.getElementById('wtTradeAmt').value = '10';
