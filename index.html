@@ -1114,20 +1114,20 @@
           <br><span style="color:#484f58;font-size:11px;margin-top:4px;display:block">Most users should use the MetaMask tab instead.</span>
         </p>
         <div class="wt-input-group">
-          <label class="wt-label">Your Wallet Address</label>
+          <label class="wt-label" for="wtAPIAddr">Your Wallet Address</label>
           <input class="wt-input" id="wtAPIAddr" type="text" placeholder="0x…" autocomplete="off" spellcheck="false" />
         </div>
         <div class="wt-input-group">
-          <label class="wt-label">API Key</label>
-          <input class="wt-input" id="wtAPIKey" type="password" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" />
+          <label class="wt-label" for="wtAPIKey">API Key</label>
+          <input class="wt-input" id="wtAPIKey" type="password" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="new-password" />
         </div>
         <div class="wt-input-group">
-          <label class="wt-label">API Secret <span style="color:#484f58;font-weight:400">(if required)</span></label>
-          <input class="wt-input" id="wtAPISecret" type="password" placeholder="Secret" autocomplete="off" />
+          <label class="wt-label" for="wtAPISecret">API Secret <span style="color:#484f58;font-weight:400">(if required)</span></label>
+          <input class="wt-input" id="wtAPISecret" type="password" placeholder="Secret" autocomplete="new-password" />
         </div>
         <div class="wt-input-group" style="margin-bottom:16px">
-          <label class="wt-label">API Passphrase <span style="color:#484f58;font-weight:400">(if required)</span></label>
-          <input class="wt-input" id="wtAPIPassphrase" type="password" placeholder="Passphrase" autocomplete="off" />
+          <label class="wt-label" for="wtAPIPassphrase">API Passphrase <span style="color:#484f58;font-weight:400">(if required)</span></label>
+          <input class="wt-input" id="wtAPIPassphrase" type="password" placeholder="Passphrase" autocomplete="new-password" />
         </div>
         <button class="wt-btn wt-btn-primary" id="wtBtnAPI" onclick="connectApiKey()">Save Credentials</button>
         <div id="wtAPIStatus" style="margin-top:12px;font-size:12px;min-height:18px;text-align:center;color:#8b949e"></div>
@@ -1159,7 +1159,7 @@
           <button class="wt-outcome-btn no"  id="wtOutcomeNo"  onclick="selectOutcome('No')">❌ NO</button>
         </div>
 
-        <div style="font-size:11px;color:#8b949e;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">Bet amount</div>
+        <label for="wtTradeAmt" style="font-size:11px;color:#8b949e;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;display:block">Bet amount</label>
         <div class="wt-preset-row">
           <button class="wt-preset-btn" onclick="setTradeAmount(10)">$10</button>
           <button class="wt-preset-btn" onclick="setTradeAmount(25)">$25</button>
