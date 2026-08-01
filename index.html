@@ -1103,6 +1103,11 @@
         <div style="padding-top:14px;border-top:1px solid #21262d;text-align:center;font-size:12px;color:#484f58">
           Need MetaMask? <a href="https://metamask.io" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Download here →</a>
           &nbsp;·&nbsp; No Polymarket account? <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Sign up free →</a>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid #21262d">
+            <a id="wtDirectPolyLink" href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#8b949e;text-decoration:none;font-size:11px" data-affiliate>
+              Skip — place bet directly on Polymarket →
+            </a>
+          </div>
         </div>
       </div>
 
@@ -2595,6 +2600,14 @@ setInterval(refreshActivity, 60 * 1000);
     document.getElementById('wtBtnAPI').disabled = false;
     document.getElementById('wtBtnAPI').textContent = 'Save Credentials';
     switchConnectTab('metamask');
+    // Set direct Polymarket link for the pending trade (if any)
+    const directLink = document.getElementById('wtDirectPolyLink');
+    if (directLink) {
+      const slug = wt.pending && wt.pending.slug;
+      directLink.href = slug
+        ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
+        : 'https://polymarket.com?via=manpreet-singh-brar';
+    }
   };
 
   window.closeConnectModal = function() {
@@ -2747,8 +2760,9 @@ setInterval(refreshActivity, 60 * 1000);
 
   // ── Trade Modal ────────────────────────────────────────────────────────────
   window.openTradeModal = function(dataset) {
-    // If not connected → show connect modal first
+    // If not connected → save pending trade + show connect modal
     if (!wt.address) {
+      wt.pending = dataset;
       openConnectModal();
       return;
     }
