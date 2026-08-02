@@ -2592,6 +2592,7 @@ setInterval(refreshActivity, 60 * 1000);
 
   // ── Connect Modal ──────────────────────────────────────────────────────────
   window.openConnectModal = function() {
+    if (typeof gtag !== 'undefined') gtag('event', 'connect_modal_open');
     document.getElementById('wtConnectModal').classList.add('open');
     document.getElementById('wtMMStatus').textContent = '';
     document.getElementById('wtAPIStatus').textContent = '';
@@ -2725,12 +2726,16 @@ setInterval(refreshActivity, 60 * 1000);
       localStorage.setItem('wt_wallet', JSON.stringify({ address: wt.address, method: 'wallet' }));
       updateNavBtn();
 
+      if (typeof gtag !== 'undefined') gtag('event', 'wallet_connected', { method: 'metamask' });
       setStatus(status, '✅ Connected! Your Polymarket account is linked. You can now copy whale bets.', 'ok');
       setTimeout(closeConnectModal, 1600);
 
     } catch(e) {
       btn.disabled = false;
       btn.textContent = 'Connect MetaMask';
+      const errReason = e.code === 4001 || e.code === 'ACTION_REJECTED' ? 'user_rejected'
+        : (e.message || '').includes('not registered') ? 'not_registered' : 'unknown';
+      if (typeof gtag !== 'undefined') gtag('event', 'wallet_connect_failed', { method: 'metamask', reason: errReason });
       if (e.code === 4001 || e.code === 'ACTION_REJECTED') {
         setStatus(status, '❌ Signature rejected — please try again.', 'err');
       } else if ((e.message || '').includes('not registered') || (e.message || '').includes('polymarket.com')) {
@@ -2773,6 +2778,7 @@ setInterval(refreshActivity, 60 * 1000);
       localStorage.setItem('wt_wallet', JSON.stringify({ address: wt.address, method: 'apikey' }));
       updateNavBtn();
 
+      if (typeof gtag !== 'undefined') gtag('event', 'wallet_connected', { method: 'apikey' });
       setStatus(status, '✅ Saved! You can now copy whale bets directly.', 'ok');
       setTimeout(closeConnectModal, 1300);
 
@@ -2827,7 +2833,10 @@ setInterval(refreshActivity, 60 * 1000);
     wtShowForm();
 
     document.getElementById('wtTradeModal').classList.add('open');
-    if (typeof gtag !== 'undefined') gtag('event', 'trade_modal_open', { slug: wt.slug });
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'trade_modal_open', { slug: wt.slug });
+      gtag('event', 'copy_bet_click', { slug: wt.slug, outcome: wt.outcome, market: wt.title });
+    }
   };
 
   window.closeTradeModal = function() {
@@ -2895,6 +2904,8 @@ setInterval(refreshActivity, 60 * 1000);
     if (amount > 1000)       { showTradeErr('Maximum bet per trade is $1,000.'); return; }
     if (!address)            { closeTradeModal(); openConnectModal(); return; }
     if (!window.ethereum)    { showTradeErr('MetaMask not found. Install MetaMask to trade.'); return; }
+
+    if (typeof gtag !== 'undefined') gtag('event', 'trade_submitted', { slug, outcome, amount });
 
     // Show loading
     document.getElementById('wtTradeForm').style.display    = 'none';
@@ -2988,12 +2999,21 @@ setInterval(refreshActivity, 60 * 1000);
         document.getElementById('wtTradeSuccess').style.display = 'block';
         document.getElementById('wtSuccessMsg').textContent =
           d.message || 'Your $' + amount.toFixed(2) + ' ' + outcome + ' bet was submitted to Polymarket.';
-        if (typeof gtag !== 'undefined') gtag('event', 'trade_executed', { slug, outcome, amount });
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'trade_executed', { slug, outcome, amount });
+          gtag('event', 'trade_success',  { slug, outcome, amount });
+        }
       } else {
         if (tradeRes.status === 401) resetWallet();
         // Closed market → offer link to view result instead of "Try Again"
         const errMsg = d.error || 'Trade failed. Please try again.';
         const isClosed = errMsg.toLowerCase().includes('closed') || errMsg.toLowerCase().includes('no longer');
+        const errCategory = errMsg.toLowerCase().includes('region') ? 'geo_block'
+          : isClosed ? 'market_closed'
+          : errMsg.toLowerCase().includes('active') ? 'market_inactive'
+          : errMsg.toLowerCase().includes('credential') || errMsg.toLowerCase().includes('api') ? 'auth_error'
+          : 'other';
+        if (typeof gtag !== 'undefined') gtag('event', 'trade_failed', { slug, outcome, amount, reason: errCategory });
         showTradeErr(errMsg);
         if (isClosed && slug) {
           const pmUrl = 'https://polymarket.com/event/' + slug + '?via=manpreet-singh-brar';
@@ -3010,8 +3030,10 @@ setInterval(refreshActivity, 60 * 1000);
       document.getElementById('wtTradeLoading').style.display = 'none';
       const msg = e?.message || '';
       if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('user denied')) {
+        if (typeof gtag !== 'undefined') gtag('event', 'trade_failed', { slug, outcome, amount, reason: 'user_rejected' });
         wtShowForm(); // silent cancel
       } else {
+        if (typeof gtag !== 'undefined') gtag('event', 'trade_failed', { slug, outcome, amount, reason: 'network_error' });
         showTradeErr(msg || 'Unexpected error — please try again.');
       }
     }
