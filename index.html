@@ -1202,7 +1202,7 @@
       <div id="wtTradeLoading" style="display:none" class="wt-status">
         <div class="wt-status-icon">⏳</div>
         <div class="wt-status-title">Placing your bet…</div>
-        <div class="wt-status-sub">Submitting to Polymarket. Hang tight — this takes a few seconds.</div>
+        <div class="wt-status-sub" id="wtLoadingMsg">Building order…</div>
       </div>
 
       <!-- SUCCESS STATE -->
@@ -2881,6 +2881,7 @@ setInterval(refreshActivity, 60 * 1000);
   };
 
   // ── Execute Trade ──────────────────────────────────────────────────────────
+  // Flow: fetch order params → MetaMask EIP-712 sign → backend HMAC proxy → CLOB
   window.executeTrade = async function() {
     const amount  = parseFloat(document.getElementById('wtTradeAmt').value);
     const outcome = wt.outcome;
@@ -2888,24 +2889,84 @@ setInterval(refreshActivity, 60 * 1000);
     const address = wt.address;
 
     // Validate
-    if (!slug)    { showTradeErr('No market selected. Please close and try again.'); return; }
-    if (!outcome) { showTradeErr('Please select YES or NO.'); return; }
+    if (!slug)               { showTradeErr('No market selected. Please close and try again.'); return; }
+    if (!outcome)            { showTradeErr('Please select YES or NO.'); return; }
     if (!amount || amount < 1)   { showTradeErr('Minimum bet amount is $1.'); return; }
-    if (amount > 1000) { showTradeErr('Maximum bet per trade is $1,000.'); return; }
-    if (!address) { closeTradeModal(); openConnectModal(); return; }
+    if (amount > 1000)       { showTradeErr('Maximum bet per trade is $1,000.'); return; }
+    if (!address)            { closeTradeModal(); openConnectModal(); return; }
+    if (!window.ethereum)    { showTradeErr('MetaMask not found. Install MetaMask to trade.'); return; }
 
     // Show loading
     document.getElementById('wtTradeForm').style.display    = 'none';
     document.getElementById('wtTradeLoading').style.display = 'block';
     document.getElementById('wtConfirmBtn').disabled = true;
 
+    const setLoading = msg => {
+      const el = document.getElementById('wtLoadingMsg');
+      if (el) el.textContent = msg;
+    };
+
     try {
-      const r = await fetch('/api/trade', {
-        method: 'POST',
+      // ── Step 1: Ensure MetaMask is on Polygon (chainId 137) ────────────────
+      setLoading('Checking network…');
+      const chainHex = await window.ethereum.request({ method: 'eth_chainId' });
+      if (chainHex !== '0x89') {
+        setLoading('Switching to Polygon…');
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x89' }],
+          });
+        } catch (switchErr) {
+          if (switchErr.code === 4902) {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{ chainId: '0x89', chainName: 'Polygon Mainnet',
+                nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+                rpcUrls: ['https://polygon-rpc.com'],
+                blockExplorerUrls: ['https://polygonscan.com'] }],
+            });
+          } else { throw switchErr; }
+        }
+      }
+
+      // ── Step 2: Fetch unsigned order params from backend ────────────────────
+      setLoading('Building order…');
+      const paramsUrl = `/api/trade-params?slug=${encodeURIComponent(slug)}&outcome=${encodeURIComponent(outcome)}&amount=${amount}&address=${encodeURIComponent(address)}`;
+      const paramsRes = await fetch(paramsUrl);
+      const paramsData = await paramsRes.json();
+      if (!paramsRes.ok || paramsData.error)
+        throw new Error(paramsData.error || 'Could not fetch order parameters');
+
+      const { domain, types, primaryType, order } = paramsData;
+
+      // ── Step 3: MetaMask EIP-712 sign ──────────────────────────────────────
+      setLoading('Sign the order in MetaMask…');
+      const typedData = JSON.stringify({ domain, types, primaryType: primaryType || 'Order', message: order });
+      let signature;
+      try {
+        signature = await window.ethereum.request({
+          method: 'eth_signTypedData_v4',
+          params: [address, typedData],
+        });
+      } catch (sigErr) {
+        if (sigErr.code === 4001 || sigErr.message?.toLowerCase().includes('rejected')) {
+          // User cancelled MetaMask — go back to form
+          wtShowForm();
+          return;
+        }
+        throw sigErr;
+      }
+
+      // ── Step 4: POST signed order to backend → CLOB ────────────────────────
+      setLoading('Submitting to Polymarket…');
+      const signedOrder = { ...order, signature };
+      const tradeRes  = await fetch('/api/trade', {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, slug, outcome, amount }),
+        body:    JSON.stringify({ signedOrder, address, orderType: 'FOK' }),
       });
-      const d = await r.json();
+      const d = await tradeRes.json();
 
       document.getElementById('wtTradeLoading').style.display = 'none';
 
@@ -2914,29 +2975,19 @@ setInterval(refreshActivity, 60 * 1000);
         document.getElementById('wtSuccessMsg').textContent =
           d.message || 'Your $' + amount.toFixed(2) + ' ' + outcome + ' bet was submitted to Polymarket.';
         if (typeof gtag !== 'undefined') gtag('event', 'trade_executed', { slug, outcome, amount });
-      } else if (d.code === 'NEED_APIKEY') {
-        // MetaMask wallet — redirect to connect with API key
-        document.getElementById('wtTradeLoading').style.display = 'none';
-        document.getElementById('wtTradeError').style.display = 'block';
-        document.getElementById('wtErrorMsg').textContent =
-          'MetaMask-only connection can\'t execute trades directly. Connect via API Key to enable 1-click betting.';
-        // Replace Try Again button with "Connect API Key" action
-        document.getElementById('wtErrorMsg').insertAdjacentHTML('afterend',
-          '<button class="wt-btn wt-btn-primary" style="max-width:180px;margin:8px auto 0" ' +
-          'onclick="closeTradeModal();openConnectModal();setTimeout(()=>switchConnectTab(\'apikey\'),100)">' +
-          '🔑 Connect API Key</button>' +
-          (d.fallbackUrl ? '<div style="margin-top:10px"><a href="' + d.fallbackUrl +
-          '" target="_blank" style="font-size:12px;color:#58a6ff;text-decoration:none">Open on Polymarket instead →</a></div>' : '')
-        );
       } else {
-        // If auth failed — clear wallet so user reconnects
-        if (r.status === 401) resetWallet();
+        if (tradeRes.status === 401) resetWallet();
         showTradeErr(d.error || 'Trade failed. Please try again.');
       }
 
     } catch(e) {
       document.getElementById('wtTradeLoading').style.display = 'none';
-      showTradeErr('Network error — check your connection and try again.');
+      const msg = e?.message || '';
+      if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('user denied')) {
+        wtShowForm(); // silent cancel
+      } else {
+        showTradeErr(msg || 'Unexpected error — please try again.');
+      }
     }
   };
 
