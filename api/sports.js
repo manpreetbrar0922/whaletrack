@@ -74,7 +74,10 @@ export default async function handler(req, res) {
         if (!marketMap[key]) {
           marketMap[key] = { title, slug, bets: [], yesValue: 0, noValue: 0, totalValue: 0 };
         }
+        // Skip resolved/redeemable positions — market has already settled
+        if (p.redeemable === true) continue;
         const value   = parseFloat(p.currentValue || p.value || 0);
+        if (value <= 0) continue;
         const outcome = (p.outcome || '').toLowerCase() === 'yes' ? 'Yes' : 'No';
         marketMap[key].bets.push({ whale: whale.name, outcome, value });
         if (outcome === 'Yes') marketMap[key].yesValue += value;
