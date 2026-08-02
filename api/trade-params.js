@@ -41,11 +41,33 @@ const ORDER_TYPES = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-// Resolve a slug to a Gamma market object.
-// Handles both market slugs (direct) and event slugs (nested markets).
-// title is used to match the specific market within an event when there are multiple.
+// Resolve a slug to a market object with at least { conditionId, closed, negRisk }.
+// Handles: URL slugs, event slugs (nested markets), and raw conditionIds (0x...).
 async function resolveMarket(slug, title) {
   const timeout = { signal: AbortSignal.timeout(9000) };
+
+  // 0. If slug looks like a conditionId (0x + 64 hex chars) → go straight to CLOB.
+  //    The positions API returns conditionIds as slugs for politics/crypto markets.
+  if (/^0x[0-9a-fA-F]{64}$/.test(slug)) {
+    try {
+      const r = await fetch(`${CLOB_HOST}/markets/${slug}`, timeout);
+      if (r.ok) {
+        const m = await r.json();
+        if (m && m.condition_id) {
+          // Normalise to the shape the rest of the code expects
+          return {
+            conditionId: m.condition_id,
+            question:    m.question || title || slug,
+            closed:      !!m.closed,
+            archived:    false,
+            negRisk:     !!m.neg_risk,
+            _fromClob:   true,     // flag so we skip getClobMarket() below
+            _clobData:   m,        // carry the full CLOB payload
+          };
+        }
+      }
+    } catch { /* fall through to other methods */ }
+  }
 
   // 1. Try direct market slug
   try {
@@ -131,12 +153,13 @@ export default async function handler(req, res) {
   if (market.closed || market.archived)
     return res.status(400).json({ error: 'This market is closed and no longer accepting bets.' });
 
-  const conditionId = market.conditionId;
+  const conditionId = market.conditionId || market.condition_id;
   if (!conditionId)
     return res.status(400).json({ error: 'Could not identify market condition.' });
 
   // 2. Get CLOB market data (token IDs + active status)
-  const clobMarket = await getClobMarket(conditionId);
+  // If resolveMarket already fetched CLOB data (conditionId path), reuse it.
+  const clobMarket = market._fromClob ? market._clobData : await getClobMarket(conditionId);
   if (!clobMarket || !clobMarket.active || clobMarket.closed)
     return res.status(400).json({ error: 'Market is not currently active for trading on Polymarket.' });
 
