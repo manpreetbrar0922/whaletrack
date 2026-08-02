@@ -2935,8 +2935,22 @@ setInterval(refreshActivity, 60 * 1000);
       const paramsUrl = `/api/trade-params?slug=${encodeURIComponent(slug)}&outcome=${encodeURIComponent(outcome)}&amount=${amount}&address=${encodeURIComponent(address)}&title=${encodeURIComponent(wt.title || '')}`;
       const paramsRes = await fetch(paramsUrl);
       const paramsData = await paramsRes.json();
-      if (!paramsRes.ok || paramsData.error)
-        throw new Error(paramsData.error || 'Could not fetch order parameters');
+      if (!paramsRes.ok || paramsData.error) {
+        const err = paramsData.error || 'Could not fetch order parameters';
+        const isClosed = err.toLowerCase().includes('closed') || err.toLowerCase().includes('no longer');
+        document.getElementById('wtTradeLoading').style.display = 'none';
+        showTradeErr(err);
+        if (isClosed && slug) {
+          const pmUrl = 'https://polymarket.com/event/' + slug + '?via=manpreet-singh-brar';
+          document.getElementById('wtErrorMsg').insertAdjacentHTML('afterend',
+            '<a href="' + pmUrl + '" target="_blank" rel="noopener" ' +
+            'style="display:inline-block;margin-top:12px;padding:8px 18px;background:rgba(88,166,255,0.15);' +
+            'border:1px solid rgba(88,166,255,0.4);border-radius:8px;font-size:13px;font-weight:700;' +
+            'color:#58a6ff;text-decoration:none">View Result on Polymarket →</a>'
+          );
+        }
+        return;
+      }
 
       const { domain, types, primaryType, order } = paramsData;
 
@@ -2977,7 +2991,19 @@ setInterval(refreshActivity, 60 * 1000);
         if (typeof gtag !== 'undefined') gtag('event', 'trade_executed', { slug, outcome, amount });
       } else {
         if (tradeRes.status === 401) resetWallet();
-        showTradeErr(d.error || 'Trade failed. Please try again.');
+        // Closed market → offer link to view result instead of "Try Again"
+        const errMsg = d.error || 'Trade failed. Please try again.';
+        const isClosed = errMsg.toLowerCase().includes('closed') || errMsg.toLowerCase().includes('no longer');
+        showTradeErr(errMsg);
+        if (isClosed && slug) {
+          const pmUrl = 'https://polymarket.com/event/' + slug + '?via=manpreet-singh-brar';
+          document.getElementById('wtErrorMsg').insertAdjacentHTML('afterend',
+            '<a href="' + pmUrl + '" target="_blank" rel="noopener" ' +
+            'style="display:inline-block;margin-top:12px;padding:8px 18px;background:rgba(88,166,255,0.15);' +
+            'border:1px solid rgba(88,166,255,0.4);border-radius:8px;font-size:13px;font-weight:700;' +
+            'color:#58a6ff;text-decoration:none">View Result on Polymarket →</a>'
+          );
+        }
       }
 
     } catch(e) {

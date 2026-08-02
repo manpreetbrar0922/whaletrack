@@ -63,8 +63,31 @@ export default async function handler(req, res) {
       }
     }
 
-    // Filter out trades with no market title or zero price (combo/internal transactions)
-    const filtered = all.filter(t => t.title && t.title !== 'Unknown Market' && t.price > 0);
+    // Helper: extract YYYY-MM-DD from a slug like "phi-int-2026-08-01-more-markets"
+    function slugDate(slug) {
+      const m = (slug || '').match(/(\d{4}-\d{2}-\d{2})/);
+      return m ? m[1] : null;
+    }
+
+    // Sports/timed markets have a date in the slug. If that date was more than
+    // 12 hours ago (UTC) the game/event is almost certainly over and the market
+    // is resolved. Filter those out so we don't show stale "LIVE" alerts.
+    const nowMs = Date.now();
+    const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+
+    const filtered = all.filter(t => {
+      // Must have title and real price
+      if (!t.title || t.title === 'Unknown Market' || t.price <= 0) return false;
+
+      // Check if slug contains a past date
+      const d = slugDate(t.slug);
+      if (d) {
+        const marketDate = new Date(d + 'T23:59:00Z').getTime(); // end of that UTC day
+        if (nowMs - marketDate > TWELVE_HOURS) return false;     // resolved — skip
+      }
+
+      return true;
+    });
 
     // Sort by most recent
     filtered.sort((a, b) => b.timestamp - a.timestamp);
