@@ -894,7 +894,7 @@
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
     <button class="alert-btn" onclick="toggleAlerts()" id="alertBtn">🔔 Alerts Off</button>
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
-    <button class="wt-connect-btn" id="wtConnectBtn" onclick="showComingSoon()" title="In-app trading coming soon!" style="opacity:0.7;cursor:default;position:relative">🔌 Connect <span style="font-size:9px;background:#f0883e;color:#000;font-weight:800;border-radius:4px;padding:1px 5px;margin-left:4px;letter-spacing:0.5px">SOON</span></button>
+    <button class="wt-connect-btn" id="wtConnectBtn" onclick="openConnectModal()" title="Connect your Polymarket wallet to copy whale bets">🔌 Connect</button>
     <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade →</a>
   </div>
 </nav>
@@ -2798,15 +2798,13 @@ setInterval(refreshActivity, 60 * 1000);
 
   // ── Trade Modal ────────────────────────────────────────────────────────────
   window.openTradeModal = function(dataset) {
-    // In-app trading temporarily paused — redirect to Polymarket
-    const slug = (dataset && (dataset.slug || dataset.get?.('trade'))) || '';
-    const pmUrl = slug
-      ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
-      : 'https://polymarket.com?via=manpreet-singh-brar';
-    window.open(pmUrl, '_blank', 'noopener');
-    return;
+    // If not connected → save pending trade + show connect modal
+    if (!wt.address) {
+      wt.pending = dataset;
+      openConnectModal();
+      return;
+    }
 
-    // eslint-disable-next-line no-unreachable
     wt.slug    = dataset.slug    || '';
     wt.outcome = dataset.outcome || 'Yes';
     wt.price   = parseFloat(dataset.price) || 0;
