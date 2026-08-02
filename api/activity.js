@@ -63,61 +63,57 @@ export default async function handler(req, res) {
       }
     }
 
-    const nowMs   = Date.now();
-    const nowSec  = Math.floor(nowMs / 1000);
-    const MONTH_NAMES = {
-      jan:1, feb:2, mar:3, apr:4, may:5, jun:6,
-      jul:7, aug:8, sep:9, oct:10, nov:11, dec:12,
-      january:1, february:2, march:3, april:4, june:6, july:7,
-      august:8, september:9, october:10, november:11, december:12,
+    const nowMs  = Date.now();
+    const nowSec = Math.floor(nowMs / 1000);
+
+    const MONTH_NUM = {
+      january:1, february:2, march:3, april:4, may:5, june:6,
+      july:7, august:8, september:9, october:10, november:11, december:12,
+      jan:1, feb:2, mar:3, apr:4, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12,
     };
 
-    // Extract the earliest date mentioned in a slug or title.
-    // Returns a Date if a past date is found, null otherwise.
-    function findPastDate(slug, title) {
-      const nowYear = new Date().getUTCFullYear();
+    // Returns true if the slug or title explicitly mentions a PAST date,
+    // meaning the market has already resolved.
+    // Only triggers when we find a specific past date — never false-positives on future dates.
+    function marketLikelyResolved(slug, title) {
+      const nowUtc = new Date(nowMs);
+      const nowYear = nowUtc.getUTCFullYear();
 
-      // 1. YYYY-MM-DD in slug (sports markets)
-      const slugMatch = (slug || '').match(/(\d{4}-\d{2}-\d{2})/);
-      if (slugMatch) {
-        const d = new Date(slugMatch[1] + 'T23:59:00Z');
-        if (d < new Date(nowMs)) return d;
+      // 1. YYYY-MM-DD in slug (sports: "phi-int-2026-08-01")
+      const slugDateMatch = (slug || '').match(/(\d{4}-\d{2}-\d{2})/);
+      if (slugDateMatch) {
+        const d = new Date(slugDateMatch[1] + 'T23:59:00Z');
+        // More than 12 hours in the past → resolved
+        if (nowMs - d.getTime() > 12 * 3600 * 1000) return true;
       }
 
-      // 2. "Month Day" or "Month Day," in title — e.g. "on July 17?" "before August 1"
-      const titleMatch = (title || '').match(
+      // 2. "Month Day" in title (crypto: "on July 17?", "above $68K on July 15")
+      // Only match if we also find the year OR the current-year date is already past.
+      // Do NOT fall back to previous year — that causes false positives on future months.
+      const titleDateMatch = (title || '').match(
         /\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|oct|nov|dec)\s+(\d{1,2})\b/i
       );
-      if (titleMatch) {
-        const mon = MONTH_NAMES[(titleMatch[1] || '').toLowerCase()];
-        const day = parseInt(titleMatch[2], 10);
-        if (mon && day) {
-          // First assume current year; if that date is in the future, try previous year
-          let d = new Date(Date.UTC(nowYear, mon - 1, day, 23, 59, 0));
-          if (d > new Date(nowMs)) d = new Date(Date.UTC(nowYear - 1, mon - 1, day, 23, 59, 0));
-          if (d < new Date(nowMs)) return d;
+      if (titleDateMatch) {
+        const mon = MONTH_NUM[(titleDateMatch[1] || '').toLowerCase()];
+        const day = parseInt(titleDateMatch[2], 10);
+        if (mon && day >= 1 && day <= 31) {
+          // Assume current year — only filter if CURRENT YEAR date is in the past
+          const d = new Date(Date.UTC(nowYear, mon - 1, day, 23, 59, 0));
+          if (d < nowUtc && nowMs - d.getTime() > 12 * 3600 * 1000) return true;
+          // If the current-year date is in the future, the market is still open → keep
         }
       }
 
-      return null;
+      return false;
     }
 
-    // Markets with a past date in slug/title are resolved — remove them.
-    // Also drop trades older than 10 days (stale regardless of market type).
-    const TEN_DAYS_SEC = 10 * 24 * 3600;
-    const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+    // Drop trades older than 30 days (absolute backstop — no one wants month-old alerts)
+    const THIRTY_DAYS_SEC = 30 * 24 * 3600;
 
     const filtered = all.filter(t => {
-      // Must have title and real price
       if (!t.title || t.title === 'Unknown Market' || t.price <= 0) return false;
-
-      // Drop trades older than 10 days
-      if (t.timestamp && nowSec - t.timestamp > TEN_DAYS_SEC) return false;
-
-      // Drop if a past date is found in slug or title (market resolved)
-      const pastDate = findPastDate(t.slug, t.title);
-      if (pastDate && nowMs - pastDate.getTime() > TWELVE_HOURS_MS) return false;
-
+      if (t.timestamp && nowSec - t.timestamp > THIRTY_DAYS_SEC)    return false;
+      if (marketLikelyResolved(t.slug, t.title))                     return false;
       return true;
     });
 
