@@ -2643,6 +2643,31 @@ setInterval(refreshActivity, 60 * 1000);
       const address  = accounts[0] || '';
       if (!address) throw new Error('No account found');
 
+      // Step 1b: switch MetaMask to Polygon (chainId 137) — required for EIP-712 domain match
+      setStatus(status, 'Switching to Polygon network…', 'info');
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x89' }], // 0x89 = 137 (Polygon)
+        });
+      } catch (switchErr) {
+        // Chain not added yet — add Polygon automatically
+        if (switchErr.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x89',
+              chainName: 'Polygon Mainnet',
+              nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+              rpcUrls: ['https://polygon-rpc.com'],
+              blockExplorerUrls: ['https://polygonscan.com'],
+            }],
+          });
+        } else {
+          throw switchErr;
+        }
+      }
+
       setStatus(status, 'Sign the Polymarket message to link your account…', 'info');
 
       // Step 2: sign Polymarket's EIP-712 ClobAuth message
