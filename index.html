@@ -2932,7 +2932,7 @@ setInterval(refreshActivity, 60 * 1000);
 
       // ── Step 2: Fetch unsigned order params from backend ────────────────────
       setLoading('Building order…');
-      const paramsUrl = `/api/trade-params?slug=${encodeURIComponent(slug)}&outcome=${encodeURIComponent(outcome)}&amount=${amount}&address=${encodeURIComponent(address)}`;
+      const paramsUrl = `/api/trade-params?slug=${encodeURIComponent(slug)}&outcome=${encodeURIComponent(outcome)}&amount=${amount}&address=${encodeURIComponent(address)}&title=${encodeURIComponent(wt.title || '')}`;
       const paramsRes = await fetch(paramsUrl);
       const paramsData = await paramsRes.json();
       if (!paramsRes.ok || paramsData.error)

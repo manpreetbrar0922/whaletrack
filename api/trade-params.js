@@ -1,6 +1,9 @@
 // WhaleTrack — Build unsigned Polymarket order params for client-side MetaMask signing.
 // Frontend calls this to get the EIP-712 typed data, signs with MetaMask, then POSTs
 // the signed order to /api/trade which handles HMAC auth + CLOB proxy.
+//
+// Note: whale activity slugs can be either market slugs or event slugs.
+// We try the markets API first, then fall back to the events API.
 
 const CLOB_HOST   = 'https://clob.polymarket.com';
 const GAMMA_API   = 'https://gamma-api.polymarket.com';
@@ -38,30 +41,66 @@ const ORDER_TYPES = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-async function getMarketBySlug(slug) {
-  const r = await fetch(
-    `${GAMMA_API}/markets?slug=${encodeURIComponent(slug)}&limit=1`,
-    { signal: AbortSignal.timeout(8000) }
-  );
-  if (!r.ok) return null;
-  const data = await r.json();
-  return Array.isArray(data) && data.length ? data[0] : null;
+// Resolve a slug to a Gamma market object.
+// Handles both market slugs (direct) and event slugs (nested markets).
+// title is used to match the specific market within an event when there are multiple.
+async function resolveMarket(slug, title) {
+  const timeout = { signal: AbortSignal.timeout(9000) };
+
+  // 1. Try direct market slug
+  try {
+    const r = await fetch(`${GAMMA_API}/markets?slug=${encodeURIComponent(slug)}&limit=1`, timeout);
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data) && data.length) return data[0];
+    }
+  } catch { /* timeout or parse error — fall through */ }
+
+  // 2. Try event slug → find matching market inside event
+  try {
+    const r = await fetch(`${GAMMA_API}/events?slug=${encodeURIComponent(slug)}&limit=1`, timeout);
+    if (!r.ok) return null;
+    const events = await r.json();
+    if (!Array.isArray(events) || !events.length) return null;
+
+    const markets = events[0].markets || [];
+    if (!markets.length) return null;
+
+    if (title) {
+      // Try to match by question (title) — exact then fuzzy
+      const titleLow = title.toLowerCase();
+      const exact = markets.find(m => m.question?.toLowerCase() === titleLow);
+      if (exact) return exact;
+
+      // Fuzzy: first market whose question contains a significant word from title
+      const words = titleLow.split(' ').filter(w => w.length > 4);
+      const fuzzy = markets.find(m =>
+        words.some(w => m.question?.toLowerCase().includes(w))
+      );
+      if (fuzzy) return fuzzy;
+    }
+
+    // Fall back to first active binary (Yes/No) market in the event
+    const binary = markets.find(m => !m.closed && !m.archived && m.outcomes === '["Yes", "No"]');
+    if (binary) return binary;
+
+    // Last resort: first market that isn't closed
+    return markets.find(m => !m.closed && !m.archived) || markets[0];
+  } catch { return null; }
 }
 
 async function getClobMarket(conditionId) {
-  const r = await fetch(
-    `${CLOB_HOST}/markets/${conditionId}`,
-    { signal: AbortSignal.timeout(8000) }
-  );
+  const r = await fetch(`${CLOB_HOST}/markets/${conditionId}`, {
+    signal: AbortSignal.timeout(8000),
+  });
   if (!r.ok) return null;
   return r.json();
 }
 
 async function getOrderbook(tokenId) {
-  const r = await fetch(
-    `${CLOB_HOST}/book?token_id=${tokenId}`,
-    { signal: AbortSignal.timeout(8000) }
-  );
+  const r = await fetch(`${CLOB_HOST}/book?token_id=${tokenId}`, {
+    signal: AbortSignal.timeout(8000),
+  });
   if (!r.ok) return null;
   return r.json();
 }
@@ -75,7 +114,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET')    return res.status(405).end();
 
-  const { slug, outcome, amount, address } = req.query;
+  const { slug, outcome, amount, address, title } = req.query;
 
   if (!slug || !outcome || !amount || !address)
     return res.status(400).json({ error: 'Required: slug, outcome, amount, address' });
@@ -84,47 +123,48 @@ export default async function handler(req, res) {
   if (isNaN(amt) || amt < 1 || amt > 1000)
     return res.status(400).json({ error: 'Amount must be between $1 and $1,000' });
 
-  // 1. Get Gamma market metadata
-  const market = await getMarketBySlug(slug);
+  // 1. Resolve slug → Gamma market (handles both market and event slugs)
+  const market = await resolveMarket(slug, title || '');
   if (!market)
-    return res.status(404).json({ error: 'Market not found' });
+    return res.status(404).json({ error: 'Market not found. It may have been removed or the slug has changed.' });
+
   if (market.closed || market.archived)
-    return res.status(400).json({ error: 'This market is closed and no longer accepting bets' });
+    return res.status(400).json({ error: 'This market is closed and no longer accepting bets.' });
 
   const conditionId = market.conditionId;
   if (!conditionId)
-    return res.status(400).json({ error: 'Could not identify market condition' });
+    return res.status(400).json({ error: 'Could not identify market condition.' });
 
-  // 2. Get CLOB market (token IDs + active status)
+  // 2. Get CLOB market data (token IDs + active status)
   const clobMarket = await getClobMarket(conditionId);
   if (!clobMarket || !clobMarket.active || clobMarket.closed)
-    return res.status(400).json({ error: 'Market is not currently active for trading on Polymarket' });
+    return res.status(400).json({ error: 'Market is not currently active for trading on Polymarket.' });
 
   const tokens = clobMarket.tokens || [];
   const match  = tokens.find(t => t.outcome?.toLowerCase() === outcome.toLowerCase());
   if (!match)
-    return res.status(400).json({ error: `No ${outcome} outcome found for this market` });
+    return res.status(400).json({ error: `No "${outcome}" outcome found for this market. Available: ${tokens.map(t => t.outcome).join(', ')}` });
 
   const tokenId = match.token_id;
 
   // 3. Get live orderbook for best ask price
   const book = await getOrderbook(tokenId);
   if (!book || !book.asks || !book.asks.length)
-    return res.status(400).json({ error: 'No active order book for this market right now — try again in a moment' });
+    return res.status(400).json({ error: 'No active order book for this market right now — try again in a moment.' });
 
-  // Asks sorted ascending (lowest first) → best ask = asks[0]
+  // Asks are sorted ascending (lowest first) → best ask = asks[0]
   const bestAsk = parseFloat(book.asks[0].price);
   if (!bestAsk || bestAsk <= 0 || bestAsk >= 1)
     return res.status(400).json({ error: 'Invalid market price. Try again in a moment.' });
 
-  // 4. Build order amounts (6 decimal places, USDC + outcome tokens)
+  // 4. Build order amounts (6 decimal places — USDC + outcome tokens)
   // BUY: makerAmount = USDC you pay, takerAmount = outcome tokens you receive
-  // With 5% slippage tolerance so FOK fills even if price moves slightly
-  const makerAmount  = Math.floor(amt * 1e6).toString();
-  const maxPrice     = bestAsk * 1.05;           // accept up to 5% above best ask
-  const takerAmount  = Math.floor(amt * 1e6 / maxPrice).toString();
+  // 5% slippage tolerance → FOK fills even if price moves slightly
+  const makerAmount = Math.floor(amt * 1e6).toString();
+  const maxPrice    = bestAsk * 1.05;
+  const takerAmount = Math.floor(amt * 1e6 / maxPrice).toString();
 
-  // Random salt (prevent replay; 15-digit random int)
+  // Random salt (prevents replay)
   const salt = Math.floor(Math.random() * 1e15 + 1e14).toString();
 
   // Which exchange contract? Depends on neg-risk flag
@@ -142,7 +182,7 @@ export default async function handler(req, res) {
     takerAmount,
     expiration:    '0',   // no expiry — FOK fires immediately
     nonce:         '0',
-    feeRateBps:    '0',   // Polymarket charges 0% fees on most markets
+    feeRateBps:    '0',   // Polymarket 0% fee on most markets
     side:          0,     // 0 = BUY
     signatureType: 0,     // 0 = EOA (MetaMask / Deposit Wallet)
   };
