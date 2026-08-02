@@ -293,6 +293,13 @@ function isPolitics(title) {
 function marketUrl(slug) {
   return slug ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar` : AFFILIATE;
 }
+
+// Open in-app trade modal on the main page (where the modal + wallet live)
+function copyBet(slug, outcome, title) {
+  if (!slug) { window.open(AFFILIATE, '_blank'); return; }
+  const params = new URLSearchParams({ trade: slug, outcome: outcome || 'Yes', title: title || '' });
+  window.location.href = '/?' + params.toString();
+}
 function fmtUSD(n) {
   n = parseFloat(n);
   if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
@@ -360,7 +367,7 @@ function renderMarkets(markets) {
           `).join('')}
         </div>
         <div style="display:flex;gap:8px">
-          ${m.slug ? `<a href="${marketUrl(m.slug)}" target="_blank" rel="noopener" style="flex:1;display:block;padding:9px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:8px;font-size:12px;color:var(--politics);text-align:center;text-decoration:none;font-weight:700">🗳️ Copy Bet →</a>` : ''}
+          ${m.slug ? `<button onclick="copyBet('${m.slug}','Yes','${(m.title||'').replace(/'/g,"\\'")}') " style="flex:1;display:block;padding:9px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:8px;font-size:12px;color:var(--politics);text-align:center;font-weight:700;cursor:pointer;border-style:solid">🗳️ Copy Bet →</button>` : ''}
           <a href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener" style="display:block;padding:9px 12px;background:#1d9bf0;border-radius:8px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;white-space:nowrap">🐦 Share</a>
         </div>
       </div>
@@ -400,7 +407,7 @@ function renderActivity(items) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
           <div class="feed-time">${timeAgo(t.timestamp)}</div>
-          <a href="${marketUrl(t.slug)}" target="_blank" rel="noopener" class="copy-link">🎯 Copy This Bet →</a>
+          <button onclick="copyBet('${t.slug}','${t.outcome||'Yes'}','${(t.title||'').replace(/'/g,"\\'")}')" class="copy-link" style="cursor:pointer;border:none">🎯 Copy This Bet →</button>
         </div>
       </div>
     `;

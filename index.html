@@ -3038,6 +3038,23 @@ setInterval(refreshActivity, 60 * 1000);
   // ── Boot ───────────────────────────────────────────────────────────────────
   init();
 
+  // ── Deep-link: open trade modal from sub-pages (?trade=slug&outcome=Yes&title=...) ──
+  (function checkTradeParam() {
+    const p = new URLSearchParams(window.location.search);
+    const slug    = p.get('trade');
+    const outcome = p.get('outcome') || 'Yes';
+    const title   = p.get('title')   || slug || 'Unknown Market';
+    if (!slug) return;
+
+    // Clean URL so refreshing doesn't reopen the modal
+    history.replaceState({}, '', window.location.pathname);
+
+    // Wait for init() to finish rendering, then open the modal
+    setTimeout(() => {
+      openTradeModal({ slug, outcome, title, price: '0' });
+    }, 400);
+  })();
+
 })();
 </script>
 
