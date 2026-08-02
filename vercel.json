@@ -1,4 +1,5 @@
 {
+  "regions": ["iad1"],
   "rewrites": [
     { "source": "/polymarket-whale-tracker", "destination": "/polymarket-whale-tracker.html" },
     { "source": "/polymarket-leaderboard",   "destination": "/polymarket-leaderboard.html"   },
