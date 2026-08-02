@@ -1,10 +1,7 @@
 // WhaleTrack — Execute Trade on Polymarket
 // Uses Polymarket CLOB API directly — no Bullpen CLI dependency, works on Vercel.
 
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const { ClobClient, OrderSide, OrderType, SignatureType } = require('@polymarket/clob-client');
-
+import { ClobClient, OrderSide, OrderType, SignatureType } from '@polymarket/clob-client';
 import { ethers } from 'ethers';
 
 const KV_BASE   = process.env.KV_REST_API_URL;
