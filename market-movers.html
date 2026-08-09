@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Market Movers — Where Polymarket Whales Are Betting Today | WhaleTrack</title>
+  <meta name="description" content="See which Polymarket markets have the most whale activity today. Real-time whale volume by market — find where smart money is concentrated."/>
+  <meta property="og:title" content="Market Movers — Where Polymarket Whales Are Betting Today"/>
+  <meta property="og:description" content="Which Polymarket markets have the most whale activity right now? See smart money concentration in real time."/>
+  <meta property="og:url" content="https://whaletrack.app/market-movers"/>
+  <link rel="canonical" href="https://whaletrack.app/market-movers"/>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-size: 18px; font-weight: 700; color: #58a6ff; text-decoration: none; }
+    .nav-logo span { color: #3fb950; }
+    .nav-links { display: flex; gap: 20px; }
+    .nav-links a { color: #8b949e; text-decoration: none; font-size: 14px; }
+    .nav-links a:hover, .nav-links a.active { color: #e6edf3; }
+    .nav-cta { background: #3fb950; color: #0d1117; font-size: 13px; font-weight: 700; padding: 7px 16px; border-radius: 8px; text-decoration: none; }
+
+    /* ── HERO ── */
+    .hero { text-align: center; padding: 48px 24px 32px; max-width: 820px; margin: 0 auto; }
+    .hero-badge { display: inline-block; background: rgba(88,166,255,.12); border: 1px solid rgba(88,166,255,.3); color: #58a6ff; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; letter-spacing: .5px; }
+    .hero h1 { font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+    .hero h1 span { color: #58a6ff; }
+    .hero p { color: #8b949e; font-size: 16px; max-width: 560px; margin: 0 auto 24px; }
+    .hero-stats { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
+    .hero-stat .val { font-size: 22px; font-weight: 800; color: #58a6ff; }
+    .hero-stat .lbl { font-size: 12px; color: #8b949e; margin-top: 2px; }
+
+    /* ── FILTERS ── */
+    .filters { max-width: 960px; margin: 0 auto 20px; padding: 0 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .filter-label { font-size: 13px; color: #8b949e; margin-right: 4px; }
+    .filter-btn { background: #161b22; border: 1px solid #30363d; color: #8b949e; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all .15s; }
+    .filter-btn:hover, .filter-btn.active { background: rgba(88,166,255,.1); border-color: #58a6ff; color: #58a6ff; }
+    .sort-label { font-size: 13px; color: #8b949e; margin-left: auto; }
+    .sort-select { background: #161b22; border: 1px solid #30363d; color: #e6edf3; font-size: 13px; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+    .refresh-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; font-size: 13px; padding: 6px 14px; border-radius: 8px; cursor: pointer; }
+    .refresh-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+    /* ── MARKET CARDS ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 16px 60px; }
+    .last-updated { text-align: center; font-size: 12px; color: #8b949e; margin-bottom: 16px; }
+
+    .loading { text-align: center; padding: 60px 20px; color: #8b949e; }
+    .loading .spinner { width: 32px; height: 32px; border: 3px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .market-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+      transition: border-color .15s, transform .15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .market-card:hover { border-color: #58a6ff; transform: translateY(-1px); }
+
+    .market-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+    .market-rank { width: 36px; height: 36px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #8b949e; flex-shrink: 0; }
+    .market-rank.top3 { border-color: #58a6ff; color: #58a6ff; background: rgba(88,166,255,.08); }
+    .market-title { font-size: 16px; font-weight: 700; color: #e6edf3; line-height: 1.4; flex: 1; }
+    .market-volume { text-align: right; flex-shrink: 0; }
+    .market-volume .amount { font-size: 20px; font-weight: 800; color: #3fb950; white-space: nowrap; }
+    .market-volume .label { font-size: 11px; color: #8b949e; margin-top: 2px; }
+
+    /* consensus bar */
+    .consensus { margin-bottom: 12px; }
+    .consensus-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+    .consensus-bar { height: 8px; background: #0d1117; border-radius: 4px; overflow: hidden; display: flex; }
+    .bar-yes { height: 100%; background: #3fb950; border-radius: 4px 0 0 4px; transition: width .5s; }
+    .bar-no  { height: 100%; background: #f85149; border-radius: 0 4px 4px 0; transition: width .5s; }
+
+    /* whale tags */
+    .market-footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .whale-tag { font-size: 11px; padding: 2px 10px; border-radius: 12px; font-weight: 600; }
+    .whale-tag.yes { background: rgba(63,185,80,.12); color: #3fb950; border: 1px solid rgba(63,185,80,.2); }
+    .whale-tag.no  { background: rgba(248,81,73,.12); color: #f85149; border: 1px solid rgba(248,81,73,.2); }
+    .bet-count { margin-left: auto; font-size: 12px; color: #8b949e; white-space: nowrap; }
+    .copy-btn { display: inline-block; background: #58a6ff; color: #0d1117; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 8px; text-decoration: none; white-space: nowrap; }
+
+    /* ── CTA ── */
+    .cta-box { background: linear-gradient(135deg, rgba(88,166,255,.08), rgba(63,185,80,.06)); border: 1px solid rgba(88,166,255,.25); border-radius: 12px; padding: 28px 24px; margin: 32px 0; text-align: center; }
+    .cta-box h3 { font-size: 20px; margin-bottom: 8px; }
+    .cta-box p  { margin-bottom: 20px; color: #8b949e; }
+    .cta-btn { display: inline-block; background: #58a6ff; color: #fff; font-size: 15px; font-weight: 700; padding: 12px 28px; border-radius: 10px; text-decoration: none; margin: 0 6px; }
+    .cta-btn.green { background: #3fb950; color: #0d1117; }
+
+    .no-data { text-align: center; padding: 60px 20px; color: #8b949e; }
+    .no-data .icon { font-size: 48px; margin-bottom: 12px; }
+
+    footer { border-top: 1px solid #21262d; padding: 24px; text-align: center; color: #8b949e; font-size: 13px; }
+    footer a { color: #58a6ff; text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 26px; }
+      .market-header { flex-wrap: wrap; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Whale<span>Track</span> 🐋</a>
+  <div class="nav-links">
+    <a href="/">Live Feed</a>
+    <a href="/hot-bets.html">🔥 Hot Bets</a>
+    <a href="/market-movers.html" class="active">📊 Market Movers</a>
+    <a href="/polymarket-leaderboard.html">Leaderboard</a>
+  </div>
+  <a href="/premium.html" class="nav-cta" onclick="gtag('event','nav_premium_click',{'page':'market-movers'})">⚡ Get Premium</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">📊 WHALE ACTIVITY BY MARKET</div>
+  <h1>Where Whales Are<br/><span>Betting Right Now</span></h1>
+  <p>Markets ranked by total whale volume in the last 24 hours. See where smart money is concentrated — and what side they're on.</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="val" id="stat-markets">—</div>
+      <div class="lbl">Active markets</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="stat-volume">—</div>
+      <div class="lbl">Total whale volume</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="stat-bets">—</div>
+      <div class="lbl">Whale bets today</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="stat-top-market">—</div>
+      <div class="lbl">Hottest market</div>
+    </div>
+  </div>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="sports">⚽ Sports</button>
+  <button class="filter-btn" data-filter="crypto">₿ Crypto</button>
+  <button class="filter-btn" data-filter="politics">🏛️ Politics</button>
+  <button class="filter-btn" data-filter="ufc">🥊 UFC/MMA</button>
+  <span class="sort-label">Sort:</span>
+  <select class="sort-select" id="sort-select">
+    <option value="volume">Whale Volume</option>
+    <option value="bets">Bet Count</option>
+    <option value="consensus">Strongest Consensus</option>
+  </select>
+  <button class="refresh-btn" id="refresh-btn">↻ Refresh</button>
+</div>
+
+<div class="container">
+  <div class="last-updated" id="last-updated"></div>
+  <div id="markets-list">
+    <div class="loading"><div class="spinner"></div>Scanning whale activity…</div>
+  </div>
+
+  <div class="cta-box">
+    <h3>⚡ Get Alerts 10 Minutes Early</h3>
+    <p>Premium subscribers get Telegram alerts before this page updates — and before Twitter. Copy whale bets before odds move.</p>
+    <a href="/premium.html" class="cta-btn green" onclick="gtag('event','premium_click',{'page':'market-movers'})">⚡ Get Premium — $9/mo</a>
+    <br/><br/>
+    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="cta-btn" style="background:#1a1f2e;border:1px solid #3fb950;color:#3fb950;" onclick="gtag('event','polymarket_click',{'page':'market-movers'})">🎯 Trade on Polymarket →</a>
+  </div>
+</div>
+
+<footer>
+  <p>
+    <a href="/">WhaleTrack</a> ·
+    <a href="/hot-bets.html">Hot Bets</a> ·
+    <a href="/premium.html">Premium</a> ·
+    <a href="/polymarket-leaderboard.html">Leaderboard</a>
+  </p>
+  <p style="margin-top:8px;">Data sourced from <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank">Polymarket</a> · Updates every 5 minutes</p>
+</footer>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const WHALES = {
+  '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': 'somalianKing',
+  '0xd9eee545c64c3f5c3acc088259289677858a89a4': 'somalianKing #2',
+  '0x09b428f7c2b469786286214aa5c90dd9015f7320': 'DEEDDIT',
+  '0x7c1ee865a785de4c00ee90ed86a38489fb8bbab3': 'CandleHammerDrums',
+  '0x640de3430e9a05e1b1fe04b42d651da1abe99a4c': 'coldsway',
+  '0x224a89dbe0db0d6124b335edabd15b3f877da3d5': 'wr0ngw4yb3tt0r',
+  '0xe9a6ed2e4d4ee8ce47cd47cac834746dc4cf627b': 'Oneger',
+  '0x83720820a8aa6c3f20ad71850e7a1a17d16c5223': 'Jsram',
+  '0xc31d0a0d63d760d72a1236d16beaa6a71c854ebe': 'FootballFan98',
+  '0xe72bb501df5306c75c89383d48a1e81073fbb0a0': 'norrisfan',
+  '0xc6a63ad5a788a576d4acc9911c50fef9fde49458': 'filthybetz',
+  '0x5e9458202b5817a72cf81105ec8a30e6f3705ba1': 'pleaseplease123',
+  '0xa7b7505abe2fdcc497c00074534f7fbd7e07962e': 'gud.hl',
+  '0xb809a4b78b5eadc71d84be43eda0491eedf72004': 'R88N',
+  '0x56acab44cfca2e88bb9b3406890aea7bfa0cd77e': 'dv-pm',
+  '0x412fe1a101554f0b382181c3af932e4b2d8030fa': 'GrizzliesSuck',
+  '0xb61b2079b95f6b7476fd3203e0274ffb93308a06': 'hot2trot',
+  '0x3dfb153c197d4c19d3b31c1ecd2c7b6860eeabaf': 'Sparkling8899',
+  '0x50f0a0fc7364d3c10fc4578b9b1d955368335355': 'bettguy',
+};
+
+const MIN_BET   = 1000;   // $1K minimum (lower than hot bets — more markets show up)
+const HOURS     = 24;
+const REF       = 'https://polymarket.com?via=manpreet-singh-brar';
+
+let allMarkets   = [];
+let activeFilter = 'all';
+let activeSort   = 'volume';
+
+// ── FETCH ────────────────────────────────────────────────────────────────────
+async function fetchWhale(address, name) {
+  try {
+    const res  = await fetch(`https://data-api.polymarket.com/activity?user=${address}&limit=50`);
+    const data = await res.json();
+    const cut  = Date.now() / 1000 - HOURS * 3600;
+    return data
+      .filter(t => t.side === 'BUY' && t.usdcSize >= MIN_BET && t.timestamp >= cut && t.title)
+      .map(t => ({ ...t, whaleName: name }));
+  } catch { return []; }
+}
+
+async function loadData() {
+  document.getElementById('markets-list').innerHTML =
+    `<div class="loading"><div class="spinner"></div>Scanning whale activity across ${Object.keys(WHALES).length} wallets…</div>`;
+
+  // 1. Try hot_bets.json first (bot-written, more reliable whale names)
+  let bets = [];
+  try {
+    const r = await fetch('/hot_bets.json?t=' + Date.now());
+    if (r.ok) bets = await r.json();
+  } catch {}
+
+  // 2. Also fetch from Polymarket API for all tracked wallets
+  const apiResults = await Promise.all(
+    Object.entries(WHALES).map(([addr, name]) => fetchWhale(addr, name))
+  );
+  const apiBets = apiResults.flat();
+
+  // Merge — dedupe by transactionHash
+  const seen = new Set(bets.map(b => b.id || b.transactionHash));
+  apiBets.forEach(b => {
+    if (!seen.has(b.transactionHash)) {
+      seen.add(b.transactionHash);
+      bets.push(b);
+    }
+  });
+
+  // 3. Group by market
+  const marketMap = {};
+  bets.forEach(t => {
+    const key = t.slug || t.title;
+    if (!key) return;
+    if (!marketMap[key]) {
+      marketMap[key] = {
+        title:    t.title,
+        slug:     t.slug || t.eventSlug || '',
+        totalVol: 0,
+        yesVol:   0,
+        noVol:    0,
+        bets:     [],
+        whales:   new Set(),
+        latestTs: 0,
+      };
+    }
+    const m = marketMap[key];
+    m.totalVol += t.usdcSize || 0;
+    if ((t.outcome || '').toLowerCase() === 'no') m.noVol += t.usdcSize || 0;
+    else m.yesVol += t.usdcSize || 0;
+    m.bets.push(t);
+    m.whales.add(t.whaleName);
+    if (t.timestamp > m.latestTs) m.latestTs = t.timestamp;
+  });
+
+  allMarkets = Object.values(marketMap)
+    .filter(m => m.totalVol > 0)
+    .map(m => ({ ...m, whales: [...m.whales] }));
+
+  // Stats
+  const totalVol = allMarkets.reduce((s, m) => s + m.totalVol, 0);
+  const totalBets = allMarkets.reduce((s, m) => s + m.bets.length, 0);
+  const topMarket = allMarkets.sort((a, b) => b.totalVol - a.totalVol)[0];
+
+  document.getElementById('stat-markets').textContent  = allMarkets.length || '—';
+  document.getElementById('stat-volume').textContent   = allMarkets.length ? fmtUSD(totalVol) : '—';
+  document.getElementById('stat-bets').textContent     = totalBets || '—';
+  document.getElementById('stat-top-market').textContent = topMarket ? truncate(topMarket.title, 20) : '—';
+  document.getElementById('last-updated').textContent  = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+  renderMarkets();
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function detectCategory(title) {
+  const t = (title || '').toLowerCase();
+  if (/ufc|mma|fight|boxing|combat/.test(t))           return 'ufc';
+  if (/bitcoin|btc|eth|crypto|sol|coin|token/.test(t)) return 'crypto';
+  if (/trump|election|senate|president|congress|democrat|republican/.test(t)) return 'politics';
+  if (/nba|nfl|mlb|nhl|soccer|football|basketball|baseball|tennis|golf|f1|premier|champions|serie|liga|open|grand slam/.test(t)) return 'sports';
+  return 'other';
+}
+
+function fmtUSD(n) {
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + Math.round(n/1e3) + 'K';
+  return '$' + Math.round(n);
+}
+
+function truncate(s, n) {
+  return s && s.length > n ? s.slice(0, n) + '…' : (s || '');
+}
+
+function sortedMarkets(list) {
+  if (activeSort === 'bets')      return [...list].sort((a, b) => b.bets.length - a.bets.length);
+  if (activeSort === 'consensus') return [...list].sort((a, b) => {
+    const aPct = a.totalVol > 0 ? Math.abs(a.yesVol / a.totalVol - 0.5) : 0;
+    const bPct = b.totalVol > 0 ? Math.abs(b.yesVol / b.totalVol - 0.5) : 0;
+    return bPct - aPct;
+  });
+  return [...list].sort((a, b) => b.totalVol - a.totalVol);
+}
+
+function renderMarkets() {
+  let filtered = activeFilter === 'all'
+    ? allMarkets
+    : allMarkets.filter(m => detectCategory(m.title) === activeFilter);
+  filtered = sortedMarkets(filtered);
+
+  const list = document.getElementById('markets-list');
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="no-data"><div class="icon">📊</div><p>No whale activity found${activeFilter !== 'all' ? ' for ' + activeFilter : ''} in the last 24 hours.<br/>Check back soon!</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((m, i) => {
+    const yesPct = m.totalVol > 0 ? Math.round(m.yesVol / m.totalVol * 100) : 50;
+    const noPct  = 100 - yesPct;
+    const polyLink = m.slug
+      ? `https://polymarket.com/event/${m.slug}?via=manpreet-singh-brar`
+      : REF;
+
+    // Build unique whale tags with side
+    const whaleTags = m.bets
+      .reduce((acc, b) => {
+        if (!acc.find(x => x.name === b.whaleName)) {
+          acc.push({ name: b.whaleName, outcome: b.outcome || 'Yes' });
+        }
+        return acc;
+      }, [])
+      .slice(0, 6)
+      .map(w => `<span class="whale-tag ${w.outcome === 'No' ? 'no' : 'yes'}">🐋 ${w.name} · ${w.outcome}</span>`)
+      .join('');
+
+    const consensus = yesPct >= 75 ? '🟢 Strong YES' : yesPct >= 60 ? '🟡 Lean YES' : yesPct <= 25 ? '🔴 Strong NO' : yesPct <= 40 ? '🟡 Lean NO' : '⚪ Split';
+
+    return `
+    <a class="market-card" href="${polyLink}" target="_blank" rel="noopener"
+       onclick="gtag('event','market_mover_click',{'market':'${m.title.replace(/'/g, '')}','volume':${Math.round(m.totalVol)}})">
+      <div class="market-header">
+        <div class="market-rank ${i < 3 ? 'top3' : ''}">#${i+1}</div>
+        <div class="market-title">${m.title}</div>
+        <div class="market-volume">
+          <div class="amount">${fmtUSD(m.totalVol)}</div>
+          <div class="label">whale volume</div>
+        </div>
+      </div>
+
+      <div class="consensus">
+        <div class="consensus-row">
+          <span style="color:#3fb950;font-weight:700">YES ${yesPct}%</span>
+          <span style="color:#8b949e;font-size:11px">${consensus}</span>
+          <span style="color:#f85149;font-weight:700">NO ${noPct}%</span>
+        </div>
+        <div class="consensus-bar">
+          <div class="bar-yes" style="width:${yesPct}%"></div>
+          <div class="bar-no"  style="width:${noPct}%"></div>
+        </div>
+      </div>
+
+      <div class="market-footer">
+        ${whaleTags}
+        <span class="bet-count">${m.bets.length} bet${m.bets.length !== 1 ? 's' : ''} · ${m.whales.length} whale${m.whales.length !== 1 ? 's' : ''}</span>
+        <span class="copy-btn">Trade →</span>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+// ── CONTROLS ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderMarkets();
+    gtag('event', 'filter_click', { filter: activeFilter, page: 'market-movers' });
+  });
+});
+
+document.getElementById('sort-select').addEventListener('change', e => {
+  activeSort = e.target.value;
+  renderMarkets();
+});
+
+document.getElementById('refresh-btn').addEventListener('click', () => {
+  loadData();
+  gtag('event', 'refresh_click', { page: 'market-movers' });
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+loadData();
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
