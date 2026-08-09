@@ -182,7 +182,7 @@ const server = http.createServer((req, res) => {
   }
 
   const ext = path.extname(filePath);
-  const mime = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css' };
+  const mime = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' };
   res.writeHead(200, { 'Content-Type': mime[ext] || 'text/plain' });
   res.end(fs.readFileSync(filePath));
 });

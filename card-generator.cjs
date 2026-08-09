@@ -993,17 +993,17 @@ async function generateCard(options) {
   // Screenshot with Puppeteer
   const browser = await puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    protocolTimeout: 60000,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    protocolTimeout: 240000,
   });
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 800, height: 418, deviceScaleFactor: 2 });
     // 'load' is enough since images are embedded as base64 — no external requests
-    await page.setContent(html, { waitUntil: 'load', timeout: 15000 });
-    await new Promise(r => setTimeout(r, 300));
+    await page.setContent(html, { waitUntil: 'load', timeout: 30000 });
+    await new Promise(r => setTimeout(r, 500));
     const imgPath = path.join(os.tmpdir(), `wt_card_${Date.now()}.png`);
-    await page.screenshot({ path: imgPath, type: 'png' });
+    await page.screenshot({ path: imgPath, type: 'png', timeout: 90000 });
     return { imgPath, category };
   } finally {
     await browser.close();
@@ -1012,8 +1012,23 @@ async function generateCard(options) {
 
 module.exports = { generateCard, detectCategory };
 
-// ── CLI TEST MODE ────────────────────────────────────────────────────
+// ── CLI ENTRY POINT ──────────────────────────────────────────────────
 if (require.main === module) {
+  // --generate mode: called by whale_alert_twitter.cjs child process
+  if (process.argv[2] === '--generate') {
+    const tradeData = JSON.parse(process.argv[3]);
+    const outPath   = process.argv[4];
+    generateCard(tradeData).then(({ imgPath }) => {
+      fs.renameSync(imgPath, outPath);
+      process.exit(0);
+    }).catch(e => {
+      process.stderr.write(e.message + '\n');
+      process.exit(1);
+    });
+    return;
+  }
+
+  // Demo/test mode
   const tests = [
     { file: 'demo_crypto.png',   title: 'Will Bitcoin hit $200,000 before end of 2026?',          outcome: 'Yes', amount: '$47K', price: 0.62, whaleName: 'somalianKing'      },
     { file: 'demo_politics.png', title: 'Will Trump win the 2028 presidential election?',          outcome: 'Yes', amount: '$31K', price: 0.54, whaleName: 'DEEDDIT'           },

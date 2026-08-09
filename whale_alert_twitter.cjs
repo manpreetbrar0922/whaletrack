@@ -7,8 +7,7 @@ const https  = require('https');
 const crypto = require('crypto');
 const fs     = require('fs');
 const path   = require('path');
-const { execSync } = require('child_process');
-const { generateCard } = require('./card-generator.cjs');
+const { execSync, spawn } = require('child_process');
 
 const BULLPEN = '/opt/homebrew/bin/bullpen';
 
@@ -33,6 +32,9 @@ const TELEGRAM_DELAY_MS   = parseInt(process.env.TELEGRAM_DELAY_MS || '600000');
 const SEEN_FILE           = process.env.SEEN_FILE || path.join(__dirname, 'twitter_seen_trades.json');
 const COUNTER_FILE        = path.join(__dirname, 'twitter_daily_count.json');
 const LAST_TWEET_FILE     = path.join(__dirname, 'twitter_last_tweet.json');
+const HOT_BETS_FILE       = path.join(__dirname, 'hot_bets.json');
+const HOT_BETS_MAX        = 50;   // keep last 50 bets
+const HOT_BETS_TTL        = 48;   // hours to keep a bet in the list
 
 // ── TELEGRAM CONFIG ──────────────────────────────────────────────────
 const BOT_TOKEN          = process.env.BOT_TOKEN          || '';
@@ -289,6 +291,33 @@ function fetchJson(url, timeoutMs = 30000) {
   });
 }
 
+// ── HOT BETS FILE WRITER ─────────────────────────────────────────────
+function saveHotBet(t) {
+  try {
+    let bets = [];
+    if (fs.existsSync(HOT_BETS_FILE)) {
+      bets = JSON.parse(fs.readFileSync(HOT_BETS_FILE, 'utf8'));
+    }
+    // Remove old bets beyond TTL
+    const cutoff = Date.now() / 1000 - HOT_BETS_TTL * 3600;
+    bets = bets.filter(b => b.timestamp >= cutoff);
+    // Add new bet at top
+    bets.unshift({
+      id:        t.id || t.conditionId || `${t.whaleName}-${Date.now()}`,
+      whaleName: t.whaleName,
+      title:     t.title,
+      outcome:   t.outcome,
+      usdcSize:  t.usdcSize,
+      price:     t.price,
+      slug:      t.slug || t.eventSlug || '',
+      timestamp: Math.floor(Date.now() / 1000),
+    });
+    // Keep only most recent HOT_BETS_MAX
+    bets = bets.slice(0, HOT_BETS_MAX);
+    fs.writeFileSync(HOT_BETS_FILE, JSON.stringify(bets, null, 2));
+  } catch (e) { /* never block a tweet on file write failure */ }
+}
+
 // ── TELEGRAM SENDER ──────────────────────────────────────────────────
 function sendTelegram(chatId, text) {
   if (!BOT_TOKEN || !chatId) return Promise.resolve();
@@ -427,9 +456,33 @@ async function uploadMedia(imgPath) {
 }
 
 // ── GENERATE + UPLOAD CARD (never blocks a tweet on failure) ─────────
+// Spawns card-generator.cjs as a child process so Puppeteer gets its own CPU/memory
+function generateCardInChildProcess(tradeData) {
+  return new Promise((resolve, reject) => {
+    const imgPath = path.join(require('os').tmpdir(), `wt_card_${Date.now()}.png`);
+    const child = spawn(process.execPath, [
+      path.join(__dirname, 'card-generator.cjs'),
+      '--generate',
+      JSON.stringify(tradeData),
+      imgPath,
+    ], { timeout: 120000 });
+
+    let stderr = '';
+    child.stderr.on('data', d => { stderr += d.toString(); });
+    child.on('close', code => {
+      if (code === 0 && fs.existsSync(imgPath)) {
+        resolve(imgPath);
+      } else {
+        reject(new Error(stderr.trim() || `card-generator exited with code ${code}`));
+      }
+    });
+    child.on('error', reject);
+  });
+}
+
 async function getCardMediaId(tradeData) {
   try {
-    const { imgPath } = await generateCard(tradeData);
+    const imgPath = await generateCardInChildProcess(tradeData);
     const mediaId = await uploadMedia(imgPath);
     try { fs.unlinkSync(imgPath); } catch (_) {}
     return mediaId;
@@ -484,7 +537,8 @@ async function tweetBet(t, label = 'Bet') {
   saveSeen();
   saveLastTweetTime(); // reserves the cooldown window right now
 
-  // 1. Telegram FIRST
+  // 1. Save to hot bets feed + Telegram FIRST
+  saveHotBet(t);
   await sendTelegramAlerts(t, 'bet');
 
   // 2. Wait before going public on Twitter
@@ -801,7 +855,8 @@ function buildTweet(t, obContext) {
   const extraTags  = buildHashtags(rawTitle);
   const baseTag    = t.usdcSize >= 50000 ? '@Polymarket #Polymarket' : '#Polymarket';
   const allTags    = [baseTag, ...extraTags].join(' ');
-  const tags       = `📋 Track live → ${getPageUrl(rawTitle)} | ${allTags}`;
+  const refLink    = `https://polymarket.com?via=manpreet-singh-brar`;
+  const tags       = `🎯 Bet on Polymarket → ${refLink} | ${allTags}`;
   const telegramCTA = `⚡ Get alerts 10min early → whaletrack.app/premium`;
 
   // Show whale's total profit if available

@@ -98,21 +98,41 @@
     .quick-answer{background:#161b22;border:1px solid #30363d;border-left:3px solid #58a6ff;border-radius:8px;padding:16px 20px;margin:0 0 36px}
     .quick-answer strong{color:#58a6ff}
     .leaderboard-wrap{background:#161b22;border:1px solid #30363d;border-radius:12px;overflow:hidden;margin-bottom:40px}
-    .lb-header{display:grid;grid-template-columns:40px 1fr 120px 120px 80px;gap:12px;padding:14px 20px;background:#0d1117;border-bottom:1px solid #30363d;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8b949e}
-    .lb-row{display:grid;grid-template-columns:40px 1fr 120px 120px 80px;gap:12px;padding:14px 20px;border-bottom:1px solid #21262d;align-items:center;transition:background .15s}
-    .lb-row:last-child{border-bottom:none}
+    .lb-controls{display:flex;gap:12px;align-items:center;padding:14px 20px;background:#0d1117;border-bottom:1px solid #30363d;flex-wrap:wrap}
+    .lb-tabs{display:flex;gap:4px}
+    .lb-tab{font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px;border:1px solid #30363d;background:transparent;color:#8b949e;cursor:pointer;transition:all .15s}
+    .lb-tab.active{background:#58a6ff;color:#fff;border-color:#58a6ff}
+    .lb-search{flex:1;min-width:160px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:5px 12px;color:#e6edf3;font-size:13px;outline:none}
+    .lb-search::placeholder{color:#484f58}
+    .lb-search:focus{border-color:#58a6ff}
+    .lb-meta{margin-left:auto;font-size:11px;color:#484f58;white-space:nowrap}
+    .lb-refresh{font-size:11px;color:#58a6ff;cursor:pointer;background:none;border:none;padding:0;margin-left:6px}
+    .lb-header{display:grid;grid-template-columns:44px 1fr 130px 120px 80px;gap:8px;padding:10px 20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8b949e}
+    .lb-header .sort-col{cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px}
+    .lb-header .sort-col:hover{color:#c9d1d9}
+    .lb-header .sort-col.active{color:#58a6ff}
+    .lb-row{display:grid;grid-template-columns:44px 1fr 130px 120px 80px;gap:8px;padding:12px 20px;border-top:1px solid #21262d;align-items:center;transition:background .15s;cursor:default}
     .lb-row:hover{background:#1c2128}
-    .lb-rank{font-size:14px;font-weight:900;color:#8b949e;text-align:center}
-    .lb-rank.gold{color:#ffd700}.lb-rank.silver{color:#c0c0c0}.lb-rank.bronze{color:#cd7f32}
-    .lb-name{font-size:14px;font-weight:700;color:#e6edf3}
-    .lb-name .whale-tag{display:inline-block;background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);border-radius:12px;padding:1px 8px;font-size:10px;font-weight:600;color:#58a6ff;margin-left:6px}
+    .lb-rank{font-size:15px;font-weight:900;color:#8b949e;text-align:center;min-width:0}
+    .lb-trader{display:flex;align-items:center;gap:10px;min-width:0}
+    .lb-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;color:#fff}
+    .lb-trader-info{min-width:0}
+    .lb-name{font-size:14px;font-weight:700;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .lb-name a{color:#e6edf3;text-decoration:none}.lb-name a:hover{color:#58a6ff}
+    .whale-tag{display:inline-block;background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.25);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;color:#58a6ff;margin-left:5px;vertical-align:middle}
+    .lb-addr{font-size:11px;color:#484f58;font-family:monospace}
     .lb-pnl{font-size:14px;font-weight:800;color:#3fb950}
     .lb-pnl.neg{color:#f85149}
+    .lb-pnl-bar{height:3px;background:rgba(63,185,80,.2);border-radius:2px;margin-top:4px;overflow:hidden}
+    .lb-pnl-fill{height:100%;background:#3fb950;border-radius:2px}
     .lb-vol{font-size:13px;color:#c9d1d9}
-    .lb-btn{font-size:11px;font-weight:700;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3);color:#58a6ff;padding:4px 10px;border-radius:6px;text-decoration:none;white-space:nowrap}
+    .lb-btn{font-size:11px;font-weight:700;background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3);color:#58a6ff;padding:4px 10px;border-radius:6px;text-decoration:none;white-space:nowrap;display:inline-block}
     .lb-btn:hover{background:rgba(88,166,255,.2)}
-    .lb-loading{padding:32px;text-align:center;color:#8b949e}
+    .lb-loading{padding:40px;text-align:center;color:#8b949e}
+    .lb-skeleton{height:52px;background:linear-gradient(90deg,#161b22 25%,#1c2128 50%,#161b22 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-top:1px solid #21262d}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .lb-showmore{width:100%;padding:14px;background:transparent;border:none;border-top:1px solid #21262d;color:#58a6ff;font-size:14px;font-weight:700;cursor:pointer;text-align:center}
+    .lb-showmore:hover{background:#1c2128}
     h2{font-size:22px;font-weight:700;margin:40px 0 14px;padding-top:8px;border-top:1px solid #21262d}
     h2:first-of-type{border-top:none;margin-top:0}
     p{margin-bottom:14px;color:#c9d1d9;font-size:15px}
@@ -136,7 +156,11 @@
     .faq-q{font-size:16px;font-weight:700;margin-bottom:8px}
     .faq-a{font-size:14px;color:#c9d1d9}
     footer{text-align:center;padding:32px;color:#8b949e;font-size:12px;border-top:1px solid #21262d}
-    @media(max-width:600px){.lb-header,.lb-row{grid-template-columns:32px 1fr 90px;}.lb-header .lb-vol,.lb-row .lb-vol,.lb-header .lb-btn,.lb-row .lb-btn{display:none}}
+    @media(max-width:620px){
+      .lb-header,.lb-row{grid-template-columns:36px 1fr 100px 60px}
+      .lb-header>:nth-child(4),.lb-row>:nth-child(4),.lb-header>:nth-child(5),.lb-row>:nth-child(5){display:none}
+      .lb-controls{gap:8px}
+    }
   </style>
 </head>
 <body>
@@ -153,14 +177,30 @@
 
   <!-- Live Leaderboard -->
   <div class="leaderboard-wrap">
-    <div class="lb-header">
-      <span>#</span><span>Trader</span><span>Profit (P&amp;L)</span><span>Volume</span><span>Copy</span>
+    <div class="lb-controls">
+      <div class="lb-tabs">
+        <button class="lb-tab active" onclick="setSort('pnl',this)">🏆 By Profit</button>
+        <button class="lb-tab" onclick="setSort('vol',this)">📊 By Volume</button>
+      </div>
+      <input class="lb-search" id="lb-search" type="text" placeholder="Search trader…" oninput="renderRows()">
+      <span class="lb-meta" id="lb-meta">Loading…</span>
+      <button class="lb-refresh" onclick="refreshData()" title="Refresh">↻</button>
     </div>
-    <div id="lb-body"><div class="lb-loading">Loading leaderboard...</div></div>
+    <div class="lb-header">
+      <span>#</span>
+      <span>Trader</span>
+      <span class="sort-col active" id="sort-pnl" onclick="setSort('pnl',null)">Profit ▼</span>
+      <span class="sort-col" id="sort-vol" onclick="setSort('vol',null)">Volume</span>
+      <span>Copy</span>
+    </div>
+    <div id="lb-body">
+      <div class="lb-skeleton"></div><div class="lb-skeleton"></div><div class="lb-skeleton"></div>
+      <div class="lb-skeleton"></div><div class="lb-skeleton"></div><div class="lb-skeleton"></div>
+    </div>
   </div>
 
   <h2>What is the Polymarket Leaderboard?</h2>
-  <p>The <strong>Polymarket leaderboard</strong> is a public, on-chain ranking of the most profitable traders on <a href="https://polymarket.com" rel="noopener">Polymarket</a> — the world's largest prediction market platform. Every wallet that trades on Polymarket is automatically ranked by profit and loss (P&amp;L), total trading volume, and number of markets traded.</p>
+  <p>The <strong>Polymarket leaderboard</strong> is a public, on-chain ranking of the most profitable traders on <a href="https://polymarket.com?via=manpreet-singh-brar" rel="noopener">Polymarket</a> — the world's largest prediction market platform. Every wallet that trades on Polymarket is automatically ranked by profit and loss (P&amp;L), total trading volume, and number of markets traded.</p>
   <p>Unlike traditional financial leaderboards, Polymarket's is fully transparent. All trades are on the Polygon blockchain, meaning anyone can verify a trader's actual profitability — no self-reported numbers, no fakes.</p>
 
   <h2>Top Polymarket Traders — Tracked by WhaleTrack</h2>
@@ -183,7 +223,7 @@
   </ul>
 
   <h2>Polymarket Leaderboard vs WhaleTrack</h2>
-  <p>The official <a href="https://polymarket.com/leaderboard" rel="noopener">Polymarket leaderboard</a> shows raw rankings. WhaleTrack adds a layer on top:</p>
+  <p>The official <a href="https://polymarket.com/leaderboard?via=manpreet-singh-brar" rel="noopener">Polymarket leaderboard</a> shows raw rankings. WhaleTrack adds a layer on top:</p>
   <ul>
     <li>✅ <strong>Live trade alerts</strong> — see the moment a top-ranked wallet places a new bet</li>
     <li>✅ <strong>One-click copy links</strong> — jump directly to the market to mirror the trade</li>
@@ -197,6 +237,7 @@
     <p>Get alerted within 2 minutes — before market odds shift on the next big bet.</p>
     <a href="https://whaletrack.app" class="cta-btn">Track Free →</a>
     <a href="https://buy.stripe.com/14A5kDd4Nfod4734NjfUQ00" class="cta-btn green" onclick="gtag('event','premium_click',{'page':'leaderboard'})">⚡ Get Alerts Before Odds Move — $9/mo</a>
+    <br/><br/><a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="cta-btn" style="background:#1a1f2e;border:1px solid #3fb950;color:#3fb950;" onclick="gtag('event','polymarket_click',{'page':'leaderboard'})">🎯 Trade on Polymarket →</a>
   </div>
 
   <h2>Frequently Asked Questions</h2>
@@ -210,42 +251,122 @@
 
 <script>
 const KNOWN_WHALES = {
-  '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': { name: 'somalianKing', slug: 'somalianking' },
-  '0x09b428f7c2b469786286214aa5c90dd9015f7320': { name: 'DEEDDIT', slug: 'deeddit' },
-  '0x50f0a0fc7364d3c10fc4578b9b1d955368335355': { name: 'bettguy', slug: 'bettguy' },
-  '0x7c1ee865a785de4c00ee90ed86a38489fb8bbab3': { name: 'CandleHammerDrums', slug: 'candlehammerdrums' },
-  '0x640de3430e9a05e1b1fe04b42d651da1abe99a4c': { name: 'coldsway', slug: 'coldsway' },
+  '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': { name: 'somalianKing', icon: '🐋', slug: 'somalianking', spec: 'Politics' },
+  '0x09b428f7c2b469786286214aa5c90dd9015f7320': { name: 'DEEDDIT', icon: '🐋', slug: 'deeddit', spec: 'Crypto & Sports' },
+  '0x50f0a0fc7364d3c10fc4578b9b1d955368335355': { name: 'bettguy', icon: '🐋', slug: 'bettguy', spec: 'Diversified' },
+  '0x7c1ee865a785de4c00ee90ed86a38489fb8bbab3': { name: 'CandleHammerDrums', icon: '🥁', slug: 'candlehammerdrums', spec: 'Sports' },
+  '0x640de3430e9a05e1b1fe04b42d651da1abe99a4c': { name: 'coldsway', icon: '❄️', slug: 'coldsway', spec: 'Crypto & Politics' },
 };
+
+// Avatar colors per letter bucket
+const AVATAR_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#6366f1','#f97316'];
+function avatarColor(name){ let h=0; for(let c of (name||'?')) h=(h*31+c.charCodeAt(0))&0xffffffff; return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length]; }
+
 function fmtUSD(n){n=parseFloat(n)||0;const abs=Math.abs(n);const s=n<0?'-':'';if(abs>=1e6)return s+'$'+(abs/1e6).toFixed(2)+'M';if(abs>=1e3)return s+'$'+(abs/1e3).toFixed(1)+'K';return s+'$'+abs.toFixed(0);}
-const RANK_CLASS=['','gold','silver','bronze'];
-async function loadLeaderboard(){
-  const body=document.getElementById('lb-body');
-  try{
-    const r=await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
-    const data=await r.json();
-    if(!Array.isArray(data)||!data.length){body.innerHTML='<div class="lb-loading">No data available</div>';return;}
-    const rows=data.slice(0,20).map((t,i)=>{
-      const rank=i+1;
-      const addr=(t.proxyWallet||'').toLowerCase();
-      const known=KNOWN_WHALES[addr];
-      const name=known?known.name:(t.name||addr.slice(0,6)+'…'+addr.slice(-4));
-      const nameHtml=known
-        ?`<a href="https://whaletrack.app/whale/${known.slug}">${name}</a><span class="whale-tag">🐋 Tracked</span>`
-        :name;
-      const pnl=parseFloat(t.pnl||0);
-      const pnlClass=pnl<0?'lb-pnl neg':'lb-pnl';
-      return`<div class="lb-row">
-        <span class="lb-rank ${RANK_CLASS[rank]||''}">${rank<=3?['🥇','🥈','🥉'][rank-1]:rank}</span>
-        <span class="lb-name">${nameHtml}</span>
-        <span class="${pnlClass}">${fmtUSD(pnl)}</span>
-        <span class="lb-vol">${fmtUSD(t.volume||0)}</span>
-        <a href="https://whaletrack.app" class="lb-btn">Copy →</a>
-      </div>`;
-    }).join('');
-    body.innerHTML=rows;
-  }catch(e){body.innerHTML='<div class="lb-loading">Could not load leaderboard — <a href="https://polymarket.com/leaderboard">view on Polymarket →</a></div>';}
+function timeSince(ts){const s=Math.round((Date.now()-ts)/1000);if(s<60)return s+'s ago';if(s<3600)return Math.round(s/60)+'m ago';return Math.round(s/3600)+'h ago';}
+
+let allData = [];
+let sortKey = 'pnl';
+let showCount = 20;
+let lastFetch = 0;
+
+function setSort(key, btn) {
+  sortKey = key;
+  document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('sort-pnl').classList.toggle('active', key==='pnl');
+  document.getElementById('sort-pnl').textContent = key==='pnl' ? 'Profit ▼' : 'Profit';
+  document.getElementById('sort-vol').classList.toggle('active', key==='vol');
+  document.getElementById('sort-vol').textContent = key==='vol' ? 'Volume ▼' : 'Volume';
+  renderRows();
 }
-loadLeaderboard();
+
+function renderRows() {
+  const body = document.getElementById('lb-body');
+  const query = (document.getElementById('lb-search')?.value || '').toLowerCase().trim();
+
+  let list = [...allData];
+  if (query) list = list.filter(t => (t.userName||t.proxyWallet||'').toLowerCase().includes(query) || (KNOWN_WHALES[(t.proxyWallet||'').toLowerCase()]?.name||'').toLowerCase().includes(query));
+
+  list.sort((a,b) => parseFloat(b[sortKey]||0) - parseFloat(a[sortKey]||0));
+
+  const maxPnl = Math.max(...list.map(t=>Math.abs(parseFloat(t.pnl||0))), 1);
+  const visible = list.slice(0, showCount);
+  const hasMore = list.length > showCount;
+
+  if (!visible.length) {
+    body.innerHTML = '<div class="lb-loading">No traders match your search.</div>';
+    return;
+  }
+
+  const rows = visible.map((t, i) => {
+    const rank = i + 1;
+    const addr = (t.proxyWallet||'').toLowerCase();
+    const known = KNOWN_WHALES[addr];
+    const displayName = known ? known.name : (t.userName || addr.slice(0,6)+'…'+addr.slice(-4));
+    const avatarLetter = displayName[0]?.toUpperCase() || '?';
+    const color = avatarColor(displayName);
+    const pnl = parseFloat(t.pnl||0);
+    const vol = parseFloat(t.vol||0);
+    const pnlPct = Math.round(Math.abs(pnl)/maxPnl*100);
+    const rankBadge = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+    const nameLink = known
+      ? `<a href="https://whaletrack.app/whale/${known.slug}">${displayName}</a><span class="whale-tag">🐋 Tracked</span>`
+      : (t.userName || addr.slice(0,6)+'…'+addr.slice(-4));
+    const subLine = known ? `<div class="lb-addr">${known.spec}</div>` : `<div class="lb-addr">${addr.slice(0,6)}…${addr.slice(-4)}</div>`;
+    const copyLink = known
+      ? `<a href="https://whaletrack.app/whale/${known.slug}" class="lb-btn">Profile →</a>`
+      : `<a href="https://whaletrack.app" class="lb-btn">Copy →</a>`;
+
+    return `<div class="lb-row">
+      <span class="lb-rank">${rankBadge}</span>
+      <div class="lb-trader">
+        <div class="lb-avatar" style="background:${color}">${known?.icon||avatarLetter}</div>
+        <div class="lb-trader-info">
+          <div class="lb-name">${nameLink}</div>
+          ${subLine}
+        </div>
+      </div>
+      <div>
+        <div class="lb-pnl${pnl<0?' neg':''}">${fmtUSD(pnl)}</div>
+        <div class="lb-pnl-bar"><div class="lb-pnl-fill" style="width:${pnlPct}%;background:${pnl<0?'#f85149':'#3fb950'}"></div></div>
+      </div>
+      <span class="lb-vol">${fmtUSD(vol)}</span>
+      ${copyLink}
+    </div>`;
+  });
+
+  const moreBtn = hasMore
+    ? `<button class="lb-showmore" onclick="showCount+=20;renderRows()">Show more (${list.length - showCount} remaining) →</button>`
+    : '';
+
+  body.innerHTML = rows.join('') + moreBtn;
+}
+
+async function refreshData() {
+  const meta = document.getElementById('lb-meta');
+  meta.textContent = 'Refreshing…';
+  const body = document.getElementById('lb-body');
+  if (!allData.length) {
+    body.innerHTML = '<div class="lb-skeleton"></div><div class="lb-skeleton"></div><div class="lb-skeleton"></div><div class="lb-skeleton"></div><div class="lb-skeleton"></div>';
+  }
+  try {
+    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
+    const data = await r.json();
+    if (!Array.isArray(data) || !data.length) throw new Error('empty');
+    allData = data;
+    lastFetch = Date.now();
+    showCount = 20;
+    renderRows();
+    meta.textContent = 'Updated just now';
+    setInterval(() => { if(lastFetch) meta.textContent = 'Updated ' + timeSince(lastFetch); }, 30000);
+  } catch(e) {
+    meta.textContent = 'Error loading';
+    body.innerHTML = '<div class="lb-loading">Could not load — <a href="https://polymarket.com/leaderboard?via=manpreet-singh-brar">view on Polymarket →</a></div>';
+  }
+}
+
+refreshData();
 </script>
 </body>
 </html>

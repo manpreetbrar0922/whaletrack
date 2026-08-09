@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hot Bets — Biggest Polymarket Whale Bets Right Now | WhaleTrack</title>
+  <meta name="description" content="See the biggest Polymarket whale bets in the last 24 hours. Real-time whale activity, sorted by size. Track and copy the top prediction market traders."/>
+  <meta property="og:title" content="Hot Bets — Biggest Polymarket Whale Bets Right Now"/>
+  <meta property="og:description" content="Live feed of the biggest Polymarket whale bets in the last 24 hours. See what the smartest traders are betting on."/>
+  <meta property="og:url" content="https://whaletrack.app/hot-bets"/>
+  <link rel="canonical" href="https://whaletrack.app/hot-bets"/>
+
+  <!-- Google tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo { font-size: 18px; font-weight: 700; color: #58a6ff; text-decoration: none; }
+    .nav-logo span { color: #3fb950; }
+    .nav-links { display: flex; gap: 20px; }
+    .nav-links a { color: #8b949e; text-decoration: none; font-size: 14px; }
+    .nav-links a:hover { color: #e6edf3; }
+    .nav-cta {
+      background: #3fb950; color: #0d1117; font-size: 13px; font-weight: 700;
+      padding: 7px 16px; border-radius: 8px; text-decoration: none;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 48px 24px 32px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(63,185,80,.12);
+      border: 1px solid rgba(63,185,80,.3);
+      color: #3fb950;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      letter-spacing: .5px;
+    }
+    .hero h1 { font-size: 36px; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+    .hero h1 span { color: #3fb950; }
+    .hero p { color: #8b949e; font-size: 16px; max-width: 540px; margin: 0 auto 24px; }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat .val { font-size: 22px; font-weight: 800; color: #3fb950; }
+    .hero-stat .lbl { font-size: 12px; color: #8b949e; margin-top: 2px; }
+
+    /* ── FILTERS ── */
+    .filters {
+      max-width: 900px;
+      margin: 0 auto 20px;
+      padding: 0 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-label { font-size: 13px; color: #8b949e; margin-right: 4px; }
+    .filter-btn {
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: rgba(63,185,80,.1);
+      border-color: #3fb950;
+      color: #3fb950;
+    }
+    .refresh-btn {
+      margin-left: auto;
+      background: transparent;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .refresh-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+    /* ── BETS GRID ── */
+    .bets-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 16px 60px;
+    }
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #8b949e;
+      font-size: 15px;
+    }
+    .loading .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #30363d;
+      border-top-color: #3fb950;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .bet-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: start;
+      transition: border-color .15s, transform .15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .bet-card:hover {
+      border-color: #3fb950;
+      transform: translateY(-1px);
+    }
+
+    /* rank badge */
+    .bet-rank {
+      width: 36px; height: 36px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: #8b949e;
+      flex-shrink: 0;
+    }
+    .bet-rank.top3 { border-color: #3fb950; color: #3fb950; background: rgba(63,185,80,.08); }
+
+    .bet-body { min-width: 0; }
+    .bet-whale {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .whale-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #58a6ff;
+    }
+    .bet-time {
+      font-size: 11px;
+      color: #8b949e;
+      margin-left: auto;
+    }
+    .bet-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e6edf3;
+      margin-bottom: 8px;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bet-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .bet-outcome {
+      background: rgba(88,166,255,.1);
+      border: 1px solid rgba(88,166,255,.2);
+      color: #58a6ff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 6px;
+    }
+    .bet-outcome.yes { background: rgba(63,185,80,.1); border-color: rgba(63,185,80,.2); color: #3fb950; }
+    .bet-outcome.no  { background: rgba(248,81,73,.1);  border-color: rgba(248,81,73,.2);  color: #f85149; }
+    .bet-odds {
+      font-size: 12px;
+      color: #8b949e;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    /* right side: amount + copy btn */
+    .bet-right { text-align: right; flex-shrink: 0; }
+    .bet-amount {
+      font-size: 20px;
+      font-weight: 800;
+      color: #3fb950;
+      white-space: nowrap;
+      margin-bottom: 8px;
+    }
+    .copy-btn {
+      display: inline-block;
+      background: #3fb950;
+      color: #0d1117;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { background: #2ea043; }
+
+    /* ── PREMIUM CTA ── */
+    .cta-box {
+      background: linear-gradient(135deg, rgba(63,185,80,.08), rgba(88,166,255,.06));
+      border: 1px solid rgba(63,185,80,.25);
+      border-radius: 12px;
+      padding: 28px 24px;
+      margin: 32px 0;
+      text-align: center;
+    }
+    .cta-box h3 { font-size: 20px; margin-bottom: 8px; }
+    .cta-box p  { margin-bottom: 20px; color: #8b949e; }
+    .cta-btn {
+      display: inline-block;
+      background: #58a6ff;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      margin: 0 6px;
+    }
+    .cta-btn.green { background: #3fb950; color: #0d1117; }
+
+    /* ── NO BETS ── */
+    .no-bets {
+      text-align: center;
+      padding: 60px 20px;
+      color: #8b949e;
+    }
+    .no-bets .icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* ── LAST UPDATED ── */
+    .last-updated {
+      text-align: center;
+      font-size: 12px;
+      color: #8b949e;
+      margin-bottom: 16px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid #21262d;
+      padding: 24px;
+      text-align: center;
+      color: #8b949e;
+      font-size: 13px;
+    }
+    footer a { color: #58a6ff; text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 26px; }
+      .bet-card { grid-template-columns: auto 1fr; }
+      .bet-right { grid-column: 2; text-align: left; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Whale<span>Track</span> 🐋</a>
+  <div class="nav-links">
+    <a href="/">Live Feed</a>
+    <a href="/hot-bets.html" style="color:#3fb950;">Hot Bets 🔥</a>
+    <a href="/polymarket-leaderboard.html">Leaderboard</a>
+    <a href="/polymarket-whale-tracker.html">Whale Tracker</a>
+  </div>
+  <a href="/premium.html" class="nav-cta" onclick="gtag('event','nav_premium_click',{'page':'hot-bets'})">⚡ Get Premium</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">🔥 UPDATED LIVE</div>
+  <h1>Biggest Whale Bets<br/><span>Last 24 Hours</span></h1>
+  <p>Real-time feed of the largest Polymarket bets from tracked whales. Sorted by size — see what the smart money is doing right now.</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="val" id="stat-count">—</div>
+      <div class="lbl">Bets tracked</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="stat-volume">—</div>
+      <div class="lbl">Total volume</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="stat-whales">—</div>
+      <div class="lbl">Active whales</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="stat-top">—</div>
+      <div class="lbl">Biggest single bet</div>
+    </div>
+  </div>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="sports">⚽ Sports</button>
+  <button class="filter-btn" data-filter="crypto">₿ Crypto</button>
+  <button class="filter-btn" data-filter="politics">🏛️ Politics</button>
+  <button class="filter-btn" data-filter="ufc">🥊 UFC/MMA</button>
+  <button class="refresh-btn" id="refresh-btn">↻ Refresh</button>
+</div>
+
+<div class="bets-container">
+  <div class="last-updated" id="last-updated"></div>
+  <div id="bets-list">
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading whale activity…
+    </div>
+  </div>
+
+  <div class="cta-box">
+    <h3>⚡ Get These Alerts 10 Minutes Early</h3>
+    <p>Premium subscribers get Telegram alerts before this page updates — and before Twitter. Copy the bet before odds move.</p>
+    <a href="/premium.html" class="cta-btn green" onclick="gtag('event','premium_click',{'page':'hot-bets'})">⚡ Get Premium — $9/mo</a>
+    <br/><br/>
+    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="cta-btn" style="background:#1a1f2e;border:1px solid #3fb950;color:#3fb950;" onclick="gtag('event','polymarket_click',{'page':'hot-bets'})">🎯 Trade on Polymarket →</a>
+  </div>
+</div>
+
+<footer>
+  <p>
+    <a href="/">WhaleTrack</a> ·
+    <a href="/premium.html">Premium</a> ·
+    <a href="/polymarket-whale-tracker.html">Whale Tracker</a> ·
+    <a href="/polymarket-leaderboard.html">Leaderboard</a>
+  </p>
+  <p style="margin-top:8px;">Data sourced from <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank">Polymarket</a> · Updates every 5 minutes</p>
+</footer>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const REF_LINK   = 'https://polymarket.com?via=manpreet-singh-brar';
+
+let allBets      = [];
+let activeFilter = 'all';
+
+// ── FETCH from bot-written hot_bets.json ─────────────────────────────────────
+async function loadAllBets() {
+  document.getElementById('bets-list').innerHTML = `
+    <div class="loading"><div class="spinner"></div>Loading whale activity…</div>`;
+  try {
+    const res  = await fetch('/hot_bets.json?t=' + Date.now());
+    allBets    = await res.json();
+    // Sort by size descending
+    allBets.sort((a, b) => b.usdcSize - a.usdcSize);
+  } catch (e) {
+    allBets = [];
+  }
+
+  // Stats
+  const totalVol     = allBets.reduce((s, t) => s + (t.usdcSize || 0), 0);
+  const uniqueWhales = new Set(allBets.map(t => t.whaleName)).size;
+  document.getElementById('stat-count').textContent   = allBets.length || '—';
+  document.getElementById('stat-volume').textContent  = allBets.length ? fmtUSD(totalVol) : '—';
+  document.getElementById('stat-whales').textContent  = uniqueWhales || '—';
+  document.getElementById('stat-top').textContent     = allBets.length ? fmtUSD(allBets[0].usdcSize) : '—';
+  document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+  renderBets();
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function detectCategory(title) {
+  const t = title.toLowerCase();
+  if (/ufc|mma|fight|boxing|combat/.test(t))           return 'ufc';
+  if (/bitcoin|btc|eth|crypto|sol|coin|token/.test(t)) return 'crypto';
+  if (/trump|election|senate|president|congress|democrat|republican|politics/.test(t)) return 'politics';
+  if (/nba|nfl|mlb|nhl|soccer|football|basketball|baseball|tennis|golf|f1|premier|champions|world cup|super bowl|serie|liga/.test(t)) return 'sports';
+  return 'other';
+}
+
+function fmtUSD(n) {
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + Math.round(n/1e3) + 'K';
+  return '$' + Math.round(n);
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor(Date.now()/1000 - ts);
+  if (diff < 60)   return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  return `${Math.floor(diff/3600)}h ago`;
+}
+
+function renderBets() {
+  const filtered = activeFilter === 'all'
+    ? allBets
+    : allBets.filter(t => detectCategory(t.title) === activeFilter);
+
+  const list = document.getElementById('bets-list');
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="no-bets"><div class="icon">🐋</div><p>No ${activeFilter === 'all' ? '' : activeFilter + ' '}bets ≥$10K in the last 24 hours.<br/>Check back soon!</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((t, i) => {
+    const cat      = detectCategory(t.title);
+    const polyLink = t.slug
+      ? `https://polymarket.com/event/${t.slug}?via=manpreet-singh-brar`
+      : REF_LINK;
+    const outcome  = t.outcome || '—';
+    const outcomeClass = outcome === 'Yes' ? 'yes' : outcome === 'No' ? 'no' : '';
+    const odds     = t.price ? Math.round(t.price * 100) + '¢' : '—';
+
+    return `
+    <a class="bet-card" href="${polyLink}" target="_blank" rel="noopener"
+       onclick="gtag('event','hot_bet_click',{'whale':'${t.whaleName}','size':${Math.round(t.usdcSize)}})">
+      <div class="bet-rank ${i < 3 ? 'top3' : ''}">#${i+1}</div>
+      <div class="bet-body">
+        <div class="bet-whale">
+          <span class="whale-name">🐋 ${t.whaleName}</span>
+          <span class="bet-time">${timeAgo(t.timestamp)}</span>
+        </div>
+        <div class="bet-title">${t.title}</div>
+        <div class="bet-meta">
+          <span class="bet-outcome ${outcomeClass}">${outcome}</span>
+          <span class="bet-odds">${odds}</span>
+        </div>
+      </div>
+      <div class="bet-right">
+        <div class="bet-amount">${fmtUSD(t.usdcSize)}</div>
+        <span class="copy-btn">Copy Bet →</span>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+// ── FILTERS ──────────────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderBets();
+    gtag('event', 'filter_click', { filter: activeFilter, page: 'hot-bets' });
+  });
+});
+
+document.getElementById('refresh-btn').addEventListener('click', () => {
+  loadAllBets();
+  gtag('event', 'refresh_click', { page: 'hot-bets' });
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+loadAllBets();
+// Auto-refresh every 5 minutes
+setInterval(loadAllBets, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
