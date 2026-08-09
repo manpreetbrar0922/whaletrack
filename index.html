@@ -977,16 +977,6 @@
     <div class="loading"><div class="spinner"></div>Finding whale battles...</div>
   </div>
 
-  <!-- WORLD CUP BETS -->
-  <div class="section-header" style="margin-top:32px">
-    <h2>⚽ World Cup Bets</h2>
-    <span class="badge" id="wcBadge">Loading...</span>
-    <span style="font-size:12px;color:var(--text2);margin-left:auto">Smart money on FIFA 2026</span>
-  </div>
-  <div class="whale-grid" id="wcGrid">
-    <div class="loading"><div class="spinner"></div>Scanning whale World Cup positions...</div>
-  </div>
-
   <!-- ACTIVITY FEED -->
   <div class="section-header">
     <h2>⚡ Live Whale Activity</h2>
@@ -1839,78 +1829,6 @@ function renderBattles(battles) {
   }).join('');
 }
 
-async function fetchMatchBets() {
-  try {
-    const res = await fetch('/api/matches');
-    if (!res.ok) return [];
-    return await res.json();
-  } catch (e) { return []; }
-}
-
-// ===== RENDER WORLD CUP BETS =====
-function renderMatchBets(markets) {
-  const grid = document.getElementById('wcGrid');
-  const badge = document.getElementById('wcBadge');
-
-  if (!markets || !markets.length) {
-    badge.textContent = '0 markets';
-    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No whale World Cup positions found right now. Check back during match time 🏆</div>';
-    return;
-  }
-
-  badge.textContent = markets.length + ' market' + (markets.length !== 1 ? 's' : '');
-
-  grid.innerHTML = markets.map(m => {
-    const total = m.totalValue || 0;
-    const yesPct = total > 0 ? Math.round((m.yesValue / total) * 100) : 0;
-    const noPct  = 100 - yesPct;
-    const whaleCount = m.bets ? m.bets.length : 0;
-    const slug = m.slug;
-
-    return `
-      <div class="whale-card" style="cursor:default">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.4">${truncate(m.title, 60)}</div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:14px">
-          🐋 <strong style="color:var(--text)">${whaleCount}</strong> whale${whaleCount !== 1 ? 's' : ''} &nbsp;·&nbsp; Total: <strong style="color:var(--accent)">$${total.toLocaleString()}</strong>
-        </div>
-
-        <!-- YES bar -->
-        <div style="margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px">
-            <span style="color:var(--green);font-weight:700">YES</span>
-            <span style="color:var(--green);font-weight:600">$${m.yesValue.toLocaleString()} &nbsp;(${yesPct}%)</span>
-          </div>
-          <div style="background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">
-            <div style="width:${yesPct}%;height:100%;background:var(--green);border-radius:4px;transition:width 0.5s"></div>
-          </div>
-        </div>
-
-        <!-- NO bar -->
-        <div style="margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px">
-            <span style="color:var(--red);font-weight:700">NO</span>
-            <span style="color:var(--red);font-weight:600">$${m.noValue.toLocaleString()} &nbsp;(${noPct}%)</span>
-          </div>
-          <div style="background:var(--bg3);border-radius:4px;height:8px;overflow:hidden">
-            <div style="width:${noPct}%;height:100%;background:var(--red);border-radius:4px;transition:width 0.5s"></div>
-          </div>
-        </div>
-
-        <!-- Whale name tags -->
-        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px">
-          ${(m.bets || []).map(b => `
-            <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${b.outcome==='Yes'?'rgba(63,185,80,0.15)':'rgba(248,81,73,0.15)'};color:${b.outcome==='Yes'?'var(--green)':'var(--red)'}">
-              ${b.whale} · ${b.outcome}
-            </span>
-          `).join('')}
-        </div>
-
-        ${slug ? `<button data-slug="${slug}" data-outcome="Yes" data-price="0" data-title="${(m.title||'').replace(/"/g,'&quot;')}" onclick="openTradeModal(this.dataset)" class="view-positions" style="cursor:pointer;color:var(--green);border-color:rgba(63,185,80,0.4)">⚽ Copy Bet →</button>` : ''}
-      </div>
-    `;
-  }).join('');
-}
-
 // ===== ACTIVITY FILTER =====
 let cachedActivity = [];
 let cachedWhales = [];
@@ -2171,11 +2089,10 @@ async function loadAll() {
 
   try {
     // Fetch all in parallel — each returns [] on failure, never throws
-    const [markets, whales, activity, matchBets, battles, consensus] = await Promise.all([
+    const [markets, whales, activity, battles, consensus] = await Promise.all([
       fetchMarkets().catch(() => []),
       fetchWhales().catch(() => []),
       fetchActivity().catch(() => []),
-      fetchMatchBets().catch(() => []),
       fetchBattles().catch(() => []),
       fetchConsensus().catch(() => []),
     ]);
@@ -2185,7 +2102,6 @@ async function loadAll() {
     renderConsensus(consensus);
     renderWhales(whales);
     renderBattles(battles);
-    renderMatchBets(matchBets);
     cachedActivity = activity;
     renderLiveFeed(activity);
     applyActivityFilter();
