@@ -94,7 +94,7 @@ export default async function handler(req, res) {
 
   let leaderboard = [];
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=20');
+    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
     if (r.ok) {
       leaderboard = await r.json();
     }
@@ -104,14 +104,13 @@ export default async function handler(req, res) {
   const whaleBase = [];
 
   // Top leaderboard traders
-  for (const t of leaderboard.slice(0, 10)) {
+  for (const t of leaderboard.slice(0, 30)) {
     const addr = (t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
-    const rawName = t.userName || t.xUsername || '';
-    // Strip Polymarket's appended rank suffix e.g. "thif - 33063" → "thif"
-    const stripped = rawName.replace(/ - \d{3,}$/, '').trim();
-    const cleanName = (stripped && !stripped.startsWith('0x')) ? stripped : null;
+    const rawName = (t.userName || t.xUsername || '').replace(/ - \d{3,}$/, '').trim();
+    // Reject hex addresses / conditionIds used as display names
+    const cleanName = (rawName && !/^0x[0-9a-fA-F]{8}/i.test(rawName) && rawName.length <= 42) ? rawName : null;
     const displayName = knownNames[addr]
       || cleanName
       || addrShort(t.proxyWallet);
