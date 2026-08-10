@@ -397,14 +397,14 @@ const REF_LINK   = 'https://polymarket.com?via=manpreet-singh-brar';
 let allBets      = [];
 let activeFilter = 'all';
 
-// ── FETCH from bot-written hot_bets.json ─────────────────────────────────────
+// ── FETCH from Vercel API ─────────────────────────────────────────────────────
 async function loadAllBets() {
   document.getElementById('bets-list').innerHTML = `
     <div class="loading"><div class="spinner"></div>Loading whale activity…</div>`;
   try {
-    const res  = await fetch('/hot_bets.json?t=' + Date.now());
+    const res  = await fetch('/api/hot-bets?t=' + Date.now());
     allBets    = await res.json();
-    // Sort by size descending
+    // Already sorted by size from API, but sort again as safety
     allBets.sort((a, b) => b.usdcSize - a.usdcSize);
   } catch (e) {
     allBets = [];
@@ -453,7 +453,7 @@ function renderBets() {
   const list = document.getElementById('bets-list');
 
   if (!filtered.length) {
-    list.innerHTML = `<div class="no-bets"><div class="icon">🐋</div><p>No ${activeFilter === 'all' ? '' : activeFilter + ' '}bets ≥$10K in the last 24 hours.<br/>Check back soon!</p></div>`;
+    list.innerHTML = `<div class="no-bets"><div class="icon">🐋</div><p>No ${activeFilter === 'all' ? '' : activeFilter + ' '}bets ≥$2K in the last 24 hours.<br/>Check back soon!</p></div>`;
     return;
   }
 
