@@ -81,7 +81,7 @@ export default async function handler(req, res) {
           const title = p.title || p.market || p.question || '';
           return isCrypto(title)
             && p.redeemable === false
-            && parseFloat(p.currentValue || 0) > 1;
+            && parseFloat(p.currentValue || 0) > 50;
         })
         .map(p => ({
           whaleName: whale.name,
