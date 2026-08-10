@@ -633,7 +633,8 @@ async function fetchCryptoOdds() {
           const yesIdx = outcomes.findIndex(o => (o||'').toLowerCase() === 'yes');
           if (yesIdx === -1) continue;
           const price = parseFloat(prices[yesIdx] || 0);
-          if (price <= 0 || price > 1) continue;
+          // Skip near-resolved markets (>97% or <3%) — not useful signals
+          if (price <= 0.03 || price >= 0.97) continue;
 
           const question = m.question || m.title || ev.title || '';
           const slug = ev.slug || m.eventSlug || m.slug || '';
