@@ -17,6 +17,9 @@ export default async function handler(req, res) {
     '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': 'somalianKing',
     '0xd9eee545c64c3f5c3acc088259289677858a89a4': 'somalianKing #2',
     '0xeccf1ecfcf3ffe049d48f60b4697ca91e8256603': 'Whale #3',
+    '0x5268527977f700f9bf9b6d5cd843859e4e70135d': 'HomeRunHazard',
+    '0x5dab5ed9691fab220535891d9c7f5c28eed322e1': 'Weaseloftheweek',
+    '0x4bff30af91642dc7d2b19a8664378fe55c45fc26': 'Sassy-Bucket',
   };
 
   function addrShort(addr) {
@@ -26,14 +29,14 @@ export default async function handler(req, res) {
   // Build whale list (leaderboard top 20)
   let leaderboard = [];
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=20');
+    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
     if (r.ok) leaderboard = await r.json();
   } catch (e) {}
 
   const seen = new Set();
   const whales = [];
 
-  for (const t of leaderboard.slice(0, 10)) {
+  for (const t of leaderboard.slice(0, 30)) {
     const addr = (t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);

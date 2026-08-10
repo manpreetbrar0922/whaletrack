@@ -417,6 +417,10 @@ async function fetchUCLOdds() {
           // Extract team name from question
           const teamMatch = q.match(/will (.+?) win/i) || q.match(/^(.+?) (to )?win/i);
           const teamName = teamMatch ? teamMatch[1].trim() : m.question || m.title;
+
+          // Skip placeholder markets like "Team a", "Team b" etc.
+          if (/^team\s+[a-z]$/i.test(teamName.trim())) continue;
+
           if (!bestSlug) bestSlug = ev.slug || m.eventSlug || m.slug || '';
           teams[teamName] = { price, slug: ev.slug || m.slug };
         }
