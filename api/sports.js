@@ -57,6 +57,12 @@ export default async function handler(req, res) {
   function addrShort(addr) {
     return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : '';
   }
+  function sanitizeName(raw) {
+    if (!raw) return null;
+    if (/^0x[0-9a-fA-F]{8}/i.test(raw)) return null;
+    if (raw.length > 42) return null;
+    return raw;
+  }
 
   let leaderboard = [];
   try {
@@ -73,7 +79,7 @@ export default async function handler(req, res) {
     seen.add(addr);
     whales.push({
       address: t.proxyWallet || addr,
-      name: knownNames[addr] || t.userName || t.xUsername || addrShort(t.proxyWallet),
+      name: knownNames[addr] || sanitizeName(t.userName) || sanitizeName(t.xUsername) || addrShort(t.proxyWallet),
     });
   }
 
