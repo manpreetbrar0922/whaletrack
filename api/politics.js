@@ -4,26 +4,31 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Cache-Control', 'no-store, max-age=0');
 
-  const POLITICS_KEYWORDS = [
-    'election', 'president', 'presidential', 'senate', 'congress', 'house',
+  // Safe substring matches (won't produce false positives)
+  const POLITICS_PARTIAL = [
+    'election', 'president', 'presidential', 'senate', 'congress',
     'republican', 'democrat', 'gop', 'dnc', 'rnc',
     'trump', 'biden', 'harris', 'vance', 'desantis', 'newsom',
     'federal reserve', 'fed rate', 'interest rate', 'fomc',
-    'inflation', 'gdp', 'recession', 'rate cut', 'rate hike',
+    'inflation', 'recession', 'rate cut', 'rate hike',
     'supreme court', 'impeach', 'cabinet', 'white house',
     'midterm', 'primary', 'ballot', 'popular vote', 'electoral',
     'nato', 'ukraine', 'russia', 'china', 'taiwan',
     'tariff', 'sanctions', 'legislation', 'bill passes',
-    'sec', 'fda', 'regulation', 'executive order',
+    'fda', 'regulation', 'executive order',
     'g7', 'g20', 'un vote', 'geopolit',
     '2026 election', '2028 election', '2028 president',
     'win the white house', 'win the presidency',
     'governor', 'mayor', 'chancellor', 'prime minister',
   ];
 
+  // Word-boundary matches only (avoid false positives like 'sec' → 'second', 'gdp' → substring)
+  const POLITICS_EXACT = ['sec', 'fda', 'gdp', 'gop', 'rnc', 'dnc'];
+
   function isPolitics(title) {
     const t = (title || '').toLowerCase();
-    return POLITICS_KEYWORDS.some(k => t.includes(k));
+    if (POLITICS_PARTIAL.some(k => t.includes(k))) return true;
+    return POLITICS_EXACT.some(k => new RegExp(`\\b${k}\\b`).test(t));
   }
 
   const knownNames = {
@@ -36,22 +41,29 @@ export default async function handler(req, res) {
     return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : '';
   }
 
+  function sanitizeName(raw) {
+    if (!raw) return null;
+    if (/^0x[0-9a-fA-F]{8}/i.test(raw)) return null;
+    if (raw.length > 42) return null;
+    return raw;
+  }
+
   let leaderboard = [];
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=20');
+    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
     if (r.ok) leaderboard = await r.json();
   } catch (e) {}
 
   const seen = new Set();
   const whales = [];
 
-  for (const t of leaderboard.slice(0, 15)) {
+  for (const t of leaderboard.slice(0, 30)) {
     const addr = (t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
     whales.push({
       address: t.proxyWallet || addr,
-      name: knownNames[addr] || t.userName || t.xUsername || addrShort(t.proxyWallet),
+      name: knownNames[addr] || sanitizeName(t.userName) || sanitizeName(t.xUsername) || addrShort(t.proxyWallet),
     });
   }
 
