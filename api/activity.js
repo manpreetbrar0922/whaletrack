@@ -48,8 +48,10 @@ export default async function handler(req, res) {
         }
         if (!outcome) outcome = '—';
 
+        const rawName = t.name || t.pseudonym || '';
+        const safeName = (rawName && !/^0x[0-9a-fA-F]{8}/i.test(rawName) && rawName.length <= 42) ? rawName : null;
         all.push({
-          whale:     KNOWN_NAMES[addr] || t.name || t.pseudonym || addr.slice(0,8) + '…',
+          whale:     KNOWN_NAMES[addr] || safeName || addr.slice(0,6) + '…' + addr.slice(-4),
           address:   t.proxyWallet || '',
           side:      t.side || 'BUY',
           outcome,

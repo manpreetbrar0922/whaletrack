@@ -14,23 +14,30 @@ export default async function handler(req, res) {
     return addr ? addr.slice(0, 6) + '\u2026' + addr.slice(-4) : '';
   }
 
+  function sanitizeName(raw) {
+    if (!raw) return null;
+    if (/^0x[0-9a-fA-F]{8}/i.test(raw)) return null; // hex address/conditionId
+    if (raw.length > 42) return null;
+    return raw;
+  }
+
   // Build whale list
   let leaderboard = [];
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=20');
+    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
     if (r.ok) leaderboard = await r.json();
   } catch (e) {}
 
   const seen = new Set();
   const whales = [];
 
-  for (const t of leaderboard.slice(0, 10)) {
+  for (const t of leaderboard.slice(0, 30)) {
     const addr = (t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
     whales.push({
       address: t.proxyWallet || addr,
-      name: knownNames[addr] || t.userName || t.xUsername || addrShort(t.proxyWallet),
+      name: knownNames[addr] || sanitizeName(t.userName) || sanitizeName(t.xUsername) || addrShort(t.proxyWallet),
     });
   }
 
