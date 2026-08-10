@@ -7,20 +7,40 @@ export default async function handler(req, res) {
   const SPORTS_KEYWORDS = [
     'nfl', 'nba', 'mlb', 'nhl', 'mls', 'ufc', 'mma', 'fifa',
     'super bowl', 'world cup', 'champions league', 'premier league',
-    'championship', 'playoffs', 'world series', 'stanley cup',
-    'nba finals', 'nfl draft', 'march madness', 'ncaa',
-    'football', 'basketball', 'baseball', 'soccer', 'tennis',
-    'golf', 'boxing', 'formula 1', 'f1', 'olympics', 'wimbledon',
-    'us open', 'masters', 'pga', 'lebron', 'mahomes', 'messi',
-    'ronaldo', 'warriors', 'lakers', 'yankees', 'dodgers',
+    'world series', 'stanley cup', 'nba finals', 'nfl draft',
+    'march madness', 'ncaa', 'basketball', 'baseball', 'soccer',
+    'tennis', 'golf', 'boxing', 'formula 1', ' f1 ', 'olympics',
+    'wimbledon', 'us open', 'masters', 'pga', 'lebron', 'mahomes',
+    'messi', 'ronaldo', 'warriors', 'lakers', 'yankees', 'dodgers',
     'patriots', 'chiefs', 'eagles', 'heat', 'celtics', 'bulls',
-    'win the', 'advance to', 'make the playoffs', 'win the series',
     'open championship', 'tour de france', 'copa america',
     'euros', 'euro 2026', 'world cup 2026', 'nba champion',
+    'playoffs', 'nba playoffs', 'nfl playoffs',
+    // MLB teams
+    'cardinals', 'pirates', 'astros', 'padres', 'giants', 'dodgers',
+    'braves', 'mets', 'cubs', 'red sox', 'white sox', 'tigers',
+    'brewers', 'rangers', 'angels', 'royals', 'mariners', 'orioles',
+    // NBA/NFL extra
+    'nuggets', 'suns', 'bucks', 'sixers', 'knicks', 'nets',
+    'ravens', 'bengals', 'bills', 'cowboys', 'niners', '49ers',
+    // Tennis/Golf events
+    'australian open', 'french open', 'roland garros', 'national bank open',
+    'mubadala', 'atp', 'wta',
+  ];
+
+  // Exclude politics/non-sports markets even if they match a keyword
+  const POLITICS_KEYWORDS = [
+    'president', 'republican', 'democrat', 'nomination', 'senate',
+    'congress', 'election', 'vance', 'trump', 'biden', 'harris',
+    'governor', 'mayor', 'vote', 'ballot', 'impeach', 'supreme court',
+    'fed rate', 'interest rate', 'gdp', 'recession', 'inflation',
+    'invade', 'war', 'sanctions', 'nato', 'treaty', 'nuclear',
   ];
 
   function isSports(title) {
     const t = (title || '').toLowerCase();
+    // Exclude politics first
+    if (POLITICS_KEYWORDS.some(k => t.includes(k))) return false;
     return SPORTS_KEYWORDS.some(k => t.includes(k));
   }
 
