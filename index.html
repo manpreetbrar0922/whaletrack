@@ -1389,6 +1389,7 @@
     'chrome-extension://', 'moz-extension://',        // extension URLs
     'Failed to construct',                             // extension trying to build EventSource/URL
     'Failed to fetch', 'NetworkError', 'Load failed',  // expected network errors — handled gracefully by try/catch
+    'Can\'t find variable: CONFIG', 'CONFIG',          // Twitter in-app browser injected script noise
   ];
 
   window.onerror = function(msg, src, line, col, err) {
