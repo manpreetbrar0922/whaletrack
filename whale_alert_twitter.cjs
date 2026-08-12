@@ -35,6 +35,12 @@ const LAST_TWEET_FILE     = path.join(__dirname, 'twitter_last_tweet.json');
 const HOT_BETS_FILE       = path.join(__dirname, 'hot_bets.json');
 const HOT_BETS_MAX        = 50;   // keep last 50 bets
 const HOT_BETS_TTL        = 48;   // hours to keep a bet in the list
+const DAILY_RECAP_FILE      = path.join(__dirname, 'daily_recap_sent.json');
+const DAILY_RECAP_HOUR_UTC  = 15;  // 9am MDT = 15:00 UTC
+const TRENDING_INTERVAL_MS  = 15 * 60 * 1000;  // check every 15 min
+const TRENDING_FILE         = path.join(__dirname, 'trending_tweeted.json');
+const TRENDING_MAX_PER_DAY  = 3;    // max 3 trending tweets per day
+let   trendingLastCheck     = 0;
 
 // ── TELEGRAM CONFIG ──────────────────────────────────────────────────
 const BOT_TOKEN          = process.env.BOT_TOKEN          || '';
@@ -179,6 +185,9 @@ function formatWhaleName(name, addr) {
   }
   return name;
 }
+
+// ── BOT START TIME — only tweet trades that arrive AFTER this restart ──
+const BOT_START_MS = Date.now();
 
 // ── PERSISTENCE ──────────────────────────────────────────────────────
 let seenTrades = new Set();
@@ -838,12 +847,25 @@ function getOrderBookContext(slug, outcome, whaleFillPrice) {
   }
 }
 
+// Count Twitter weighted chars: URLs = 23, everything else = JS .length
+function twitterLen(text) {
+  const urlRe = /https?:\/\/[^\s]+|(?:^|\s)([a-zA-Z0-9][-a-zA-Z0-9]*(?:\.[a-zA-Z]{2,})+\/\S*)/g;
+  let len = text.length;
+  let m;
+  while ((m = urlRe.exec(text)) !== null) {
+    const url = m[0].trimStart();
+    len -= url.length;
+    len += 23; // Twitter t.co length
+  }
+  return len;
+}
+
 function buildTweet(t, obContext) {
   const outcomeEmoji = t.outcome === 'Yes' ? '🟢' : t.outcome === 'No' ? '🔴' : '⚪';
   const price = (t.price * 100).toFixed(0);
 
-  // Twitter counts any URL as 23 chars — keep title short to fit
-  const maxTitle = 60;
+  // Twitter counts any URL as 23 chars — keep title short to guarantee fit
+  const maxTitle = 42;
   const rawTitle = t.title || 'Unknown Market';
   // Clean up raw slug-style titles like "Will France win on 2026-07-09?"
   const cleanTitle = rawTitle.replace(/\s+on\s+\d{4}-\d{2}-\d{2}\??$/i, '?').trim();
@@ -851,18 +873,16 @@ function buildTweet(t, obContext) {
     ? cleanTitle.slice(0, maxTitle - 1) + '…'
     : cleanTitle;
 
-  // Smart hashtags based on market category
-  const extraTags  = buildHashtags(rawTitle);
+  // Smart hashtags — cap at 2 extra to save space
+  const extraTags  = buildHashtags(rawTitle).slice(0, 2);
   const baseTag    = t.usdcSize >= 50000 ? '@Polymarket #Polymarket' : '#Polymarket';
   const allTags    = [baseTag, ...extraTags].join(' ');
-  const refLink    = `https://polymarket.com?via=manpreet-singh-brar`;
-  const tags       = `🎯 Bet on Polymarket → ${refLink} | ${allTags}`;
-  const telegramCTA = `⚡ Get alerts 10min early → whaletrack.app/premium`;
+  const refLink    = `https://whaletrack.app/go`;
 
   // Show whale's total profit if available
   const addrKey = (t.proxyWallet || '').toLowerCase();
   const pnl = whalePnl[addrKey];
-  const pnlStr = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)} on Polymarket)` : '';
+  const pnlStr = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)})` : '';
 
   const lines = [
     `🐋 Whale Alert!`,
@@ -872,41 +892,49 @@ function buildTweet(t, obContext) {
     `📊 ${title}`,
   ];
 
+  // Add order book context if short enough
   if (obContext) {
+    const shortOb = obContext.length > 42 ? obContext.slice(0, 41) + '…' : obContext;
     lines.push(``);
-    lines.push(obContext);
+    lines.push(shortOb);
   }
 
+  // Referral link + CTA — always fits because both URLs count as 23 chars each
   lines.push(``);
-  lines.push(`Would you copy this bet? 👇`);
-  lines.push(``);
-  lines.push(telegramCTA);
-  lines.push(tags);
+  lines.push(`Copy this bet → ${refLink}`);
+  lines.push(`⚡ whaletrack.app/premium | ${allTags}`);
 
-  return lines.join('\n');
+  const text = lines.join('\n');
+  // Safety check — log a warning if somehow still over limit
+  const wLen = twitterLen(text);
+  if (wLen > 275) console.warn(`  ⚠️ Tweet may be over limit: ~${wLen} chars`);
+
+  return text;
 }
 
 // ── EXIT TWEET (whale sold/exited a position) ─────────────────────────
 function buildExitTweet(t) {
   const rawTitle   = t.title || 'Unknown Market';
   const cleanTitle = rawTitle.replace(/\s+on\s+\d{4}-\d{2}-\d{2}\??$/i, '?').trim();
-  const title      = cleanTitle.length > 60 ? cleanTitle.slice(0, 59) + '…' : cleanTitle;
-  const extraTags  = buildHashtags(rawTitle);
-  const allTags    = ['#Polymarket', '#PredictionMarkets', ...extraTags].join(' ');
+  const title      = cleanTitle.length > 42 ? cleanTitle.slice(0, 41) + '…' : cleanTitle;
+  const extraTags  = buildHashtags(rawTitle).slice(0, 2);
+  const allTags    = ['#Polymarket', ...extraTags].join(' ');
   const addrKey    = (t.proxyWallet || '').toLowerCase();
   const pnl        = whalePnl[addrKey];
-  const pnlStr     = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)} total)` : '';
+  const pnlStr     = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)})` : '';
   const price      = Math.round((t.price || 0) * 100);
+  const refLink    = `https://whaletrack.app/go`;
   return [
     `🚨 Whale Exit Alert!`,
     ``,
-    `${t.whaleName}${pnlStr} just SOLD their position @ ${price}¢`,
+    `${t.whaleName}${pnlStr} just SOLD @ ${price}¢`,
     ``,
     `📊 ${title}`,
     ``,
-    `⚠️ If you copied this bet — watch your position closely.`,
+    `⚠️ Watch your position if you copied this!`,
     ``,
-    `📋 Track next move → ${getPageUrl(rawTitle)} | ${allTags}`,
+    `Track next bet → ${refLink}`,
+    `⚡ whaletrack.app/premium | ${allTags}`,
   ].join('\n');
 }
 
@@ -914,21 +942,21 @@ function buildExitTweet(t) {
 function buildWinTweet(t) {
   const rawTitle = t.title || 'Unknown Market';
   const cleanTitle = rawTitle.replace(/\s+on\s+\d{4}-\d{2}-\d{2}\??$/i, '?').trim();
-  const title = cleanTitle.length > 60 ? cleanTitle.slice(0, 59) + '…' : cleanTitle;
+  const title = cleanTitle.length > 42 ? cleanTitle.slice(0, 41) + '…' : cleanTitle;
   const addrKey = (t.proxyWallet || '').toLowerCase();
   const pnl = whalePnl[addrKey];
   const pnlStr = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)} total)` : '';
-  const extraTags = buildHashtags(rawTitle);
-  const allTags   = ['#Polymarket', '#PredictionMarkets', ...extraTags].join(' ');
+  const extraTags = buildHashtags(rawTitle).slice(0, 2);
+  const allTags   = ['#Polymarket', ...extraTags].join(' ');
+  const refLink   = `https://whaletrack.app/go`;
   return [
     `✅ Whale Win!`,
     ``,
-    `${t.whaleName}${pnlStr} just collected ${fmtUSD(t.usdcSize)} on ${title}`,
+    `${t.whaleName}${pnlStr} just collected ${fmtUSD(t.usdcSize)}`,
+    `📊 ${title}`,
     ``,
-    `Think they'll bet big again? 👇`,
-    ``,
-    `⚡ Get alerts 10min early → whaletrack.app/premium`,
-    `📋 Copy their next bet → ${getPageUrl(rawTitle)} | ${allTags}`,
+    `Copy their next bet → ${refLink}`,
+    `⚡ whaletrack.app/premium | ${allTags}`,
   ].join('\n');
 }
 
@@ -965,10 +993,10 @@ async function checkAndTweet() {
       if (results[i].status !== 'fulfilled') continue;
       const addr = addresses[i];
       for (const t of results[i].value) {
-        // Detect exits (SELL >= $10K within last 24h)
+        // Detect exits (SELL >= $10K — only after bot start)
         if (t.side === 'SELL' && parseFloat(t.usdcSize || 0) >= 10000) {
           const tsMs   = t.timestamp > 1e12 ? t.timestamp : t.timestamp * 1000;
-          if (Date.now() - tsMs <= 86400000) {
+          if (tsMs >= BOT_START_MS) {
             const exitKey = `exit-${(t.proxyWallet || addr).toLowerCase()}-${t.timestamp}`;
             if (!seenTrades.has(exitKey)) {
               bigExits.push({
@@ -983,10 +1011,10 @@ async function checkAndTweet() {
             }
           }
         }
-        // Detect wins (REDEEM = collected winnings)
+        // Detect wins (REDEEM = collected winnings — only after bot start)
         if (t.type === 'REDEEM' && parseFloat(t.usdcSize || 0) >= 100000) {
           const tsMs = t.timestamp > 1e12 ? t.timestamp : t.timestamp * 1000;
-          if (Date.now() - tsMs <= 86400000) {
+          if (tsMs >= BOT_START_MS) {
             const winKey = `win-${(t.proxyWallet || addr).toLowerCase()}-${t.timestamp}`;
             if (!seenTrades.has(winKey)) {
               bigWins.push({
@@ -1002,9 +1030,9 @@ async function checkAndTweet() {
         }
         if (t.side !== 'BUY') continue;
         if (parseFloat(t.usdcSize || 0) < TWEET_MIN) continue;
-        // Skip trades older than 24 hours
+        // Skip trades that existed before this bot session started
         const tsMs = t.timestamp > 1e12 ? t.timestamp : t.timestamp * 1000;
-        if (Date.now() - tsMs > 86400000) continue;
+        if (tsMs < BOT_START_MS) continue;
         const key = `${(t.proxyWallet || addr).toLowerCase()}-${t.timestamp}`;
         // Deduplicate by whale + market (ignore multiple trades same whale same market)
         const marketKey = `market-${(t.proxyWallet || addr).toLowerCase()}-${t.slug || t.title || ''}`;
@@ -1195,12 +1223,194 @@ async function checkFedAnnouncement() {
   }
 }
 
+// ── DAILY RECAP TWEET (9am MDT = 15:00 UTC) ──────────────────────────
+function isDailyRecapSentToday() {
+  try {
+    if (!fs.existsSync(DAILY_RECAP_FILE)) return false;
+    const data = JSON.parse(fs.readFileSync(DAILY_RECAP_FILE, 'utf8'));
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    return data.date === today;
+  } catch { return false; }
+}
+
+function markDailyRecapSent() {
+  const today = new Date().toISOString().slice(0, 10);
+  fs.writeFileSync(DAILY_RECAP_FILE, JSON.stringify({ date: today, at: new Date().toISOString() }));
+}
+
+async function checkDailyRecap() {
+  const now = new Date();
+  if (now.getUTCHours() < DAILY_RECAP_HOUR_UTC) return;   // too early
+  if (isDailyRecapSentToday()) return;                     // already sent today
+
+  // Load hot bets from last 24h
+  let bets = [];
+  try {
+    if (fs.existsSync(HOT_BETS_FILE)) {
+      bets = JSON.parse(fs.readFileSync(HOT_BETS_FILE, 'utf8'));
+    }
+  } catch { return; }
+
+  const cutoff = Date.now() / 1000 - 24 * 3600;
+  const top3 = bets
+    .filter(b => b.timestamp >= cutoff && b.usdcSize >= 5000)
+    .sort((a, b) => b.usdcSize - a.usdcSize)
+    .slice(0, 3);
+
+  if (!top3.length) {
+    console.log('[DailyRecap] No bets ≥$5K in last 24h — skipping recap');
+    markDailyRecapSent();
+    return;
+  }
+
+  const lines = top3.map((b, i) => {
+    const emoji = ['🥇','🥈','🥉'][i];
+    const outcome = b.outcome === 'Yes' ? '✅' : b.outcome === 'No' ? '❌' : b.outcome;
+    const price = b.price ? Math.round(b.price * 100) : null;
+    const priceStr = price ? ` @ ${price}¢` : '';
+    const title = b.title.length > 40 ? b.title.slice(0, 40) + '…' : b.title;
+    return `${emoji} ${fmtUSD(b.usdcSize)} ${outcome} "${title}"${priceStr}`;
+  });
+
+  const text = [
+    `🐋 Biggest whale bets in last 24h:`,
+    ``,
+    ...lines,
+    ``,
+    `Track smart money → whaletrack.app`,
+    `#Polymarket #PredictionMarkets`,
+  ].join('\n');
+
+  console.log(`[DailyRecap] Posting recap (${top3.length} bets):\n${text}`);
+  try {
+    const result = await postTweet(text);
+    const tweetId = result?.data?.id;
+    markDailyRecapSent();
+    incrementDailyCount();
+    console.log(`[DailyRecap] ✅ https://twitter.com/i/web/status/${tweetId}`);
+  } catch (e) {
+    console.error(`[DailyRecap] Failed: ${e.message}`);
+  }
+}
+
+// ── TRENDING WHALE ALERT (Polymarket-first) ───────────────────────────
+function loadTrendingData() {
+  try {
+    if (!fs.existsSync(TRENDING_FILE)) return { slugs: [], count: 0, date: '' };
+    return JSON.parse(fs.readFileSync(TRENDING_FILE, 'utf8'));
+  } catch { return { slugs: [], count: 0, date: '' }; }
+}
+function saveTrendingData(data) {
+  try { fs.writeFileSync(TRENDING_FILE, JSON.stringify(data)); } catch {}
+}
+
+function getTrendingHashtags(title) {
+  const t = title.toLowerCase();
+  const tags = ['#Polymarket'];
+  if (/bitcoin|btc/.test(t))   tags.push('#Bitcoin');
+  if (/ethereum|eth/.test(t))  tags.push('#Ethereum');
+  if (/solana|sol\b/.test(t))  tags.push('#Solana');
+  if (/crypto/.test(t))        tags.push('#Crypto');
+  if (/mlb|baseball|astros|padres|dodgers|yankees|cubs|mets|red sox|braves/.test(t)) tags.push('#MLB');
+  if (/nba|basketball/.test(t)) tags.push('#NBA');
+  if (/nfl|football/.test(t))  tags.push('#NFL');
+  if (/tennis|atp|wta|open/.test(t)) tags.push('#Tennis');
+  if (/ufc|mma/.test(t))       tags.push('#UFC');
+  if (/election|president|trump|senate/.test(t)) tags.push('#Polymarket');
+  return [...new Set(tags)].slice(0, 3).join(' ');
+}
+
+async function checkTrendingWhaleAlert() {
+  const now = Date.now();
+  if (now - trendingLastCheck < TRENDING_INTERVAL_MS) return;
+  trendingLastCheck = now;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const data = loadTrendingData();
+  if (data.date !== today) { data.slugs = []; data.count = 0; data.date = today; }
+  if (data.count >= TRENDING_MAX_PER_DAY) return;
+
+  // Load hot bets (last 24h, ≥$10K)
+  let hotBets = [];
+  try {
+    if (fs.existsSync(HOT_BETS_FILE)) {
+      const cutoff = Date.now() / 1000 - 24 * 3600;
+      hotBets = JSON.parse(fs.readFileSync(HOT_BETS_FILE, 'utf8'))
+        .filter(b => b.timestamp >= cutoff && b.usdcSize >= 10000 && b.slug);
+    }
+  } catch {}
+  if (!hotBets.length) return;
+
+  // Fetch top trending markets from Polymarket by 24h volume
+  console.log('[Trending] Checking Polymarket trending markets...');
+  let trending = [];
+  try {
+    const r = await fetch('https://gamma-api.polymarket.com/events?active=true&closed=false&limit=30&order=volume24hr&ascending=false');
+    if (r.ok) trending = await r.json();
+  } catch {}
+  if (!trending.length) return;
+
+  // Build set of trending slugs
+  const trendingSlugs = new Set();
+  for (const ev of trending) {
+    if (ev.slug) trendingSlugs.add(ev.slug);
+    for (const m of (ev.markets || [])) {
+      if (m.slug) trendingSlugs.add(m.slug);
+      if (m.eventSlug) trendingSlugs.add(m.eventSlug);
+    }
+  }
+
+  // Find a hot bet whose market is trending and not already tweeted
+  for (const bet of hotBets.sort((a, b) => b.usdcSize - a.usdcSize)) {
+    if (data.slugs.includes(bet.slug)) continue;          // already tweeted this one
+    if (!trendingSlugs.has(bet.slug)) continue;           // not trending right now
+
+    const outcome   = bet.outcome === 'Yes' ? '✅ YES' : bet.outcome === 'No' ? '❌ NO' : bet.outcome;
+    const price     = bet.price ? ` @ ${Math.round(bet.price * 100)}¢` : '';
+    const title     = bet.title.length > 45 ? bet.title.slice(0, 45) + '…' : bet.title;
+    const hashtags  = getTrendingHashtags(bet.title);
+    const refLink   = `https://whaletrack.app/go`;
+
+    const text = [
+      `🐋 Whales are loading up on this Polymarket market 👀`,
+      ``,
+      `"${title}"`,
+      ``,
+      `${bet.whaleName}: ${fmtUSD(bet.usdcSize)} ${outcome}${price}`,
+      ``,
+      `Copy this bet → ${refLink}`,
+      `📱 t.me/WhaleTrackPolybot | ⚡ whaletrack.app/premium`,
+      hashtags,
+    ].join('\n');
+
+    // Check char count using twitterLen (URLs = 23 chars on Twitter)
+    if (twitterLen(text) > 275) continue;
+
+    console.log(`[Trending] Posting tweet for "${bet.title}" (${fmtUSD(bet.usdcSize)})`);
+    try {
+      const result  = await postTweet(text);
+      const tweetId = result?.data?.id;
+      data.slugs.push(bet.slug);
+      data.count++;
+      saveTrendingData(data);
+      incrementDailyCount();
+      console.log(`[Trending] ✅ https://twitter.com/i/web/status/${tweetId} [${data.count}/${TRENDING_MAX_PER_DAY} today]`);
+    } catch(e) {
+      console.error(`[Trending] Failed: ${e.message}`);
+    }
+    break; // one per check cycle
+  }
+}
+
 // ── START (continuous daemon — polls every 60s) ───────────────────────
 loadSeen();
 checkAndTweet();
+checkDailyRecap();
 setInterval(async () => {
   await checkAndTweet();
   await checkFedAnnouncement();
+  await checkDailyRecap();
+  await checkTrendingWhaleAlert();
 }, POLL_INTERVAL);
 // Also run Fed check immediately on startup in case already past 2 PM ET
 checkFedAnnouncement();
