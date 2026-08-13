@@ -984,108 +984,150 @@ async function loadAll() {
   }
 }
 
-// ===== PRICE TICKER =====
-async function fetchPrices() {
-  try {
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,hyperliquid&vs_currencies=usd&include_24hr_change=true');
-    if (!r.ok) return;
-    const d = await r.json();
-    const coins = [
-      { id: 'bitcoin',     symbol: 'BTC',  emoji: '₿'  },
-      { id: 'ethereum',    symbol: 'ETH',  emoji: '⟠'  },
-      { id: 'solana',      symbol: 'SOL',  emoji: '◎'  },
-      { id: 'hyperliquid', symbol: 'HYPE', emoji: '⚡' },
-    ];
-    const items = coins.map((c, i) => {
-      const info = d[c.id];
-      if (!info) return '';
-      const price  = info.usd;
-      const change = info.usd_24h_change || 0;
-      const cls    = change >= 0 ? 'ticker-up' : 'ticker-down';
-      const arrow  = change >= 0 ? '▲' : '▼';
-      const pStr   = price >= 1000 ? '$' + price.toLocaleString('en-US', {maximumFractionDigits: 0})
-                                   : '$' + price.toFixed(2);
-      const div = i < coins.length - 1 ? '<span class="ticker-divider">|</span>' : '';
-      return `<div class="ticker-item">
-        <span>${c.emoji}</span>
-        <span class="ticker-symbol">${c.symbol}</span>
-        <span class="ticker-price">${pStr}</span>
-        <span class="${cls}">${arrow} ${Math.abs(change).toFixed(2)}%</span>
-      </div>${div}`;
-    }).join('');
-    document.getElementById('priceTicker').innerHTML = items || '<div class="ticker-item"><span class="ticker-symbol">Price data unavailable</span></div>';
-  } catch(e) { console.warn('Price ticker error:', e); }
+// ===== PRICE TICKER — dual source + cache =====
+let _priceCache = null;
+
+function renderTicker(data) {
+  const coins = [
+    { id: 'bitcoin',     symbol: 'BTC',  emoji: '₿'  },
+    { id: 'ethereum',    symbol: 'ETH',  emoji: '⟠'  },
+    { id: 'solana',      symbol: 'SOL',  emoji: '◎'  },
+    { id: 'hyperliquid', symbol: 'HYPE', emoji: '⚡' },
+  ];
+  const items = coins.map((c, i) => {
+    const info = data[c.id];
+    if (!info) return '';
+    const price  = info.usd;
+    const change = info.usd_24h_change || 0;
+    const cls    = change >= 0 ? 'ticker-up' : 'ticker-down';
+    const arrow  = change >= 0 ? '▲' : '▼';
+    const pStr   = price >= 1000
+      ? '$' + price.toLocaleString('en-US', {maximumFractionDigits: 0})
+      : '$' + price.toFixed(2);
+    const div = i < coins.length - 1 ? '<span class="ticker-divider">|</span>' : '';
+    return `<div class="ticker-item">
+      <span>${c.emoji}</span>
+      <span class="ticker-symbol">${c.symbol}</span>
+      <span class="ticker-price">${pStr}</span>
+      <span class="${cls}">${arrow} ${Math.abs(change).toFixed(2)}%</span>
+    </div>${div}`;
+  }).filter(Boolean).join('');
+  if (items) document.getElementById('priceTicker').innerHTML = items;
 }
 
-// ===== MARKET INTELLIGENCE (Funding + Confluence) =====
+async function fetchPrices() {
+  // Primary: CoinGecko
+  try {
+    const r = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,hyperliquid&vs_currencies=usd&include_24hr_change=true',
+      { signal: AbortSignal.timeout(8000) }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if (d.bitcoin) { _priceCache = d; renderTicker(d); return; }
+    }
+  } catch(e) { /* fall through to backup */ }
+
+  // Backup: Binance spot for BTC/ETH/SOL + last HYPE from cache
+  try {
+    const syms = ['BTCUSDT','ETHUSDT','SOLUSDT'];
+    const results = await Promise.all(
+      syms.map(s => fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s}`, { signal: AbortSignal.timeout(6000) }).then(r => r.json()).catch(() => null))
+    );
+    const map = { bitcoin: null, ethereum: null, solana: null };
+    const keys = ['bitcoin','ethereum','solana'];
+    results.forEach((r, i) => {
+      if (r && r.lastPrice) {
+        map[keys[i]] = { usd: parseFloat(r.lastPrice), usd_24h_change: parseFloat(r.priceChangePercent) };
+      }
+    });
+    // Keep HYPE from cache if available
+    if (_priceCache && _priceCache.hyperliquid) map.hyperliquid = _priceCache.hyperliquid;
+    if (map.bitcoin) { _priceCache = { ..._priceCache, ...map }; renderTicker(_priceCache); return; }
+  } catch(e) { /* fall through */ }
+
+  // Last resort: show stale cache with indicator
+  if (_priceCache) {
+    renderTicker(_priceCache);
+    const ticker = document.getElementById('priceTicker');
+    if (ticker && !ticker.querySelector('.stale-note')) {
+      ticker.insertAdjacentHTML('beforeend', '<span class="ticker-symbol stale-note" style="margin-left:12px;font-size:11px;opacity:0.5">stale</span>');
+    }
+  }
+}
+
+// ===== MARKET INTELLIGENCE — per-coin fallback + cache =====
+let _intelCache = null;
+
+function renderIntelCard(c) {
+  const sigCls   = c.signal === 'BULLISH' ? 'sig-bull' : c.signal === 'BEARISH' ? 'sig-bear' : 'sig-neut';
+  const sigEmoji = c.signal === 'BULLISH' ? '🟢' : c.signal === 'BEARISH' ? '🔴' : '🟡';
+  const fundStr  = c.fundPct !== null ? (c.fundPct >= 0 ? '+' : '') + c.fundPct.toFixed(4) + '%' : '—';
+  const lsCls    = c.lsPct  != null ? (c.lsPct  > 50 ? 'sig-bull' : 'sig-bear') : '';
+  const topCls   = c.topPct != null ? (c.topPct > 50 ? 'sig-bull' : 'sig-bear') : '';
+  const fundCls  = c.fundPct != null ? (c.fundPct > 0 ? 'sig-bull' : c.fundPct < 0 ? 'sig-bear' : '') : '';
+  return `<div class="intel-card">
+    <div class="intel-coin-header" style="color:${c.color}">
+      <span>${c.emoji}</span><span>${c.name}</span>
+      ${c.stale ? '<span style="font-size:10px;color:var(--text2);margin-left:auto;font-weight:400">cached</span>' : ''}
+    </div>
+    <div class="intel-row">
+      <span class="intel-label">Global L/S Ratio</span>
+      <span class="intel-value ${lsCls}">${c.lsPct !== null ? c.lsPct.toFixed(1) + '% Long' : '—'}</span>
+    </div>
+    <div class="intel-row">
+      <span class="intel-label">Top Traders</span>
+      <span class="intel-value ${topCls}">${c.topPct !== null ? c.topPct.toFixed(1) + '% Long' : '—'}</span>
+    </div>
+    <div class="intel-row">
+      <span class="intel-label">Funding Rate</span>
+      <span class="intel-value ${fundCls}">${fundStr}</span>
+    </div>
+    <div class="intel-row">
+      <span class="intel-label">Signal</span>
+      <span class="intel-value ${sigCls}">${sigEmoji} ${c.signal}</span>
+    </div>
+  </div>`;
+}
+
+async function fetchCoinIntel(c) {
+  try {
+    const [lsRes, topRes, fundRes] = await Promise.all([
+      fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${c.symbol}&period=5m&limit=1`, { signal: AbortSignal.timeout(7000) }).catch(() => null),
+      fetch(`https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=${c.symbol}&period=5m&limit=1`,    { signal: AbortSignal.timeout(7000) }).catch(() => null),
+      fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${c.symbol}`,                                       { signal: AbortSignal.timeout(7000) }).catch(() => null),
+    ]);
+    const ls   = lsRes  && lsRes.ok  ? await lsRes.json().catch(() => null)  : null;
+    const top  = topRes && topRes.ok ? await topRes.json().catch(() => null) : null;
+    const fund = fundRes && fundRes.ok ? await fundRes.json().catch(() => null) : null;
+
+    const lsPct   = ls  && ls[0]  ? parseFloat(ls[0].longAccount)  * 100 : null;
+    const topPct  = top && top[0] ? parseFloat(top[0].longAccount) * 100 : null;
+    const fundPct = fund && fund.lastFundingRate != null ? parseFloat(fund.lastFundingRate) * 100 : null;
+
+    const bull   = (lsPct > 55 ? 1 : 0) + (topPct > 55 ? 1 : 0) + (fundPct > 0.005 ? 1 : 0);
+    const bear   = (lsPct < 45 ? 1 : 0) + (topPct < 45 ? 1 : 0) + (fundPct < -0.005 ? 1 : 0);
+    const signal = bull >= 2 ? 'BULLISH' : bear >= 2 ? 'BEARISH' : 'NEUTRAL';
+
+    return { ...c, lsPct, topPct, fundPct, signal, stale: false };
+  } catch(e) {
+    // Return cached data for this coin if available
+    const cached = _intelCache && _intelCache.find(x => x.symbol === c.symbol);
+    return cached ? { ...cached, stale: true } : { ...c, lsPct: null, topPct: null, fundPct: null, signal: 'NEUTRAL', stale: true };
+  }
+}
+
 async function fetchMarketIntel() {
   const coins = [
-    { symbol: 'BTCUSDT', name: 'Bitcoin',  emoji: '₿',  color: '#f7931a' },
-    { symbol: 'ETHUSDT', name: 'Ethereum', emoji: '⟠',  color: '#627eea' },
-    { symbol: 'SOLUSDT', name: 'Solana',   emoji: '◎',  color: '#9945ff' },
+    { symbol: 'BTCUSDT', name: 'Bitcoin',  emoji: '₿', color: '#f7931a' },
+    { symbol: 'ETHUSDT', name: 'Ethereum', emoji: '⟠', color: '#627eea' },
+    { symbol: 'SOLUSDT', name: 'Solana',   emoji: '◎', color: '#9945ff' },
   ];
-  try {
-    const results = await Promise.all(coins.map(async c => {
-      const [lsRes, topRes, fundRes] = await Promise.all([
-        fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${c.symbol}&period=5m&limit=1`).catch(() => null),
-        fetch(`https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=${c.symbol}&period=5m&limit=1`).catch(() => null),
-        fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${c.symbol}`).catch(() => null),
-      ]);
-      const ls   = lsRes  && lsRes.ok  ? await lsRes.json()  : null;
-      const top  = topRes && topRes.ok ? await topRes.json() : null;
-      const fund = fundRes && fundRes.ok ? await fundRes.json() : null;
 
-      const lsPct   = ls  && ls[0]  ? parseFloat(ls[0].longAccount)  * 100 : null;
-      const topPct  = top && top[0] ? parseFloat(top[0].longAccount) * 100 : null;
-      const fundPct = fund ? parseFloat(fund.lastFundingRate) * 100 : null;
-
-      const bull = (lsPct  > 55 ? 1 : 0) + (topPct  > 55 ? 1 : 0) + (fundPct > 0.005 ? 1 : 0);
-      const bear = (lsPct  < 45 ? 1 : 0) + (topPct  < 45 ? 1 : 0) + (fundPct < -0.005 ? 1 : 0);
-      const signal = bull >= 2 ? 'BULLISH' : bear >= 2 ? 'BEARISH' : 'NEUTRAL';
-
-      return { ...c, lsPct, topPct, fundPct, signal };
-    }));
-
-    const html = results.map(c => {
-      const sigCls   = c.signal === 'BULLISH' ? 'sig-bull' : c.signal === 'BEARISH' ? 'sig-bear' : 'sig-neut';
-      const sigEmoji = c.signal === 'BULLISH' ? '🟢' : c.signal === 'BEARISH' ? '🔴' : '🟡';
-      const fmt = (v, suffix) => v !== null ? v.toFixed(2) + suffix : '—';
-      const fundStr = c.fundPct !== null
-        ? (c.fundPct >= 0 ? '+' : '') + c.fundPct.toFixed(4) + '%'
-        : '—';
-      const lsCls  = c.lsPct  > 50 ? 'sig-bull' : 'sig-bear';
-      const topCls = c.topPct > 50 ? 'sig-bull' : 'sig-bear';
-      const fundCls = c.fundPct > 0 ? 'sig-bull' : c.fundPct < 0 ? 'sig-bear' : '';
-
-      return `<div class="intel-card">
-        <div class="intel-coin-header" style="color:${c.color}">
-          <span>${c.emoji}</span><span>${c.name}</span>
-        </div>
-        <div class="intel-row">
-          <span class="intel-label">Global L/S Ratio</span>
-          <span class="intel-value ${lsCls}">${c.lsPct !== null ? c.lsPct.toFixed(1) + '% Long' : '—'}</span>
-        </div>
-        <div class="intel-row">
-          <span class="intel-label">Top Traders</span>
-          <span class="intel-value ${topCls}">${c.topPct !== null ? c.topPct.toFixed(1) + '% Long' : '—'}</span>
-        </div>
-        <div class="intel-row">
-          <span class="intel-label">Funding Rate</span>
-          <span class="intel-value ${fundCls}">${fundStr}</span>
-        </div>
-        <div class="intel-row">
-          <span class="intel-label">Signal</span>
-          <span class="intel-value ${sigCls}">${sigEmoji} ${c.signal}</span>
-        </div>
-      </div>`;
-    }).join('');
-
-    document.getElementById('intelGrid').innerHTML = html;
-  } catch(e) {
-    console.warn('Intel error:', e);
-    document.getElementById('intelGrid').innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;color:var(--text2);font-size:13px;padding:12px">Market data temporarily unavailable</div>';
-  }
+  // Fetch each coin independently so one failure doesn't kill the others
+  const results = await Promise.all(coins.map(fetchCoinIntel));
+  _intelCache = results;
+  document.getElementById('intelGrid').innerHTML = results.map(renderIntelCard).join('');
 }
 
 loadAll();
