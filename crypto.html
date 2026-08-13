@@ -451,6 +451,84 @@
     }
     .footer-cta:hover { opacity: 0.85; }
 
+    /* PRICE TICKER */
+    .price-ticker {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 9px 24px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .price-ticker::-webkit-scrollbar { display: none; }
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .ticker-symbol { color: var(--text2); font-size: 12px; font-weight: 500; }
+    .ticker-price { color: var(--text); }
+    .ticker-up { color: #3fb950; }
+    .ticker-down { color: #f85149; }
+    .ticker-divider { color: var(--border); font-size: 16px; flex-shrink: 0; }
+
+    /* MARKET INTELLIGENCE */
+    .intel-wrap { max-width: 1200px; margin: 0 auto; padding: 20px 24px 0; }
+    .intel-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .intel-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .intel-header span { font-size: 11px; font-weight: 400; color: var(--text2); margin-left: 4px; }
+    .intel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .intel-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .intel-coin-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .intel-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .intel-row:last-child { border-bottom: none; }
+    .intel-label { color: var(--text2); }
+    .intel-value { font-weight: 600; }
+    .sig-bull { color: #3fb950; font-weight: 700; }
+    .sig-bear { color: #f85149; font-weight: 700; }
+    .sig-neut { color: var(--text2); font-weight: 700; }
+
     /* RESPONSIVE */
     @media (max-width: 768px) {
       .container { padding: 16px; }
@@ -460,6 +538,7 @@
       .nav-trade-btn { display: none; }
       .feed-item { padding: 10px 14px; gap: 10px; }
       .odds-row { grid-template-columns: 1fr; }
+      .intel-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -474,6 +553,11 @@
     <a href="https://polymarket.com/crypto?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn">₿ Bet on Crypto →</a>
   </div>
 </nav>
+
+<!-- PRICE TICKER -->
+<div class="price-ticker" id="priceTicker">
+  <div class="ticker-item"><span class="ticker-symbol">Loading prices...</span></div>
+</div>
 
 <!-- HERO -->
 <div class="hero">
@@ -510,6 +594,19 @@
   <div class="crypto-widget-footer">
     <div class="crypto-refresh" id="cryptoRefresh">Updates every 30 seconds</div>
     <a href="#" target="_blank" rel="noopener" class="crypto-tweet-btn" id="cryptoTweetBtn">🐦 Share crypto odds</a>
+  </div>
+</div>
+
+<!-- MARKET INTELLIGENCE -->
+<div class="intel-wrap">
+  <div class="intel-panel">
+    <div class="intel-header">
+      📊 Market Intelligence
+      <span>Binance futures data · Updates every 60s</span>
+    </div>
+    <div class="intel-grid" id="intelGrid">
+      <div style="grid-column:1/-1;text-align:center;color:var(--text2);font-size:13px;padding:16px">Loading market data...</div>
+    </div>
   </div>
 </div>
 
@@ -579,7 +676,7 @@
 </footer>
 
 <script>
-const AFFILIATE = 'https://polymarket.com?via=manpreet-singh-brar';
+const AFFILIATE = 'https://whaletrack.app/go';
 
 // ===== LIVE CRYPTO ODDS WIDGET =====
 let cryptoCountdown = 30;
@@ -887,8 +984,118 @@ async function loadAll() {
   }
 }
 
+// ===== PRICE TICKER =====
+async function fetchPrices() {
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,hyperliquid&vs_currencies=usd&include_24hr_change=true');
+    if (!r.ok) return;
+    const d = await r.json();
+    const coins = [
+      { id: 'bitcoin',     symbol: 'BTC',  emoji: '₿'  },
+      { id: 'ethereum',    symbol: 'ETH',  emoji: '⟠'  },
+      { id: 'solana',      symbol: 'SOL',  emoji: '◎'  },
+      { id: 'hyperliquid', symbol: 'HYPE', emoji: '⚡' },
+    ];
+    const items = coins.map((c, i) => {
+      const info = d[c.id];
+      if (!info) return '';
+      const price  = info.usd;
+      const change = info.usd_24h_change || 0;
+      const cls    = change >= 0 ? 'ticker-up' : 'ticker-down';
+      const arrow  = change >= 0 ? '▲' : '▼';
+      const pStr   = price >= 1000 ? '$' + price.toLocaleString('en-US', {maximumFractionDigits: 0})
+                                   : '$' + price.toFixed(2);
+      const div = i < coins.length - 1 ? '<span class="ticker-divider">|</span>' : '';
+      return `<div class="ticker-item">
+        <span>${c.emoji}</span>
+        <span class="ticker-symbol">${c.symbol}</span>
+        <span class="ticker-price">${pStr}</span>
+        <span class="${cls}">${arrow} ${Math.abs(change).toFixed(2)}%</span>
+      </div>${div}`;
+    }).join('');
+    document.getElementById('priceTicker').innerHTML = items || '<div class="ticker-item"><span class="ticker-symbol">Price data unavailable</span></div>';
+  } catch(e) { console.warn('Price ticker error:', e); }
+}
+
+// ===== MARKET INTELLIGENCE (Funding + Confluence) =====
+async function fetchMarketIntel() {
+  const coins = [
+    { symbol: 'BTCUSDT', name: 'Bitcoin',  emoji: '₿',  color: '#f7931a' },
+    { symbol: 'ETHUSDT', name: 'Ethereum', emoji: '⟠',  color: '#627eea' },
+    { symbol: 'SOLUSDT', name: 'Solana',   emoji: '◎',  color: '#9945ff' },
+  ];
+  try {
+    const results = await Promise.all(coins.map(async c => {
+      const [lsRes, topRes, fundRes] = await Promise.all([
+        fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${c.symbol}&period=5m&limit=1`).catch(() => null),
+        fetch(`https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=${c.symbol}&period=5m&limit=1`).catch(() => null),
+        fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${c.symbol}`).catch(() => null),
+      ]);
+      const ls   = lsRes  && lsRes.ok  ? await lsRes.json()  : null;
+      const top  = topRes && topRes.ok ? await topRes.json() : null;
+      const fund = fundRes && fundRes.ok ? await fundRes.json() : null;
+
+      const lsPct   = ls  && ls[0]  ? parseFloat(ls[0].longAccount)  * 100 : null;
+      const topPct  = top && top[0] ? parseFloat(top[0].longAccount) * 100 : null;
+      const fundPct = fund ? parseFloat(fund.lastFundingRate) * 100 : null;
+
+      const bull = (lsPct  > 55 ? 1 : 0) + (topPct  > 55 ? 1 : 0) + (fundPct > 0.005 ? 1 : 0);
+      const bear = (lsPct  < 45 ? 1 : 0) + (topPct  < 45 ? 1 : 0) + (fundPct < -0.005 ? 1 : 0);
+      const signal = bull >= 2 ? 'BULLISH' : bear >= 2 ? 'BEARISH' : 'NEUTRAL';
+
+      return { ...c, lsPct, topPct, fundPct, signal };
+    }));
+
+    const html = results.map(c => {
+      const sigCls   = c.signal === 'BULLISH' ? 'sig-bull' : c.signal === 'BEARISH' ? 'sig-bear' : 'sig-neut';
+      const sigEmoji = c.signal === 'BULLISH' ? '🟢' : c.signal === 'BEARISH' ? '🔴' : '🟡';
+      const fmt = (v, suffix) => v !== null ? v.toFixed(2) + suffix : '—';
+      const fundStr = c.fundPct !== null
+        ? (c.fundPct >= 0 ? '+' : '') + c.fundPct.toFixed(4) + '%'
+        : '—';
+      const lsCls  = c.lsPct  > 50 ? 'sig-bull' : 'sig-bear';
+      const topCls = c.topPct > 50 ? 'sig-bull' : 'sig-bear';
+      const fundCls = c.fundPct > 0 ? 'sig-bull' : c.fundPct < 0 ? 'sig-bear' : '';
+
+      return `<div class="intel-card">
+        <div class="intel-coin-header" style="color:${c.color}">
+          <span>${c.emoji}</span><span>${c.name}</span>
+        </div>
+        <div class="intel-row">
+          <span class="intel-label">Global L/S Ratio</span>
+          <span class="intel-value ${lsCls}">${c.lsPct !== null ? c.lsPct.toFixed(1) + '% Long' : '—'}</span>
+        </div>
+        <div class="intel-row">
+          <span class="intel-label">Top Traders</span>
+          <span class="intel-value ${topCls}">${c.topPct !== null ? c.topPct.toFixed(1) + '% Long' : '—'}</span>
+        </div>
+        <div class="intel-row">
+          <span class="intel-label">Funding Rate</span>
+          <span class="intel-value ${fundCls}">${fundStr}</span>
+        </div>
+        <div class="intel-row">
+          <span class="intel-label">Signal</span>
+          <span class="intel-value ${sigCls}">${sigEmoji} ${c.signal}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('intelGrid').innerHTML = html;
+  } catch(e) {
+    console.warn('Intel error:', e);
+    document.getElementById('intelGrid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;color:var(--text2);font-size:13px;padding:12px">Market data temporarily unavailable</div>';
+  }
+}
+
 loadAll();
 setInterval(loadAll, 5 * 60 * 1000);
+
+fetchPrices();
+setInterval(fetchPrices, 60 * 1000);
+
+fetchMarketIntel();
+setInterval(fetchMarketIntel, 60 * 1000);
 </script>
 </body>
 </html>
