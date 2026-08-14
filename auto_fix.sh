@@ -119,7 +119,7 @@ fi
 # FIX 4: Daily tweet counter — reset if date is stale
 # ─────────────────────────────────────────────────────────────
 COUNTER_FILE="$DIR/twitter_daily_count.json"
-TODAY=$(date +%Y-%m-%d)
+TODAY=$(date -u +%Y-%m-%d)   # use UTC to match Node.js toISOString()
 if [ -f "$COUNTER_FILE" ]; then
     COUNTER_DATE=$(python3 -c "import json; d=json.load(open('$COUNTER_FILE')); print(d.get('date',''))" 2>/dev/null)
     COUNTER_COUNT=$(python3 -c "import json; d=json.load(open('$COUNTER_FILE')); print(d.get('count',0))" 2>/dev/null)
