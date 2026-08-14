@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <!-- Dark background -->
+  <rect width="800" height="800" fill="#0d1117" rx="0"/>
+
+  <!-- Outer glow ring -->
+  <circle cx="400" cy="400" r="300" fill="none" stroke="#1e40af" stroke-width="4" opacity="0.4"/>
+
+  <!-- Blue circle -->
+  <circle cx="400" cy="400" r="260" fill="#2563eb"/>
+
+  <!-- Inner highlight -->
+  <circle cx="400" cy="380" r="240" fill="#3b82f6" opacity="0.5"/>
+
+  <!-- Whale emoji / text -->
+  <text x="400" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="180" font-weight="900" fill="white" text-anchor="middle" dominant-baseline="middle">🐋</text>
+
+  <!-- WT text below -->
+  <text x="400" y="560" font-family="system-ui, -apple-system, sans-serif" font-size="90" font-weight="900" fill="white" text-anchor="middle" letter-spacing="8">TRACK</text>
+</svg>

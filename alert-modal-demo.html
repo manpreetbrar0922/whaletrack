@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alert Modal Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+  /* Backdrop */
+  .backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+  }
+
+  /* Modal */
+  .modal {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 16px;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  }
+
+  .close-btn {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none; color: #8b949e;
+    font-size: 20px; cursor: pointer; line-height: 1;
+  }
+  .close-btn:hover { color: #e6edf3; }
+
+  .bell { font-size: 40px; margin-bottom: 12px; }
+
+  .modal h2 {
+    font-size: 20px; font-weight: 800;
+    color: #e6edf3; margin-bottom: 6px;
+  }
+
+  .modal .sub {
+    font-size: 13px; color: #8b949e; margin-bottom: 20px; line-height: 1.5;
+  }
+
+  .features {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+  .feature {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: #e6edf3;
+    padding: 5px 0;
+  }
+  .feature .check { color: #3fb950; font-size: 15px; flex-shrink: 0; }
+
+  .example-alert {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-left: 3px solid #3fb950;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    text-align: left;
+    font-size: 12px;
+    color: #8b949e;
+  }
+  .example-alert .alert-title { color: #e6edf3; font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .example-alert .alert-tag { display: inline-block; background: rgba(63,185,80,0.15); color: #3fb950; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-right: 4px; }
+
+  .price-row {
+    display: flex; align-items: baseline; justify-content: center; gap: 6px;
+    margin-bottom: 16px;
+  }
+  .price { font-size: 32px; font-weight: 800; color: #e6edf3; }
+  .price-mo { font-size: 14px; color: #8b949e; }
+
+  .cta-btn {
+    display: block; width: 100%;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+    margin-bottom: 10px;
+  }
+  .cta-btn:hover { background: #1d4ed8; }
+
+  .footer-note { font-size: 11px; color: #484f58; }
+</style>
+</head>
+<body>
+
+<div class="backdrop">
+  <div class="modal">
+    <button class="close-btn">✕</button>
+
+    <div class="bell">🔔</div>
+    <h2>Get Whale Alerts on Telegram</h2>
+    <p class="sub">Know instantly when smart money moves — before it hits the leaderboard.</p>
+
+    <div class="example-alert">
+      <div class="alert-title">🐋 Whale Alert — Just Now</div>
+      <span class="alert-tag">A+</span> <strong style="color:#e6edf3">Themsnw</strong> bet <strong style="color:#3fb950">$47K YES</strong> on<br>
+      <span style="color:#e6edf3">Will BTC reach $100K by Dec 2026?</span>
+    </div>
+
+    <div class="features">
+      <div class="feature"><span class="check">✓</span> Real-time alerts for bets over $5K</div>
+      <div class="feature"><span class="check">✓</span> Whale name + reliability grade (A+→D)</div>
+      <div class="feature"><span class="check">✓</span> Market, outcome & amount</div>
+      <div class="feature"><span class="check">✓</span> Delivered via Telegram instantly</div>
+    </div>
+
+    <div class="price-row">
+      <span class="price">$9</span>
+      <span class="price-mo">/ month</span>
+    </div>
+
+    <a href="#" class="cta-btn">Get Alerts on Telegram →</a>
+    <div class="footer-note">Cancel anytime · Powered by Stripe</div>
+  </div>
+</div>
+
+</body>
+</html>

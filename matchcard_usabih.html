@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Arial Black', Arial, sans-serif; }
+
+  .card {
+    width: 600px;
+    height: auto;
+    background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 50%, #0d1117 100%);
+    border: 1px solid #2a2f3e;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 32px;
+    gap: 18px;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: -100px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(191,10,48,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: -100px; right: -100px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(0,35,149,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .brand { font-size: 13px; color: #58a6ff; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .tournament { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 2px; }
+  .live-badge {
+    background: #1a2f1a; color: #00e676; font-size: 10px; font-weight: 700;
+    padding: 3px 8px; border-radius: 4px; letter-spacing: 1px;
+    border: 1px solid #00e676;
+  }
+
+  .teams {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; gap: 0;
+  }
+  .team { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; }
+  .flag { font-size: 72px; line-height: 1; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
+  .team-name { font-size: 20px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+  .odds-val { font-size: 20px; font-weight: 900; }
+  .usa-odds { color: #BF0A30; }
+  .bih-odds { color: #4a90d9; }
+  .team-odds-label { font-size: 13px; color: #8b949e; }
+
+  .vs-block { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 16px; }
+  .score { font-size: 36px; font-weight: 900; color: #fff; letter-spacing: 4px; }
+  .score-label { font-size: 10px; color: #58a6ff; text-transform: uppercase; letter-spacing: 1px; }
+  .match-time { font-size: 11px; color: #58a6ff; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+
+  .odds-bar-wrap { width: 100%; }
+  .odds-label-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .odds-label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+  .odds-bar {
+    width: 100%; height: 8px; background: #21262d;
+    border-radius: 4px; overflow: hidden; display: flex;
+  }
+  .odds-usa { width: 72%; background: linear-gradient(90deg, #BF0A30, #e8364f); border-radius: 4px 0 0 4px; }
+  .odds-draw { width: 18%; background: #444d56; }
+  .odds-bih { width: 10%; background: linear-gradient(90deg, #002395, #4a90d9); border-radius: 0 4px 4px 0; }
+  .odds-pct-row { display: flex; justify-content: space-between; margin-top: 5px; }
+  .pct { font-size: 13px; font-weight: 700; }
+  .pct-usa { color: #e8364f; }
+  .pct-draw { color: #8b949e; }
+  .pct-bih { color: #4a90d9; }
+
+  .whale-box {
+    width: 100%;
+    background: rgba(88, 166, 255, 0.08);
+    border: 1px solid rgba(88, 166, 255, 0.3);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .whale-icon { font-size: 28px; }
+  .whale-text { flex: 1; }
+  .whale-title { font-size: 11px; color: #58a6ff; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 3px; }
+  .whale-desc { font-size: 15px; color: #fff; font-weight: 700; line-height: 1.3; }
+  .whale-sub { font-size: 11px; color: #8b949e; margin-top: 3px; }
+  .whale-amount { font-size: 22px; font-weight: 900; color: #e8364f; text-align: right; line-height: 1; }
+  .whale-amount span { display: block; font-size: 10px; color: #8b949e; font-weight: 400; text-align: right; margin-top: 2px; letter-spacing: 1px; text-transform: uppercase; }
+
+  .goal-box {
+    width: 100%;
+    background: rgba(191, 10, 48, 0.08);
+    border: 1px solid rgba(191, 10, 48, 0.3);
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .goal-text { font-size: 13px; color: #e8364f; font-weight: 700; }
+  .goal-sub { font-size: 11px; color: #8b949e; margin-top: 2px; }
+
+  .stats-row { display: flex; width: 100%; gap: 10px; }
+  .stat-box {
+    flex: 1; background: rgba(255,255,255,0.03);
+    border: 1px solid #21262d; border-radius: 10px;
+    padding: 10px 14px; text-align: center;
+  }
+  .stat-val { font-size: 18px; font-weight: 900; color: #58a6ff; }
+  .stat-label { font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  .players-row { display: flex; width: 100%; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .players-side { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .players-side.right { align-items: flex-end; }
+  .player-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.03); border: 1px solid #21262d;
+    border-radius: 20px; padding: 4px 10px; width: fit-content;
+  }
+  .players-side.right .player-chip { flex-direction: row-reverse; }
+  .player-num { font-size: 10px; font-weight: 900; color: #8b949e; min-width: 16px; text-align: center; }
+  .player-name { font-size: 11px; font-weight: 700; color: #e6edf3; white-space: nowrap; }
+  .player-icon { font-size: 12px; }
+  .players-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 0 8px; }
+  .players-divider-line { width: 1px; height: 60px; background: linear-gradient(to bottom, transparent, #30363d, transparent); }
+  .key-label { font-size: 9px; color: #444d56; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+
+  .footer { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+  .footer-url { font-size: 13px; color: #58a6ff; font-weight: 700; letter-spacing: 1px; }
+  .footer-tag { font-size: 11px; color: #444d56; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">🐋 WhaleTrack</div>
+    <div class="tournament">FIFA World Cup 2026 · Round of 32</div>
+    <div class="live-badge">FT</div>
+  </div>
+
+  <!-- Teams -->
+  <div class="teams">
+    <div class="team">
+      <div class="flag">🇺🇸</div>
+      <div class="team-name">USA</div>
+      <div class="odds-val usa-odds">72%</div>
+      <div class="team-odds-label">Polymarket</div>
+    </div>
+    <div class="vs-block">
+      <div class="score">2 - 0</div>
+      <div class="score-label">Full Time</div>
+      <div class="match-time">Levi's Stadium · Santa Clara</div>
+    </div>
+    <div class="team">
+      <div class="flag">🇧🇦</div>
+      <div class="team-name">Bosnia</div>
+      <div class="odds-val bih-odds">10%</div>
+      <div class="team-odds-label">Polymarket</div>
+    </div>
+  </div>
+
+  <!-- Odds bar -->
+  <div class="odds-bar-wrap">
+    <div class="odds-label-row">
+      <div class="odds-label">USA Win</div>
+      <div class="odds-label">ET/PKs</div>
+      <div class="odds-label">Bosnia Win</div>
+    </div>
+    <div class="odds-bar">
+      <div class="odds-usa"></div>
+      <div class="odds-draw"></div>
+      <div class="odds-bih"></div>
+    </div>
+    <div class="odds-pct-row">
+      <div class="pct pct-usa">72%</div>
+      <div class="pct pct-draw">18%</div>
+      <div class="pct pct-bih">10%</div>
+    </div>
+  </div>
+
+  <!-- Whale alert -->
+  <div class="whale-box">
+    <div class="whale-icon">🐋</div>
+    <div class="whale-text">
+      <div class="whale-title">Smart Money Alert</div>
+      <div class="whale-desc">USA backed all week — whale wallets loaded before kickoff. Balogun delivered at 31' exactly as predicted</div>
+      <div class="whale-sub">13 whale wallets tracked live on Polymarket · whaletrack.app</div>
+    </div>
+    <div class="whale-amount">72%<span>USA</span></div>
+  </div>
+
+  <!-- Goal alert -->
+  <div class="goal-box">
+    <div style="font-size:24px">⚽</div>
+    <div>
+      <div class="goal-text">BALOGUN 45' + TILLMAN 82' — USA ADVANCE 🇺🇸</div>
+      <div class="goal-sub">Folarin Balogun opens the scoring · Tim Tillman seals it · USA through to Round of 16!</div>
+    </div>
+  </div>
+
+  <!-- Key Players -->
+  <div class="players-row">
+    <div class="players-side left">
+      <div class="player-chip"><span class="player-num">#10</span><span class="player-icon">⚡</span><span class="player-name">Pulisic</span></div>
+      <div class="player-chip"><span class="player-num">#20</span><span class="player-icon">🎯</span><span class="player-name">Balogun</span></div>
+      <div class="player-chip"><span class="player-num">#8</span><span class="player-icon">🔥</span><span class="player-name">McKennie</span></div>
+    </div>
+    <div class="players-divider">
+      <div class="key-label">Key</div>
+      <div class="players-divider-line"></div>
+      <div class="key-label">Players</div>
+    </div>
+    <div class="players-side right">
+      <div class="player-chip"><span class="player-num">#11</span><span class="player-icon">👑</span><span class="player-name">Dzeko</span></div>
+      <div class="player-chip"><span class="player-num">#9</span><span class="player-icon">🦁</span><span class="player-name">Demirovic</span></div>
+      <div class="player-chip"><span class="player-num">#7</span><span class="player-icon">💨</span><span class="player-name">Dedic</span></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-val">45'+82'</div>
+      <div class="stat-label">Goals</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">2-0</div>
+      <div class="stat-label">Final Score</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">$2.8M+</div>
+      <div class="stat-label">Whale Volume</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">Live</div>
+      <div class="stat-label">Real-Time</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-url">whaletrack.app</div>
+    <div class="footer-tag">#USAvBIH · #FIFAWorldCup · #USMNT</div>
+  </div>
+
+</div>
+</body>
+</html>

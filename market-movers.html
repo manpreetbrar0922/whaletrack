@@ -192,7 +192,7 @@
     <p>Premium subscribers get Telegram alerts before this page updates — and before Twitter. Copy whale bets before odds move.</p>
     <a href="/premium.html" class="cta-btn green" onclick="gtag('event','premium_click',{'page':'market-movers'})">⚡ Get Premium — $9/mo</a>
     <br/><br/>
-    <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="cta-btn" style="background:#1a1f2e;border:1px solid #3fb950;color:#3fb950;" onclick="gtag('event','polymarket_click',{'page':'market-movers'})">🎯 Trade on Polymarket →</a>
+    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="cta-btn" style="background:#1a1f2e;border:1px solid #3fb950;color:#3fb950;" onclick="gtag('event','polymarket_click',{'page':'market-movers'})">🎯 Trade on Polymarket →</a>
   </div>
 </div>
 
@@ -203,7 +203,7 @@
     <a href="/premium.html">Premium</a> ·
     <a href="/polymarket-leaderboard.html">Leaderboard</a>
   </p>
-  <p style="margin-top:8px;">Data sourced from <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank">Polymarket</a> · Updates every 5 minutes</p>
+  <p style="margin-top:8px;">Data sourced from <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank">Polymarket</a> · Updates every 5 minutes</p>
 </footer>
 
 <script>
@@ -232,7 +232,7 @@ const WHALES = {
 
 const MIN_BET   = 1000;   // $1K minimum (lower than hot bets — more markets show up)
 const HOURS     = 24;
-const REF       = 'https://polymarket.com?r=polymarketcomrwhaletrack';
+const REF       = 'https://polymarket.com?via=manpreet-singh-brar';
 
 let allMarkets   = [];
 let activeFilter = 'all';
@@ -367,7 +367,7 @@ function renderMarkets() {
     const yesPct = m.totalVol > 0 ? Math.round(m.yesVol / m.totalVol * 100) : 50;
     const noPct  = 100 - yesPct;
     const polyLink = m.slug
-      ? `https://polymarket.com/event/${m.slug}?r=polymarketcomrwhaletrack`
+      ? `https://polymarket.com/event/${m.slug}?via=manpreet-singh-brar`
       : REF;
 
     // Build unique whale tags with side

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Whale Card Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0d1117;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px 20px;
+  }
+
+  h2 {
+    color: #8b949e;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  /* ── Live Feed Container ─────────────────────────────── */
+  .feed {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ── Whale Card ──────────────────────────────────────── */
+  .whale-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.3s, transform 0.2s;
+
+    /* Slide in from right */
+    animation: slideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .whale-card:hover {
+    border-color: #58a6ff44;
+    transform: translateY(-1px);
+  }
+
+  /* Slide in animation */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(60px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
+  /* Glow sweep on new card */
+  .whale-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(88,166,255,0.08), transparent);
+    animation: sweep 1.2s ease 0.3s both;
+  }
+
+  @keyframes sweep {
+    from { left: -100%; }
+    to   { left: 150%; }
+  }
+
+  /* Size-based left border accent */
+  .whale-card.size-mega  { border-left: 3px solid #f0c040; }
+  .whale-card.size-large { border-left: 3px solid #58a6ff; }
+  .whale-card.size-mid   { border-left: 3px solid #3fb950; }
+
+  /* ── Card Header ─────────────────────────────────────── */
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .whale-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Animated whale emoji */
+  .whale-icon {
+    font-size: 22px;
+    display: inline-block;
+    animation: bob 3s ease-in-out infinite;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50%       { transform: translateY(-4px) rotate(3deg); }
+  }
+
+  .whale-name {
+    font-weight: 700;
+    color: #e6edf3;
+    font-size: 14px;
+  }
+
+  .whale-rank {
+    font-size: 11px;
+    color: #8b949e;
+    margin-top: 1px;
+  }
+
+  /* Live pulse badge */
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: #3fb950;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    background: #3fb950;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  /* ── Bet Size (count-up) ─────────────────────────────── */
+  .bet-size {
+    font-size: 28px;
+    font-weight: 800;
+    color: #e6edf3;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bet-size.mega  { color: #f0c040; }
+  .bet-size.large { color: #58a6ff; }
+
+  /* ── Market Title ────────────────────────────────────── */
+  .market-title {
+    font-size: 13px;
+    color: #8b949e;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+
+  /* ── Outcome Bar ─────────────────────────────────────── */
+  .outcome-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .outcome-label {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .outcome-label.yes {
+    background: rgba(63,185,80,0.15);
+    color: #3fb950;
+    border: 1px solid rgba(63,185,80,0.3);
+  }
+
+  .outcome-label.no {
+    background: rgba(248,81,73,0.15);
+    color: #f85149;
+    border: 1px solid rgba(248,81,73,0.3);
+  }
+
+  .price-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: #21262d;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .price-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 0%;
+  }
+
+  .price-bar.yes { background: linear-gradient(90deg, #238636, #3fb950); }
+  .price-bar.no  { background: linear-gradient(90deg, #b91c1c, #f85149); }
+
+  .price-pct {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e6edf3;
+    min-width: 32px;
+    text-align: right;
+  }
+
+  /* ── Footer Stats ────────────────────────────────────── */
+  .card-footer {
+    display: flex;
+    gap: 16px;
+    padding-top: 10px;
+    border-top: 1px solid #21262d;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: #484f58;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-value {
+    font-size: 12px;
+    font-weight: 700;
+    color: #8b949e;
+  }
+
+  .stat-value.green { color: #3fb950; }
+  .stat-value.gold  { color: #f0c040; }
+
+  /* Copy bet button */
+  .copy-btn {
+    margin-left: auto;
+    background: #1f6feb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .copy-btn:hover  { background: #388bfd; }
+  .copy-btn:active { transform: scale(0.96); }
+
+  /* ── Ripple on new mega card ─────────────────────────── */
+  .ripple {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(240,192,64,0.15);
+    transform: translate(-50%, -50%) scale(0);
+    animation: ripple 1s ease-out both;
+    pointer-events: none;
+  }
+
+  @keyframes ripple {
+    to { transform: translate(-50%, -50%) scale(80); opacity: 0; }
+  }
+
+  /* ── Controls ────────────────────────────────────────── */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .ctrl-btn {
+    background: #21262d;
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .ctrl-btn:hover { background: #30363d; }
+</style>
+</head>
+<body>
+
+<h2>🐋 WhaleTrack — Live Alert Feed</h2>
+
+<div class="feed" id="feed"></div>
+
+<div class="controls">
+  <button class="ctrl-btn" onclick="addCard('mega')">+ Mega Bet ($500K)</button>
+  <button class="ctrl-btn" onclick="addCard('large')">+ Large Bet ($100K)</button>
+  <button class="ctrl-btn" onclick="addCard('mid')">+ Mid Bet ($25K)</button>
+</div>
+
+<script>
+const CARDS = [
+  {
+    size: 'mega', amount: 497000,
+    name: 'Themsnw', rank: '#1 on Polymarket',
+    market: 'Will Bitcoin reach $100K by December 2026?',
+    outcome: 'yes', price: 74,
+    wr: '71%', pnl: '+$2.1M', grade: 'A+'
+  },
+  {
+    size: 'large', amount: 103000,
+    name: 'pleaseplease123', rank: '#3 on Polymarket',
+    market: 'Will France win the 2026 FIFA World Cup?',
+    outcome: 'yes', price: 38,
+    wr: '65%', pnl: '+$178K', grade: 'A'
+  },
+  {
+    size: 'mid', amount: 27500,
+    name: 'AbrahamE', rank: '#7 on Polymarket',
+    market: 'Will the Fed cut rates in September 2026?',
+    outcome: 'no', price: 61,
+    wr: '58%', pnl: '+$44K', grade: 'B'
+  },
+];
+
+const EMOJIS = { mega: '🐋', large: '🐬', mid: '🐟' };
+
+function countUp(el, target, duration = 900) {
+  const start = Date.now();
+  const tick = () => {
+    const p = Math.min((Date.now() - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    const val = Math.round(ease * target);
+    el.textContent = val >= 1000000
+      ? '$' + (val / 1000000).toFixed(1) + 'M'
+      : val >= 1000
+      ? '$' + Math.round(val / 1000) + 'K'
+      : '$' + val;
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+function addCard(type) {
+  const data = CARDS.find(c => c.size === type);
+  const feed = document.getElementById('feed');
+
+  const card = document.createElement('div');
+  card.className = `whale-card size-${type}`;
+
+  const isMega = type === 'mega';
+  if (isMega) {
+    const rip = document.createElement('div');
+    rip.className = 'ripple';
+    card.appendChild(rip);
+  }
+
+  card.innerHTML += `
+    <div class="card-header">
+      <div class="whale-identity">
+        <span class="whale-icon">${EMOJIS[type]}</span>
+        <div>
+          <div class="whale-name">${data.name}</div>
+          <div class="whale-rank">${data.rank}</div>
+        </div>
+      </div>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        LIVE
+      </div>
+    </div>
+
+    <div class="bet-size ${type}" id="amt-${Date.now()}">$0</div>
+    <div class="market-title">${data.market}</div>
+
+    <div class="outcome-row">
+      <span class="outcome-label ${data.outcome}">${data.outcome.toUpperCase()}</span>
+      <div class="price-bar-wrap">
+        <div class="price-bar ${data.outcome}" id="bar-${Date.now()}" style="width:0%"></div>
+      </div>
+      <span class="price-pct">${data.price}¢</span>
+    </div>
+
+    <div class="card-footer">
+      <div class="stat">
+        <span class="stat-label">Grade</span>
+        <span class="stat-value gold">${data.grade}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Win Rate</span>
+        <span class="stat-value green">${data.wr}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">All-time P&L</span>
+        <span class="stat-value green">${data.pnl}</span>
+      </div>
+      <button class="copy-btn">📋 Copy Bet</button>
+    </div>
+  `;
+
+  // Prepend so newest is on top
+  feed.insertBefore(card, feed.firstChild);
+
+  // Limit to 5 cards
+  while (feed.children.length > 5) feed.removeChild(feed.lastChild);
+
+  // Count-up animation
+  const amtEl = card.querySelector('[id^="amt-"]');
+  setTimeout(() => countUp(amtEl, data.amount), 200);
+
+  // Bar animation
+  const barEl = card.querySelector('[id^="bar-"]');
+  setTimeout(() => barEl.style.width = data.price + '%', 300);
+}
+
+// Auto-play on load
+const sequence = ['mega', 'large', 'mid', 'large', 'mid'];
+sequence.forEach((type, i) => setTimeout(() => addCard(type), i * 800));
+</script>
+</body>
+</html>

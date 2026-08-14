@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1152" viewBox="0 0 2048 1152">
+  <!-- Dark background -->
+  <rect width="2048" height="1152" fill="#0d1117"/>
+
+  <!-- Glow behind content -->
+  <ellipse cx="1024" cy="576" rx="700" ry="220" fill="#2563eb" opacity="0.07"/>
+
+  <!-- Whale emoji -->
+  <text x="280" y="660" font-family="system-ui" font-size="260" text-anchor="middle">🐋</text>
+
+  <!-- WhaleTrack main title - centered in right area -->
+  <text x="1200" y="490" font-family="-apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="130" font-weight="900" fill="white" text-anchor="middle">WhaleTrack</text>
+
+  <!-- Tagline -->
+  <text x="1200" y="590" font-family="-apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="46" font-weight="400" fill="#94a3b8" text-anchor="middle">Track Polymarket whales in real time</text>
+
+  <!-- Blue line -->
+  <rect x="720" y="635" width="960" height="3" fill="#2563eb" rx="2"/>
+
+  <!-- URL -->
+  <text x="1200" y="710" font-family="-apple-system, BlinkMacSystemFont, Arial, sans-serif" font-size="50" font-weight="700" fill="#3b82f6" text-anchor="middle">whaletrack.app</text>
+</svg>

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WhaleTrack — Announcement Card</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── Animated background canvas ── */
+  #bg { position: fixed; inset: 0; z-index: 0; }
+
+  /* ── Floating bubble particles ── */
+  .bubble {
+    position: fixed;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(0,255,136,0.25), rgba(0,180,255,0.08));
+    border: 1px solid rgba(0,255,136,0.15);
+    animation: floatUp linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 0.6; }
+    100% { transform: translateY(-110vh) translateX(var(--dx)) scale(1.3); opacity: 0; }
+  }
+
+  /* ── Ticker bar ── */
+  .ticker-wrap {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 38px;
+    background: rgba(0,255,136,0.06);
+    border-top: 1px solid rgba(0,255,136,0.2);
+    overflow: hidden;
+    z-index: 10;
+  }
+  .ticker {
+    display: flex;
+    gap: 60px;
+    white-space: nowrap;
+    animation: ticker 28s linear infinite;
+    align-items: center;
+    height: 100%;
+    padding: 0 20px;
+  }
+  .ticker-item {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #00ff88;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ticker-item .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #00ff88;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.5)} }
+  @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+  /* ── Main card ── */
+  .card-wrap {
+    position: relative;
+    z-index: 20;
+    width: 620px;
+  }
+
+  /* Glowing border ring */
+  .card-glow {
+    position: absolute;
+    inset: -2px;
+    border-radius: 26px;
+    background: linear-gradient(135deg, #00ff88, #0080ff, #8b5cf6, #00ff88);
+    background-size: 300% 300%;
+    animation: gradientShift 4s ease infinite;
+    filter: blur(8px);
+    opacity: 0.7;
+    z-index: -1;
+  }
+  @keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .card {
+    background: rgba(8, 12, 20, 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 44px 48px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Inner shimmer sweep */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -60%;
+    width: 60%; height: 200%;
+    background: linear-gradient(105deg, transparent, rgba(0,255,136,0.04), transparent);
+    animation: shimmer 3.5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%   { left: -60%; }
+    100% { left: 120%; }
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    animation: fadeSlideUp 0.7s ease both;
+  }
+  .whale-badge {
+    font-size: 44px;
+    filter: drop-shadow(0 0 18px rgba(0,255,136,0.6));
+    animation: whaleBob 3s ease-in-out infinite;
+  }
+  @keyframes whaleBob {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50%      { transform: translateY(-6px) rotate(3deg); }
+  }
+  .brand {
+    display: flex;
+    flex-direction: column;
+  }
+  .brand-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+  .brand-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .live-badge {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,255,136,0.1);
+    border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #00ff88;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #00ff88;
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  /* ── Headline ── */
+  .headline {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #fff;
+    letter-spacing: -0.8px;
+    margin-bottom: 10px;
+    animation: fadeSlideUp 0.7s 0.1s ease both;
+  }
+  .headline .accent {
+    background: linear-gradient(90deg, #00ff88, #00c8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subhead {
+    font-size: 15px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+    margin-bottom: 30px;
+    animation: fadeSlideUp 0.7s 0.2s ease both;
+  }
+
+  /* ── Flow steps ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 30px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 18px 22px;
+    animation: fadeSlideUp 0.7s 0.3s ease both;
+    overflow: hidden;
+  }
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+  }
+  .flow-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.2);
+  }
+  .flow-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .flow-arrow {
+    color: rgba(0,255,136,0.4);
+    font-size: 16px;
+    padding: 0 4px;
+    flex-shrink: 0;
+    animation: arrowPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes arrowPulse {
+    0%,100% { opacity: 0.4; transform: translateX(0); }
+    50%      { opacity: 1;   transform: translateX(3px); }
+  }
+
+  /* ── Connect options ── */
+  .connect-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+    animation: fadeSlideUp 0.7s 0.4s ease both;
+  }
+  .connect-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 16px 18px;
+    transition: border-color 0.3s, background 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .connect-card:hover {
+    border-color: rgba(0,255,136,0.3);
+    background: rgba(0,255,136,0.04);
+  }
+  .connect-card .cc-icon { font-size: 20px; margin-bottom: 8px; display: block; }
+  .connect-card .cc-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 3px;
+  }
+  .connect-card .cc-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.4;
+  }
+  .connect-card .cc-badge {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: rgba(0,255,136,0.12);
+    border: 1px solid rgba(0,255,136,0.25);
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #00ff88;
+    padding: 2px 7px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── Category pills ── */
+  .categories {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    animation: fadeSlideUp 0.7s 0.5s ease both;
+  }
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    transition: all 0.25s;
+  }
+  .pill:hover {
+    background: rgba(0,255,136,0.08);
+    border-color: rgba(0,255,136,0.25);
+    color: #fff;
+  }
+
+  /* ── CTA ── */
+  .cta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: fadeSlideUp 0.7s 0.6s ease both;
+  }
+  .cta-url {
+    font-size: 18px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #00ff88, #00c8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.3px;
+  }
+  .cta-free {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .free-badge {
+    background: linear-gradient(135deg, rgba(0,255,136,0.15), rgba(0,200,255,0.1));
+    border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #00ff88;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    animation: glowPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%,100% { box-shadow: 0 0 0px rgba(0,255,136,0); }
+    50%      { box-shadow: 0 0 20px rgba(0,255,136,0.3); }
+  }
+
+  /* ── Whale stats strip ── */
+  .stats-strip {
+    display: flex;
+    gap: 0;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    animation: fadeSlideUp 0.7s 0.7s ease both;
+  }
+  .stat {
+    flex: 1;
+    text-align: center;
+  }
+  .stat + .stat {
+    border-left: 1px solid rgba(255,255,255,0.06);
+  }
+  .stat-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+  .stat-val .green { color: #00ff88; }
+  .stat-lbl {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Animated background canvas -->
+<canvas id="bg"></canvas>
+
+<!-- Floating bubbles -->
+<div id="bubbles"></div>
+
+<!-- Main card -->
+<div class="card-wrap">
+  <div class="card-glow"></div>
+  <div class="card">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="whale-badge">🐋</div>
+      <div class="brand">
+        <div class="brand-name">WhaleTrack</div>
+        <div class="brand-sub">Polymarket Whale Intelligence</div>
+      </div>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        Live Now
+      </div>
+    </div>
+
+    <!-- Headline -->
+    <div class="headline">
+      Copy whale bets<br><span class="accent">directly in the app.</span>
+    </div>
+    <div class="subhead">
+      See a $50K whale trade → copy it before the odds move. No tab switching. No delay.
+    </div>
+
+    <!-- Flow -->
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-icon">👁️</div>
+        <div class="flow-label">See Whale Bet</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">⚡</div>
+        <div class="flow-label">Click Copy Bet</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">✍️</div>
+        <div class="flow-label">Sign in MetaMask</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">✅</div>
+        <div class="flow-label">Trade Placed</div>
+      </div>
+    </div>
+
+    <!-- Connect options -->
+    <div class="connect-row">
+      <div class="connect-card">
+        <span class="cc-icon">🦊</span>
+        <div class="cc-badge">Recommended</div>
+        <div class="cc-title">MetaMask Wallet</div>
+        <div class="cc-desc">One-click connect. No keys needed — just sign.</div>
+      </div>
+      <div class="connect-card">
+        <span class="cc-icon">🔑</span>
+        <div class="cc-title">Polymarket API Key</div>
+        <div class="cc-desc">Paste your credentials and start copying instantly.</div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="categories">
+      <div class="pill">⚽ Sports</div>
+      <div class="pill">₿ Crypto</div>
+      <div class="pill">🏛️ Politics</div>
+      <div class="pill">🔴 Real-time feed</div>
+      <div class="pill">👛 Top whale wallets</div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-row">
+      <div class="cta-url">whaletrack.app</div>
+      <div class="cta-free">
+        <div class="free-badge">100% Free</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-strip">
+      <div class="stat">
+        <div class="stat-val"><span class="green">$50K+</span></div>
+        <div class="stat-lbl">avg whale bet</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">24/7</div>
+        <div class="stat-lbl">live tracking</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val"><span class="green">Real-time</span></div>
+        <div class="stat-lbl">no delay</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">Free</div>
+        <div class="stat-lbl">no signup</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Ticker -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <div class="ticker-item"><div class="dot"></div> somalianKing just bet $82,000 on YES — "Will Trump impose 25% tariffs?" · 2 min ago</div>
+    <div class="ticker-item"><div class="dot"></div> Whale #3 placed $31,500 on BTC above $100K by Sept · 5 min ago</div>
+    <div class="ticker-item"><div class="dot"></div> somalianKing #2 bet $44,000 on Chiefs to win Super Bowl · 12 min ago</div>
+    <div class="ticker-item"><div class="dot"></div> Top whale entered $67,200 YES on Fed rate cut in September · 18 min ago</div>
+    <!-- duplicate for seamless loop -->
+    <div class="ticker-item"><div class="dot"></div> somalianKing just bet $82,000 on YES — "Will Trump impose 25% tariffs?" · 2 min ago</div>
+    <div class="ticker-item"><div class="dot"></div> Whale #3 placed $31,500 on BTC above $100K by Sept · 5 min ago</div>
+    <div class="ticker-item"><div class="dot"></div> somalianKing #2 bet $44,000 on Chiefs to win Super Bowl · 12 min ago</div>
+    <div class="ticker-item"><div class="dot"></div> Top whale entered $67,200 YES on Fed rate cut in September · 18 min ago</div>
+  </div>
+</div>
+
+<script>
+  // ── Animated background (dark ocean + grid) ──────────────────────────────
+  const canvas = document.getElementById('bg');
+  const ctx    = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0;
+  function drawBg() {
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Deep ocean gradient
+    const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w,h)*0.7);
+    grad.addColorStop(0,   'rgba(0,30,20,1)');
+    grad.addColorStop(0.5, 'rgba(0,10,18,1)');
+    grad.addColorStop(1,   'rgba(0,0,8,1)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle grid
+    ctx.strokeStyle = 'rgba(0,255,136,0.04)';
+    ctx.lineWidth = 1;
+    const gs = 60;
+    for (let x = 0; x < w; x += gs) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 0; y < h; y += gs) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+
+    // Animated wave lines
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(0,255,136,${0.03 + i * 0.01})`;
+      ctx.lineWidth = 1.5;
+      for (let x = 0; x <= w; x += 4) {
+        const y = h * (0.2 + i * 0.18) + Math.sin(x * 0.008 + t * 0.4 + i) * 30
+                + Math.sin(x * 0.015 - t * 0.3) * 15;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // Glow orbs
+    const orbs = [
+      { x: 0.15, y: 0.3,  r: 220, c: 'rgba(0,255,136,0.07)' },
+      { x: 0.85, y: 0.65, r: 200, c: 'rgba(0,120,255,0.06)' },
+      { x: 0.5,  y: 0.8,  r: 180, c: 'rgba(100,0,255,0.05)' },
+    ];
+    for (const o of orbs) {
+      const og = ctx.createRadialGradient(o.x*w, o.y*h, 0, o.x*w, o.y*h, o.r);
+      og.addColorStop(0, o.c);
+      og.addColorStop(1, 'transparent');
+      ctx.fillStyle = og;
+      ctx.beginPath();
+      ctx.arc(o.x*w, o.y*h, o.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    t += 0.015;
+    requestAnimationFrame(drawBg);
+  }
+  drawBg();
+
+  // ── Floating bubbles ────────────────────────────────────────────────────
+  const container = document.getElementById('bubbles');
+  function spawnBubble() {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 8 + Math.random() * 40;
+    const left = 5 + Math.random() * 90;
+    const dur  = 8 + Math.random() * 14;
+    const dx   = (Math.random() - 0.5) * 120;
+    b.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${left}%; bottom:-${size}px;
+      --dx:${dx}px;
+      animation-duration:${dur}s;
+      animation-delay:${Math.random() * -dur}s;
+    `;
+    container.appendChild(b);
+    setTimeout(() => b.remove(), dur * 1000);
+  }
+  for (let i = 0; i < 18; i++) spawnBubble();
+  setInterval(spawnBubble, 1200);
+</script>
+
+</body>
+</html>

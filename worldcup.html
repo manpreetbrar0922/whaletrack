@@ -423,7 +423,7 @@
   <div class="nav-right">
     <a href="/" class="nav-btn">← All Markets</a>
     <a href="/crypto" style="font-size:13px;font-weight:700;color:#f7931a;text-decoration:none;padding:7px 14px;border:1px solid rgba(247,147,26,0.35);border-radius:8px;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(247,147,26,0.1)'" onmouseout="this.style.background='transparent'">₿ Crypto</a>
-    <a href="https://polymarket.com/sports?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="nav-trade-btn">Trade on Polymarket →</a>
+    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn">Trade on Polymarket →</a>
   </div>
 </nav>
 
@@ -440,7 +440,7 @@
   </div>
 
   <div class="hero-actions">
-    <a href="https://polymarket.com/sports?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="hero-btn-primary">⚽ Bet on Polymarket →</a>
+    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="hero-btn-primary">⚽ Bet on Polymarket →</a>
     <a href="#markets" class="hero-btn-secondary">See Whale Positions ↓</a>
   </div>
 </div>
@@ -472,7 +472,7 @@
   <div class="match-meta" id="matchMeta">Fetching live odds from Polymarket...</div>
 
   <div class="match-actions">
-    <a href="https://polymarket.com/sports?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="match-bet-btn" id="matchBetBtn">⚽ Bet on this match →</a>
+    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="match-bet-btn" id="matchBetBtn">⚽ Bet on this match →</a>
     <a href="#" target="_blank" rel="noopener" class="match-tweet-btn" id="matchTweetBtn">🐦 Share odds</a>
   </div>
   <div class="match-refresh" id="matchRefresh">Updates every 30 seconds</div>
@@ -521,7 +521,7 @@
 </footer>
 
 <script>
-const AFFILIATE = 'https://polymarket.com?r=polymarketcomrwhaletrack';
+const AFFILIATE = 'https://polymarket.com?via=manpreet-singh-brar';
 
 // ===== LIVE MATCH ODDS =====
 let matchCountdown = 30;
@@ -611,8 +611,8 @@ async function fetchMatchOdds() {
     }
 
     document.getElementById('matchBetBtn').href = franceSlug
-      ? `https://polymarket.com/event/${franceSlug}?r=polymarketcomrwhaletrack`
-      : 'https://polymarket.com/sports?r=polymarketcomrwhaletrack';
+      ? `https://polymarket.com/event/${franceSlug}?via=manpreet-singh-brar`
+      : 'https://polymarket.com/sports?via=manpreet-singh-brar';
 
     const tweetText = encodeURIComponent(
       `🇫🇷 France ${francePct}% vs 🇪🇸 Spain ${spainPct}%\n\n` +
@@ -646,7 +646,7 @@ startMatchCountdown();
 
 function marketUrl(slug) {
   return slug
-    ? `https://polymarket.com/event/${slug}?r=polymarketcomrwhaletrack`
+    ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
     : AFFILIATE;
 }
 

@@ -8,8 +8,13 @@ services:
       - bot_data:/data
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
-      - POLL_INTERVAL=${POLL_INTERVAL:-300000}   # ms between whale refreshes (default: 5 min)
-      - PNL_THRESHOLD=${PNL_THRESHOLD:-1000}      # alert when P&L moves by this $ amount
+      - POLL_INTERVAL=${POLL_INTERVAL:-300000}        # ms between whale refreshes (default: 5 min)
+      - PNL_THRESHOLD=${PNL_THRESHOLD:-1000}          # alert when P&L moves by this $ amount
+      - TRADE_ALERT_MIN=${TRADE_ALERT_MIN:-10000}     # min trade size for alerts ($10K)
+      - PREMIUM_CHANNEL_ID=${PREMIUM_CHANNEL_ID:-}    # Telegram channel ID for premium alerts
+      - AFFILIATE_TAG=${AFFILIATE_TAG:-manpreet-singh-brar}
+      - WIN_RATE_MIN=${WIN_RATE_MIN:-55}              # min win rate % to highlight whale
+      - DATA_DIR=/data
 
 volumes:
   bot_data:

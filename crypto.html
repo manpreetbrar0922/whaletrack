@@ -550,7 +550,7 @@
   <div class="nav-right">
     <a href="/" class="nav-btn">← All Markets</a>
     <a href="/worldcup" style="font-size:13px;font-weight:700;color:var(--green);text-decoration:none;padding:7px 14px;border:1px solid rgba(63,185,80,0.35);border-radius:8px;white-space:nowrap;transition:background 0.2s" onmouseover="this.style.background='rgba(63,185,80,0.1)'" onmouseout="this.style.background='transparent'">⚽ World Cup</a>
-    <a href="https://polymarket.com/crypto?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="nav-trade-btn">₿ Bet on Crypto →</a>
+    <a href="https://polymarket.com/crypto?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn">₿ Bet on Crypto →</a>
   </div>
 </nav>
 
@@ -572,7 +572,7 @@
   </div>
 
   <div class="hero-actions">
-    <a href="https://polymarket.com/crypto?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="hero-btn-primary">₿ Bet on Polymarket →</a>
+    <a href="https://polymarket.com/crypto?via=manpreet-singh-brar" target="_blank" rel="noopener" class="hero-btn-primary">₿ Bet on Polymarket →</a>
     <a href="#markets" class="hero-btn-secondary">See Whale Positions ↓</a>
   </div>
 </div>
@@ -768,7 +768,7 @@ async function fetchCryptoOdds() {
         <div class="odds-bar-wrap">
           <div class="odds-bar-fill" style="width:${f.pct}%;background:linear-gradient(90deg,${f.coin.color},${f.coin.color}aa)"></div>
         </div>
-        <a href="${f.slug ? `https://polymarket.com/event/${f.slug}?r=polymarketcomrwhaletrack` : AFFILIATE}"
+        <a href="${f.slug ? `https://polymarket.com/event/${f.slug}?via=manpreet-singh-brar` : AFFILIATE}"
            target="_blank" rel="noopener" class="odds-bet-btn" style="color:${f.coin.color};border-color:${f.coin.color}44;background:${f.coin.color}18">
           Bet on ${f.coin.name} →
         </a>
@@ -810,7 +810,7 @@ startCryptoCountdown();
 // ===== HELPERS =====
 function marketUrl(slug) {
   return slug
-    ? `https://polymarket.com/event/${slug}?r=polymarketcomrwhaletrack`
+    ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
     : AFFILIATE;
 }
 function copyBet(slug, outcome, title) {

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1200px;
+    height: 675px;
+    background: #080c14;
+    font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Background glow blobs */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.18;
+  }
+  .blob-1 { width: 500px; height: 500px; background: #3fb950; top: -120px; left: -80px; }
+  .blob-2 { width: 400px; height: 400px; background: #ff7043; top: 200px; right: -100px; }
+  .blob-3 { width: 300px; height: 300px; background: #58a6ff; bottom: -80px; left: 350px; }
+
+  /* Grid lines overlay */
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(63,185,80,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(63,185,80,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Main container */
+  .container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 44px 56px;
+  }
+
+  /* Top bar */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 36px;
+  }
+
+  .logo {
+    font-size: 22px;
+    font-weight: 800;
+    color: #e6edf3;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: #3fb950; }
+
+  .badge {
+    background: linear-gradient(135deg, #3fb950, #2ea043);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(63,185,80,0.4);
+  }
+
+  /* Headline */
+  .headline {
+    margin-bottom: 42px;
+  }
+  .headline .label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #3fb950;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .headline h1 {
+    font-size: 52px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.05;
+    letter-spacing: -1.5px;
+  }
+  .headline h1 em {
+    font-style: normal;
+    background: linear-gradient(90deg, #3fb950, #58a6ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Feature cards row */
+  .features {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+  }
+
+  .feature-card {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border-radius: 18px;
+    padding: 28px 30px;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .feature-card.hot::before    { background: linear-gradient(90deg, #ff7043, #ff9800); }
+  .feature-card.movers::before { background: linear-gradient(90deg, #3fb950, #58a6ff); }
+  .feature-card.wallet::before { background: linear-gradient(90deg, #a371f7, #58a6ff); }
+
+  .feature-icon {
+    font-size: 36px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .feature-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+
+  .feature-card.hot .feature-name    { color: #ff7043; }
+  .feature-card.movers .feature-name { color: #3fb950; }
+  .feature-card.wallet .feature-name { color: #a371f7; }
+
+  .feature-desc {
+    font-size: 14px;
+    color: #8b949e;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .feature-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    color: #8b949e;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .feature-card.hot .pill    { color: #ff7043; border-color: rgba(255,112,67,0.25); background: rgba(255,112,67,0.08); }
+  .feature-card.movers .pill { color: #3fb950; border-color: rgba(63,185,80,0.25); background: rgba(63,185,80,0.08); }
+  .feature-card.wallet .pill { color: #a371f7; border-color: rgba(163,113,247,0.25); background: rgba(163,113,247,0.08); }
+
+  /* Bottom bar */
+  .bottom-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .url {
+    font-size: 16px;
+    font-weight: 700;
+    color: #3fb950;
+    letter-spacing: 0.5px;
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: #484f58;
+    font-weight: 500;
+  }
+
+  .free-badge {
+    background: rgba(63,185,80,0.12);
+    border: 1px solid rgba(63,185,80,0.3);
+    color: #3fb950;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+<div class="grid"></div>
+
+<div class="container">
+
+  <div class="top-bar">
+    <div class="logo">🐋 Whale<span>Track</span></div>
+    <div class="badge">🚀 Just Launched</div>
+  </div>
+
+  <div class="headline">
+    <div class="label">New Features</div>
+    <h1>Follow the<br/><em>smart money.</em></h1>
+  </div>
+
+  <div class="features">
+
+    <div class="feature-card hot">
+      <div class="feature-icon">🔥</div>
+      <div class="feature-name">Hot Bets</div>
+      <div class="feature-desc">
+        The biggest whale bets on Polymarket in the last 24h — sorted by size. See what smart money is backing right now.
+      </div>
+      <div class="feature-pills">
+        <span class="pill">Sports</span>
+        <span class="pill">Crypto</span>
+        <span class="pill">Politics</span>
+        <span class="pill">UFC/MMA</span>
+      </div>
+    </div>
+
+    <div class="feature-card movers">
+      <div class="feature-icon">📊</div>
+      <div class="feature-name">Market Movers</div>
+      <div class="feature-desc">
+        Which markets are whales piling into? YES/NO consensus, total whale volume, every wallet that placed a bet.
+      </div>
+      <div class="feature-pills">
+        <span class="pill">YES/NO Consensus</span>
+        <span class="pill">Whale Tags</span>
+        <span class="pill">Live Volume</span>
+      </div>
+    </div>
+
+    <div class="feature-card wallet">
+      <div class="feature-icon">🔌</div>
+      <div class="feature-name">Wallet Connect</div>
+      <div class="feature-desc">
+        Connect your Polymarket wallet. See a whale bet you like — click Copy Bet and it opens pre-filled on Polymarket.
+      </div>
+      <div class="feature-pills">
+        <span class="pill">1-Click Copy</span>
+        <span class="pill">Pre-filled</span>
+        <span class="pill">Instant</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-bar">
+    <div class="url">whaletrack.app</div>
+    <div class="tagline">Track 19 whale wallets · Real-time alerts · 100% free</div>
+    <div class="free-badge">FREE →</div>
+  </div>
+
+</div>
+
+</body>
+</html>

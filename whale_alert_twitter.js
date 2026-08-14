@@ -303,7 +303,7 @@ function buildTweet(t, obContext) {
 
   // Use whale profile URL for rich OG card, fallback to homepage
   const profileUrl = whaleProfileUrl(t.proxyWallet || '');
-  const refLink = `https://polymarket.com?r=polymarketcomrwhaletrack`;
+  const refLink = `https://polymarket.com?via=manpreet-singh-brar`;
   const tags = t.usdcSize >= 50000
     ? `⚡ Get alerts 10min early → https://whaletrack.app/premium\n🎯 Bet on Polymarket → ${refLink} | @Polymarket #Polymarket`
     : `⚡ Get alerts 10min early → https://whaletrack.app/premium\n🎯 Bet on Polymarket → ${refLink} | #Polymarket`;
