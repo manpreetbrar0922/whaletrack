@@ -896,7 +896,7 @@
     <button class="alert-btn" onclick="toggleAlerts()" id="alertBtn">🔔 Alerts Off</button>
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
     <button class="wt-connect-btn" id="wtConnectBtn" onclick="openConnectModal()" title="Connect your Polymarket wallet to copy whale bets">🔌 Connect</button>
-    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade →</a>
+    <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade →</a>
   </div>
 </nav>
 
@@ -904,7 +904,7 @@
 <div id="newUserBanner" style="background:linear-gradient(90deg,rgba(88,166,255,0.12),rgba(63,185,80,0.08));border-bottom:1px solid rgba(88,166,255,0.2);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
   <span style="font-size:13px;color:#8b949e;">👋 <strong style="color:#e6edf3;">New to Polymarket?</strong> Create a free account and copy your first whale bet in 2 minutes.</span>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="background:#58a6ff;color:#fff;font-size:12px;font-weight:700;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;">Get Started Free →</a>
+    <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" style="background:#58a6ff;color:#fff;font-size:12px;font-weight:700;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;">Get Started Free →</a>
     <button onclick="document.getElementById('newUserBanner').style.display='none';localStorage.setItem('wt_nb','1')" style="background:none;border:none;color:#8b949e;font-size:18px;cursor:pointer;line-height:1;padding:0 4px;">×</button>
   </div>
 </div>
@@ -1093,9 +1093,9 @@
         </div>
         <div style="padding-top:14px;border-top:1px solid #21262d;text-align:center;font-size:12px;color:#484f58">
           Need MetaMask? <a href="https://metamask.io" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Download here →</a>
-          &nbsp;·&nbsp; No Polymarket account? <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Sign up free →</a>
+          &nbsp;·&nbsp; No Polymarket account? <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Sign up free →</a>
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid #21262d">
-            <a id="wtDirectPolyLink" href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#8b949e;text-decoration:none;font-size:11px" data-affiliate>
+            <a id="wtDirectPolyLink" href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" style="color:#8b949e;text-decoration:none;font-size:11px" data-affiliate>
               Skip — place bet directly on Polymarket →
             </a>
           </div>
@@ -1317,7 +1317,7 @@
   <p style="margin-top:10px;"><a href="/polymarket-whale-tracker" style="color:var(--accent);font-size:12px;">📖 How to Track Polymarket Whales →</a></p>
   <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
     <p style="font-size:13px;color:var(--text);margin-bottom:10px;">Ready to copy a whale bet? Trade on the world's biggest prediction market.</p>
-    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" data-affiliate
+    <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" data-affiliate
        style="display:inline-block;background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:9px 22px;border-radius:8px;text-decoration:none;transition:opacity 0.2s;"
        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
       Trade on Polymarket →
@@ -1328,7 +1328,7 @@
 <!-- MOBILE STICKY CTA (only shows on small screens) -->
 <div id="mobileCta" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:10px 16px;z-index:200;align-items:center;justify-content:space-between;gap:10px;">
   <span style="font-size:12px;color:var(--text2);">Copy whale bets on Polymarket</span>
-  <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" data-affiliate
+  <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" data-affiliate
      style="background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;flex-shrink:0;">
     Trade Free →
   </a>
@@ -1417,10 +1417,10 @@
 })();
 
 // ===== AFFILIATE LINK — swap this URL when Polymarket approves =====
-const AFFILIATE_URL = 'https://polymarket.com?via=manpreet-singh-brar';
+const AFFILIATE_URL = 'https://polymarket.com?r=polymarketcomrwhaletrack';
 
 function marketUrl(slug) {
-  const base = slug ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar` : 'https://polymarket.com?via=manpreet-singh-brar';
+  const base = slug ? `https://polymarket.com/event/${slug}?r=polymarketcomrwhaletrack` : 'https://polymarket.com?r=polymarketcomrwhaletrack';
   // When affiliate approved, append ?ref=xxx to base
   return base;
 }
@@ -1650,7 +1650,7 @@ function renderLiveFeed(activity) {
             data-price="${t.price}"
             data-title="${(t.title||'').replace(/"/g,'&quot;')}"
             onclick="openTradeModal(this.dataset)">🎯 Copy This Bet →</button>
-          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#3fb950;text-decoration:none;text-align:center;display:block;margin-top:5px;font-weight:600;" data-affiliate>✨ New? Get started free →</a>
+          <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" style="font-size:10px;color:#3fb950;text-decoration:none;text-align:center;display:block;margin-top:5px;font-weight:600;" data-affiliate>✨ New? Get started free →</a>
         </div>
       </div>
     `;
@@ -1887,7 +1887,7 @@ function renderActivity(items) {
             data-price="${t.price || 0}"
             data-title="${(t.title || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
             onclick="openTradeModal(this.dataset)">Copy Bet →</button>
-          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#484f58;text-decoration:none;text-align:right;display:block;" data-affiliate>No account? Sign up →</a>
+          <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" style="font-size:10px;color:#484f58;text-decoration:none;text-align:right;display:block;" data-affiliate>No account? Sign up →</a>
         </div>
       </div>
     `;
@@ -2524,8 +2524,8 @@ setInterval(refreshActivity, 60 * 1000);
     if (directLink) {
       const slug = wt.pending && wt.pending.slug;
       directLink.href = slug
-        ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`
-        : 'https://polymarket.com?via=manpreet-singh-brar';
+        ? `https://polymarket.com/event/${slug}?r=polymarketcomrwhaletrack`
+        : 'https://polymarket.com?r=polymarketcomrwhaletrack';
     }
   };
 
@@ -2740,8 +2740,8 @@ setInterval(refreshActivity, 60 * 1000);
       wt.price > 0 ? (wt.price * 100).toFixed(1) + '¢' : '—';
     const pmLink = document.getElementById('wtPolymarketLink');
     if (pmLink) pmLink.href = wt.slug
-      ? `https://polymarket.com/event/${wt.slug}?via=manpreet-singh-brar`
-      : 'https://polymarket.com?via=manpreet-singh-brar';
+      ? `https://polymarket.com/event/${wt.slug}?r=polymarketcomrwhaletrack`
+      : 'https://polymarket.com?r=polymarketcomrwhaletrack';
 
     // Preset amount reset
     document.getElementById('wtTradeAmt').value = '10';
@@ -2870,7 +2870,7 @@ setInterval(refreshActivity, 60 * 1000);
         document.getElementById('wtTradeLoading').style.display = 'none';
         showTradeErr(err);
         if (isClosed && slug) {
-          const pmUrl = 'https://polymarket.com/event/' + slug + '?via=manpreet-singh-brar';
+          const pmUrl = 'https://polymarket.com/event/' + slug + '?r=polymarketcomrwhaletrack';
           document.getElementById('wtErrorMsg').insertAdjacentHTML('afterend',
             '<a href="' + pmUrl + '" target="_blank" rel="noopener" ' +
             'style="display:inline-block;margin-top:12px;padding:8px 18px;background:rgba(88,166,255,0.15);' +
@@ -2934,7 +2934,7 @@ setInterval(refreshActivity, 60 * 1000);
         if (typeof gtag !== 'undefined') gtag('event', 'trade_failed', { slug, outcome, amount, reason: errCategory });
         showTradeErr(errMsg);
         if (isClosed && slug) {
-          const pmUrl = 'https://polymarket.com/event/' + slug + '?via=manpreet-singh-brar';
+          const pmUrl = 'https://polymarket.com/event/' + slug + '?r=polymarketcomrwhaletrack';
           document.getElementById('wtErrorMsg').insertAdjacentHTML('afterend',
             '<a href="' + pmUrl + '" target="_blank" rel="noopener" ' +
             'style="display:inline-block;margin-top:12px;padding:8px 18px;background:rgba(88,166,255,0.15);' +

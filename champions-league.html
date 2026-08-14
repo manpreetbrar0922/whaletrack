@@ -276,7 +276,7 @@
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
     <a href="/" class="nav-btn">← All Markets</a>
-    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn">⚽ Bet on Polymarket →</a>
+    <a href="https://polymarket.com/sports?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="nav-trade-btn">⚽ Bet on Polymarket →</a>
   </div>
 </nav>
 
@@ -293,7 +293,7 @@
   </div>
 
   <div class="hero-btns">
-    <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="hero-btn-primary">🏆 Bet on UCL →</a>
+    <a href="https://polymarket.com/sports?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="hero-btn-primary">🏆 Bet on UCL →</a>
     <a href="#markets" class="hero-btn-secondary">See Whale Positions ↓</a>
   </div>
 </div>
@@ -316,7 +316,7 @@
     <div class="odds-meta" id="oddsMeta">Fetching live odds from Polymarket...</div>
 
     <div class="odds-footer">
-      <a href="https://polymarket.com/sports?via=manpreet-singh-brar" target="_blank" rel="noopener" class="odds-bet-btn" id="oddsBetBtn">🏆 Bet on Champions League →</a>
+      <a href="https://polymarket.com/sports?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="odds-bet-btn" id="oddsBetBtn">🏆 Bet on Champions League →</a>
       <a href="#" target="_blank" rel="noopener" class="odds-tweet-btn" id="oddsTweetBtn">🐦 Share</a>
     </div>
   </div>
@@ -355,7 +355,7 @@
 </div>
 
 <script>
-const AFFILIATE = 'https://polymarket.com?via=manpreet-singh-brar';
+const AFFILIATE = 'https://polymarket.com?r=polymarketcomrwhaletrack';
 
 // Theme toggle
 function toggleTheme() {
@@ -459,8 +459,8 @@ async function fetchUCLOdds() {
       `Smart money favourite: ${getFlag(topTeam)} ${topTeam} at ${topPct}% · Polymarket UCL odds · Updated ${updatedAt}`;
 
     document.getElementById('oddsBetBtn').href = bestSlug
-      ? `https://polymarket.com/event/${bestSlug}?via=manpreet-singh-brar`
-      : 'https://polymarket.com/sports?via=manpreet-singh-brar';
+      ? `https://polymarket.com/event/${bestSlug}?r=polymarketcomrwhaletrack`
+      : 'https://polymarket.com/sports?r=polymarketcomrwhaletrack';
 
     const tweetText = encodeURIComponent(
       `🏆 Smart money on the Champions League winner (Polymarket):\n\n` +
@@ -476,7 +476,7 @@ async function fetchUCLOdds() {
 
 // ===== HELPERS =====
 function marketUrl(slug) {
-  return slug ? `https://polymarket.com/event/${slug}?via=manpreet-singh-brar` : AFFILIATE;
+  return slug ? `https://polymarket.com/event/${slug}?r=polymarketcomrwhaletrack` : AFFILIATE;
 }
 function fmtUSD(n) {
   n = parseFloat(n);

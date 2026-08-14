@@ -303,9 +303,10 @@ function buildTweet(t, obContext) {
 
   // Use whale profile URL for rich OG card, fallback to homepage
   const profileUrl = whaleProfileUrl(t.proxyWallet || '');
+  const refLink = `https://polymarket.com?r=polymarketcomrwhaletrack`;
   const tags = t.usdcSize >= 50000
-    ? `📋 Copy this bet → ${profileUrl} | @Polymarket #Polymarket #PredictionMarkets`
-    : `📋 Copy this bet → ${profileUrl} | #Polymarket #PredictionMarkets`;
+    ? `⚡ Get alerts 10min early → https://whaletrack.app/premium\n🎯 Bet on Polymarket → ${refLink} | @Polymarket #Polymarket`
+    : `⚡ Get alerts 10min early → https://whaletrack.app/premium\n🎯 Bet on Polymarket → ${refLink} | #Polymarket`;
 
   // Show whale's total profit if available
   const addrKey = (t.proxyWallet || '').toLowerCase();

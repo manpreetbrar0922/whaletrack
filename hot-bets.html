@@ -376,7 +376,7 @@
     <p>Premium subscribers get Telegram alerts before this page updates — and before Twitter. Copy the bet before odds move.</p>
     <a href="/premium.html" class="cta-btn green" onclick="gtag('event','premium_click',{'page':'hot-bets'})">⚡ Get Premium — $9/mo</a>
     <br/><br/>
-    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="cta-btn" style="background:#1a1f2e;border:1px solid #3fb950;color:#3fb950;" onclick="gtag('event','polymarket_click',{'page':'hot-bets'})">🎯 Trade on Polymarket →</a>
+    <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank" rel="noopener" class="cta-btn" style="background:#1a1f2e;border:1px solid #3fb950;color:#3fb950;" onclick="gtag('event','polymarket_click',{'page':'hot-bets'})">🎯 Trade on Polymarket →</a>
   </div>
 </div>
 
@@ -387,12 +387,12 @@
     <a href="/polymarket-whale-tracker.html">Whale Tracker</a> ·
     <a href="/polymarket-leaderboard.html">Leaderboard</a>
   </p>
-  <p style="margin-top:8px;">Data sourced from <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank">Polymarket</a> · Updates every 5 minutes</p>
+  <p style="margin-top:8px;">Data sourced from <a href="https://polymarket.com?r=polymarketcomrwhaletrack" target="_blank">Polymarket</a> · Updates every 5 minutes</p>
 </footer>
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────────────────
-const REF_LINK   = 'https://polymarket.com?via=manpreet-singh-brar';
+const REF_LINK   = 'https://polymarket.com?r=polymarketcomrwhaletrack';
 
 let allBets      = [];
 let activeFilter = 'all';
@@ -460,7 +460,7 @@ function renderBets() {
   list.innerHTML = filtered.map((t, i) => {
     const cat      = detectCategory(t.title);
     const polyLink = t.slug
-      ? `https://polymarket.com/event/${t.slug}?via=manpreet-singh-brar`
+      ? `https://polymarket.com/event/${t.slug}?r=polymarketcomrwhaletrack`
       : REF_LINK;
     const outcome  = t.outcome || '—';
     const outcomeClass = outcome === 'Yes' ? 'yes' : outcome === 'No' ? 'no' : '';
