@@ -26,6 +26,7 @@ if (!API_KEY || !API_SECRET || !ACCESS_TOKEN || !ACCESS_TOKEN_SECRET) {
 const TWEET_MIN           = parseInt(process.env.TWEET_MIN        || '15000');  // $15K
 const POLL_INTERVAL       = parseInt(process.env.POLL_INTERVAL     || '60000');  // 60s continuous
 const DAILY_LIMIT         = parseInt(process.env.DAILY_LIMIT       || '50');     // max tweets/day
+const SKIP_CARDS          = process.env.SKIP_CARDS === 'true';                   // set true on free API tier (no media upload)
 const COOLDOWN_MS         = 25 * 60 * 1000;                                      // 25 min between tweets
 const SPORTS_COOLDOWN_MS  =  3 * 60 * 1000;                                      // 3 min for sports (fast markets)
 const TELEGRAM_DELAY_MS   = parseInt(process.env.TELEGRAM_DELAY_MS || '600000'); // 10 min Telegram → Twitter gap
@@ -464,6 +465,32 @@ async function uploadMedia(imgPath) {
   });
 }
 
+// ── CARD GENERATION LOCK (prevents concurrent Puppeteer instances crashing each other) ──
+let _cardLock = false;
+const _cardQueue = [];
+
+function withCardLock(fn) {
+  return new Promise((resolve, reject) => {
+    const run = () => {
+      _cardLock = true;
+      fn().then(res => {
+        resolve(res);
+        _cardLock = false;
+        if (_cardQueue.length) _cardQueue.shift()();
+      }).catch(err => {
+        reject(err);
+        _cardLock = false;
+        if (_cardQueue.length) _cardQueue.shift()();
+      });
+    };
+    if (_cardLock) {
+      _cardQueue.push(run);
+    } else {
+      run();
+    }
+  });
+}
+
 // ── GENERATE + UPLOAD CARD (never blocks a tweet on failure) ─────────
 // Spawns card-generator.cjs as a child process so Puppeteer gets its own CPU/memory
 function generateCardInChildProcess(tradeData) {
@@ -490,8 +517,9 @@ function generateCardInChildProcess(tradeData) {
 }
 
 async function getCardMediaId(tradeData) {
+  if (SKIP_CARDS) return null;  // free API tier — skip media upload entirely
   try {
-    const imgPath = await generateCardInChildProcess(tradeData);
+    const imgPath = await withCardLock(() => generateCardInChildProcess(tradeData));
     const mediaId = await uploadMedia(imgPath);
     try { fs.unlinkSync(imgPath); } catch (_) {}
     return mediaId;
