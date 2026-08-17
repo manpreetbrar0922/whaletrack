@@ -16,8 +16,26 @@
   <meta property="og:type" content="website">
 
   <!-- GA4 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RN22NVFVP"></script>
+  <script>
+    window.dataLayer=window.dataLayer||[];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6RN22NVFVP');
+
+    // Track premium page view
+    gtag('event', 'page_view', { page_title: 'Premium Landing', page_location: window.location.href });
+
+    // Track trial button click
+    function trackTrialClick() {
+      gtag('event', 'begin_checkout', {
+        currency: 'USD',
+        value: 9.00,
+        items: [{ item_id: 'whaletrack_premium', item_name: 'WhaleTrack Premium', price: 9.00 }]
+      });
+      gtag('event', 'premium_trial_click', { page: 'premium-landing' });
+    }
+  </script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -443,7 +461,7 @@
       href="https://buy.stripe.com/3cI9ATc0J8ZPgTPdjPfUQ01"
       target="_blank"
       class="cta-btn"
-      onclick="gtag('event','premium_click',{'page':'premium-landing'})"
+      onclick="trackTrialClick()"
     >
       ⚡ Start Free 7-Day Trial — then $9/mo
     </a>
