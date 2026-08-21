@@ -576,6 +576,68 @@
     .vol-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; width: 120px; overflow: hidden; }
     .vol-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.5s; }
 
+    /* ===== EXCHANGE AFFILIATE STRIP ===== */
+    .exchange-strip {
+      margin: 40px 0 0;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(247,147,26,0.06) 0%, rgba(0,120,220,0.06) 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .exchange-strip-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .exchange-cards {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .exchange-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.15s;
+      min-width: 200px;
+      flex: 1;
+      max-width: 280px;
+    }
+    .exchange-card:hover { transform: translateY(-2px); }
+    .exchange-card.binance:hover { border-color: rgba(247,147,26,0.5); }
+    .exchange-card.okx:hover     { border-color: rgba(88,166,255,0.5); }
+    .exchange-logo {
+      font-size: 26px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .exchange-info { flex: 1; min-width: 0; }
+    .exchange-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .exchange-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .exchange-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-binance { background: rgba(247,147,26,0.15); color: #f7931a; }
+    .badge-okx     { background: rgba(88,166,255,0.15); color: #58a6ff; }
+    @media(max-width:600px) {
+      .exchange-card { max-width: 100%; }
+    }
+
     /* ===== FOOTER ===== */
     footer {
       text-align: center;
@@ -901,6 +963,8 @@
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
     <button class="wt-connect-btn" id="wtConnectBtn" onclick="openConnectModal()" title="Connect your Polymarket wallet to copy whale bets">🔌 Connect</button>
     <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade →</a>
+    <a href="https://accounts.binance.com/register?ref=BINANCE_REF_CODE" target="_blank" rel="noopener sponsored" class="nav-trade-btn" style="background:rgba(247,147,26,0.15);color:#f7931a;border:1px solid rgba(247,147,26,0.3);" data-exchange="binance">Binance →</a>
+    <a href="https://www.okx.com/join/OKXCODE" target="_blank" rel="noopener sponsored" class="nav-trade-btn" style="background:rgba(88,166,255,0.1);color:#58a6ff;border:1px solid rgba(88,166,255,0.25);" data-exchange="okx">OKX →</a>
   </div>
 </nav>
 
@@ -1315,17 +1379,68 @@
   </div>
 </section>
 
+<!-- EXCHANGE AFFILIATE STRIP -->
+<div class="container">
+  <div class="exchange-strip">
+    <div class="exchange-strip-title">🐋 Trade where the whales trade crypto perps</div>
+    <div class="exchange-cards">
+
+      <!-- BINANCE -->
+      <a href="https://accounts.binance.com/register?ref=BINANCE_REF_CODE"
+         target="_blank" rel="noopener sponsored"
+         class="exchange-card binance"
+         data-exchange="binance">
+        <div class="exchange-logo">🟡</div>
+        <div class="exchange-info">
+          <div class="exchange-name">Binance</div>
+          <div class="exchange-desc">World's largest exchange · 323M users</div>
+        </div>
+        <div class="exchange-badge badge-binance">Up to 50% fee rebate</div>
+      </a>
+
+      <!-- OKX -->
+      <a href="https://www.okx.com/join/OKXCODE"
+         target="_blank" rel="noopener sponsored"
+         class="exchange-card okx"
+         data-exchange="okx">
+        <div class="exchange-logo">🔵</div>
+        <div class="exchange-info">
+          <div class="exchange-name">OKX</div>
+          <div class="exchange-desc">Regulated in US, EU, UAE · 100+ countries</div>
+        </div>
+        <div class="exchange-badge badge-okx">Spot &amp; Perps trading</div>
+      </a>
+
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--text2);margin-top:14px;">
+      Whale watching on Polymarket? Level up with crypto perps. Not financial advice.
+    </p>
+  </div>
+</div>
+
 <footer>
   <p>🐋 WhaleTrack — Smart Money Intelligence for Polymarket</p>
   <p style="margin-top:6px;">Data refreshed every 5 minutes. Not financial advice.</p>
   <p style="margin-top:10px;"><a href="/polymarket-whale-tracker" style="color:var(--accent);font-size:12px;">📖 How to Track Polymarket Whales →</a></p>
   <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
-    <p style="font-size:13px;color:var(--text);margin-bottom:10px;">Ready to copy a whale bet? Trade on the world's biggest prediction market.</p>
-    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" data-affiliate
-       style="display:inline-block;background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:9px 22px;border-radius:8px;text-decoration:none;transition:opacity 0.2s;"
-       onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-      Trade on Polymarket →
-    </a>
+    <p style="font-size:13px;color:var(--text);margin-bottom:12px;">Ready to trade? Pick your platform:</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" data-affiliate
+         style="display:inline-block;background:var(--accent);color:#fff;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none;transition:opacity 0.2s;"
+         onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        🎯 Polymarket →
+      </a>
+      <a href="https://accounts.binance.com/register?ref=BINANCE_REF_CODE" target="_blank" rel="noopener sponsored" data-exchange="binance"
+         style="display:inline-block;background:rgba(247,147,26,0.15);border:1px solid rgba(247,147,26,0.3);color:#f7931a;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none;transition:opacity 0.2s;"
+         onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
+        🟡 Binance →
+      </a>
+      <a href="https://www.okx.com/join/OKXCODE" target="_blank" rel="noopener sponsored" data-exchange="okx"
+         style="display:inline-block;background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.25);color:#58a6ff;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none;transition:opacity 0.2s;"
+         onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
+        🔵 OKX →
+      </a>
+    </div>
   </div>
 </footer>
 
