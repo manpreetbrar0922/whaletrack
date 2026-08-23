@@ -384,64 +384,81 @@ function sendTelegram(chatId, text) {
   });
 }
 
-function buildTelegramAlert(t, type = 'bet') {
+function buildTelegramAlert(t, type = 'bet', isPremium = false, meta = {}) {
   const outcomeEmoji = t.outcome === 'Yes' ? '🟢' : t.outcome === 'No' ? '🔴' : '⚪';
   const price        = Math.round((t.price || 0) * 100);
   const addrKey      = (t.proxyWallet || '').toLowerCase();
   const pnl          = whalePnl[addrKey];
-  const pnlStr       = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)})` : '';
+  const rank         = whaleRank[addrKey] || meta.rank || null;
   const title        = (t.title || 'Unknown Market').slice(0, 80);
 
-  // default: bet
-  const isPremium = arguments[2] === true;
-  const eventSlug = t.eventSlug || (t.slug ? t.slug.replace(/-f5-.*|-moneyline.*|-spread.*|-total.*|-nrfi.*|-yrfi.*/, '') : null);
-  const polyLink  = eventSlug
-    ? `https://polymarket.com/event/${eventSlug}?via=manpreet-singh-brar`
-    : `https://polymarket.com?via=manpreet-singh-brar`;
+  // Build whale track record line for premium
+  const wrLine = (() => {
+    if (!isPremium) return null;
+    const parts = [];
+    if (rank) parts.push(`🏆 #${rank} on Polymarket`);
+    if (pnl && pnl > 0) parts.push(`💰 +${fmtUSD(pnl)} total P&L`);
+    if (meta.rate !== null && meta.rate !== undefined && meta.total >= 3)
+      parts.push(`🎯 ${meta.rate}% WR (${meta.total} trades)`);
+    else if (meta.total !== undefined && meta.total < 3)
+      parts.push(`🎯 WR: tracking (${meta.total} resolved)`);
+    return parts.length ? parts.join(' | ') : null;
+  })();
 
   if (type === 'exit') {
-    return [
-      `🚨 <b>Whale Exit — ${t.whaleName}${pnlStr}</b>`,
+    const lines = [
+      `🚨 <b>Whale Exit — ${t.whaleName}</b>`,
       ``,
       `Just SOLD their position @ ${price}¢`,
       ``,
       `📊 <i>${title}</i>`,
       ``,
+    ];
+    if (isPremium && wrLine) lines.push(wrLine, ``);
+    lines.push(
       `⚠️ If you copied this bet — watch your position.`,
       isPremium
         ? `🌐 <a href="https://whaletrack.app">whaletrack.app</a>`
         : `🐋 <a href="https://whaletrack.app/premium">Get every alert → whaletrack.app/premium</a>`,
-    ].join('\n');
+    );
+    return lines.join('\n');
   }
 
   if (type === 'win') {
-    return [
-      `✅ <b>Whale Win — ${t.whaleName}${pnlStr}</b>`,
+    const lines = [
+      `✅ <b>Whale Win — ${t.whaleName}</b>`,
       ``,
       `Just collected <b>${fmtUSD(t.usdcSize)}</b>`,
       ``,
       `📊 <i>${title}</i>`,
       ``,
+    ];
+    if (isPremium && wrLine) lines.push(wrLine, ``);
+    lines.push(
       isPremium
         ? `🌐 <a href="https://whaletrack.app">whaletrack.app</a>`
         : `🐋 <a href="https://whaletrack.app/premium">Get every alert → whaletrack.app/premium</a>`,
-    ].join('\n');
+    );
+    return lines.join('\n');
   }
+
   // bet alert
   if (isPremium) {
-    return [
-      `⚡ <b>Whale Alert — ${t.whaleName}${pnlStr}</b>`,
+    const lines = [
+      `⚡ <b>Whale Alert — ${t.whaleName}</b>`,
       ``,
       `${outcomeEmoji} <b>${t.outcome}</b> ${fmtUSD(t.usdcSize)} @ ${price}¢`,
       ``,
       `📊 <i>${title}</i>`,
       ``,
-      `🌐 <a href="https://whaletrack.app">whaletrack.app</a>`,
-    ].join('\n');
+    ];
+    if (wrLine) lines.push(wrLine, ``);
+    lines.push(`🌐 <a href="https://whaletrack.app">whaletrack.app</a>`);
+    return lines.join('\n');
   }
 
   return [
-    `⚡ <b>Whale Alert — ${t.whaleName}${pnlStr}</b>`,
+    `⚡ <b>Whale Alert — ${t.whaleName}</b>`,
     ``,
     `${outcomeEmoji} <b>${t.outcome}</b> ${fmtUSD(t.usdcSize)} @ ${price}¢`,
     ``,
@@ -453,8 +470,13 @@ function buildTelegramAlert(t, type = 'bet') {
 
 async function sendTelegramAlerts(t, type = 'bet') {
   if (!BOT_TOKEN) return;
-  const premiumMsg = buildTelegramAlert(t, type, true);   // no upsell CTA
-  const adminMsg   = buildTelegramAlert(t, type, false);  // with CTA
+  // Fetch win rate for premium alert context (cached 30 min)
+  let meta = {};
+  if (PREMIUM_CHANNEL_ID && t.proxyWallet) {
+    try { meta = await fetchWinRate(t.proxyWallet); } catch (e) {}
+  }
+  const premiumMsg = buildTelegramAlert(t, type, true,  meta);  // full context, no upsell
+  const adminMsg   = buildTelegramAlert(t, type, false, {});    // free format + upsell CTA
   const sends = [];
   if (PREMIUM_CHANNEL_ID) sends.push(sendTelegram(PREMIUM_CHANNEL_ID, premiumMsg));
   if (ADMIN_CHAT_ID)      sends.push(sendTelegram(ADMIN_CHAT_ID, adminMsg));
@@ -693,8 +715,9 @@ function fmtUSD(n) {
   return '$' + n.toFixed(0);
 }
 
-// Cache whale PnL from leaderboard
-const whalePnl = {};
+// Cache whale PnL + rank from leaderboard
+const whalePnl  = {};
+const whaleRank = {};
 
 async function fetchWhaleAddresses() {
   try {
@@ -703,7 +726,8 @@ async function fetchWhaleAddresses() {
       .slice(0, 15)
       .map(t => {
         const addr = (t.proxyWallet || '').toLowerCase();
-        if (addr && t.pnl) whalePnl[addr] = t.pnl;
+        if (addr && t.pnl)  whalePnl[addr]  = t.pnl;
+        if (addr && t.rank) whaleRank[addr]  = t.rank;
         return addr;
       })
       .filter(Boolean);
@@ -713,6 +737,32 @@ async function fetchWhaleAddresses() {
     return [...new Set(addrs)];
   } catch (e) {
     return Object.keys(KNOWN_NAMES);
+  }
+}
+
+// ── WIN RATE FETCHER ─────────────────────────────────────────────────
+const winRateCache = {}; // address → { rate, wins, losses, total, cachedAt }
+
+async function fetchWinRate(address) {
+  const now    = Date.now();
+  const cached = winRateCache[address];
+  if (cached && now - cached.cachedAt < 30 * 60 * 1000) return cached; // 30 min cache
+  try {
+    const activity = await fetchActivity(address, 50);
+    const sells    = activity.filter(t => t.side === 'SELL' && parseFloat(t.price || 0) > 0);
+    let wins = 0, losses = 0;
+    for (const t of sells) {
+      const price = parseFloat(t.price || 0);
+      if (price >= 0.85)      wins++;
+      else if (price <= 0.15) losses++;
+    }
+    const total  = wins + losses;
+    const rate   = total > 0 ? Math.round((wins / total) * 100) : null;
+    const result = { rate, wins, losses, total, cachedAt: now };
+    winRateCache[address] = result;
+    return result;
+  } catch (e) {
+    return { rate: null, wins: 0, losses: 0, total: 0, cachedAt: now };
   }
 }
 
