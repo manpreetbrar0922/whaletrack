@@ -408,9 +408,9 @@ function buildTelegramAlert(t, type = 'bet', isPremium = false, meta = {}) {
     const parts = [];
     if (rank) parts.push(`🏆 #${rank} on Polymarket`);
     if (pnl && pnl > 0) parts.push(`💰 +${fmtUSD(pnl)} total P&L`);
-    if (meta.rate !== null && meta.rate !== undefined && meta.total >= 3)
+    if (meta.rate != null && (meta.total || 0) >= 3)
       parts.push(`🎯 ${meta.rate}% WR (${meta.total} trades)`);
-    else if (meta.total !== undefined && meta.total < 3)
+    else if (meta.total != null)
       parts.push(`🎯 WR: tracking (${meta.total} resolved)`);
     return parts.length ? parts.join(' | ') : null;
   })();
@@ -1209,13 +1209,14 @@ async function checkAndTweet() {
         if (seenTrades.has(key) || seenTrades.has(marketKey)) continue;
         bigTrades.push({
           key,
-          whaleName: KNOWN_NAMES[(t.proxyWallet || addr).toLowerCase()] || KNOWN_NAMES[addr] || formatWhaleName(t.name, t.proxyWallet || addr),
-          outcome:   t.outcome  || '—',
-          usdcSize:  parseFloat(t.usdcSize || 0),
-          price:     parseFloat(t.price    || 0),
-          title:     t.title    || 'Unknown Market',
-          slug:      t.slug     || '',
-          timestamp: t.timestamp || 0,
+          whaleName:   KNOWN_NAMES[(t.proxyWallet || addr).toLowerCase()] || KNOWN_NAMES[addr] || formatWhaleName(t.name, t.proxyWallet || addr),
+          proxyWallet: t.proxyWallet || addr,
+          outcome:     t.outcome  || '—',
+          usdcSize:    parseFloat(t.usdcSize || 0),
+          price:       parseFloat(t.price    || 0),
+          title:       t.title    || 'Unknown Market',
+          slug:        t.slug     || '',
+          timestamp:   t.timestamp || 0,
         });
       }
     }
