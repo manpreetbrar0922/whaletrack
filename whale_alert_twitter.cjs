@@ -17,17 +17,18 @@ const API_SECRET          = process.env.TWITTER_API_SECRET;
 const ACCESS_TOKEN        = process.env.TWITTER_ACCESS_TOKEN;
 const ACCESS_TOKEN_SECRET = process.env.TWITTER_ACCESS_TOKEN_SECRET;
 
-if (!API_KEY || !API_SECRET || !ACCESS_TOKEN || !ACCESS_TOKEN_SECRET) {
-  console.error('❌ Missing Twitter credentials.');
-  console.error('   Set: TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET');
-  process.exit(1);
+const TWITTER_ENABLED = !!(API_KEY && API_SECRET && ACCESS_TOKEN && ACCESS_TOKEN_SECRET);
+if (!TWITTER_ENABLED) {
+  console.warn('⚠️  Twitter credentials not set — Twitter posting disabled. Telegram-only mode.');
 }
 
 const TWEET_MIN           = parseInt(process.env.TWEET_MIN        || '15000');  // $15K
 const POLL_INTERVAL       = parseInt(process.env.POLL_INTERVAL     || '60000');  // 60s continuous
 const DAILY_LIMIT         = parseInt(process.env.DAILY_LIMIT       || '50');     // max tweets/day
 const SKIP_CARDS          = process.env.SKIP_CARDS === 'true';                   // set true on free API tier (no media upload)
-const COOLDOWN_MS         = 25 * 60 * 1000;                                      // 25 min between tweets
+const COOLDOWN_MS         = 6 * 60 * 60 * 1000;                                   // 6 hours between tweets (curated mode)
+const TWEET_WINDOWS_UTC  = [9, 18];                                               // fire at 9am UTC and 6pm UTC only
+const TWEET_WINDOW_MIN   = 59;                                                    // window stays open for 59 min after the hour
 const SPORTS_COOLDOWN_MS  =  3 * 60 * 1000;                                      // 3 min for sports (fast markets)
 const TELEGRAM_DELAY_MS   = parseInt(process.env.TELEGRAM_DELAY_MS || '600000'); // 10 min Telegram → Twitter gap
 const SEEN_FILE           = process.env.SEEN_FILE || path.join(__dirname, 'twitter_seen_trades.json');
@@ -276,13 +277,26 @@ function getPageUrl(title) {
   return 'whaletrack.app';
 }
 
+function inTweetWindow() {
+  const utcHour = new Date().getUTCHours();
+  const utcMin  = new Date().getUTCMinutes();
+  return TWEET_WINDOWS_UTC.some(h => utcHour === h && utcMin <= TWEET_WINDOW_MIN);
+}
+
 function canTweetNow(title = '') {
+  // Scheduled windows: only fire at 9am UTC or 6pm UTC
+  if (!inTweetWindow()) {
+    const now     = new Date();
+    const utcHour = now.getUTCHours();
+    const nextH   = TWEET_WINDOWS_UTC.find(h => h > utcHour) || TWEET_WINDOWS_UTC[0];
+    console.log(`  🕐 Outside tweet window — next window at ${nextH}:00 UTC`);
+    return false;
+  }
   const elapsed  = Date.now() - getLastTweetTime();
-  const sports   = isSportsTrade(title);
-  const cooldown = sports ? SPORTS_COOLDOWN_MS : COOLDOWN_MS;
+  const cooldown = COOLDOWN_MS;
   if (elapsed < cooldown) {
     const waitMin = Math.ceil((cooldown - elapsed) / 60000);
-    console.log(`  ⏳ Cooldown active — next tweet in ~${waitMin}min${sports ? ' (sports priority)' : ''}`);
+    console.log(`  ⏳ Cooldown active — next tweet in ~${waitMin}min`);
     return false;
   }
   return true;
@@ -299,6 +313,31 @@ function fetchJson(url, timeoutMs = 30000) {
     req.on('error', reject);
     req.setTimeout(timeoutMs, () => { req.destroy(); reject(new Error('timeout')); });
   });
+}
+
+// ── SPORTS FRESHNESS CHECK ───────────────────────────────────────────
+// Returns true if the market is still open (game not over yet)
+// For sports bets, skips if market ends within 2 hours or already ended
+async function isMarketFresh(slug) {
+  if (!slug) return true; // no slug = assume fresh
+  if (!isSportsTrade(slug.replace(/-/g, ' '))) return true; // non-sports = always fresh
+  try {
+    const data = await fetchJson(`https://gamma-api.polymarket.com/markets?slug=${encodeURIComponent(slug)}&limit=1`);
+    const market = Array.isArray(data) ? data[0] : data?.markets?.[0];
+    if (!market) return true; // can't fetch = assume fresh
+    const endDate = market.endDate || market.endDateIso;
+    if (!endDate) return true;
+    const endsAt = new Date(endDate).getTime();
+    const now = Date.now();
+    const twoHours = 2 * 60 * 60 * 1000;
+    if (endsAt < now + twoHours) {
+      console.log(`  ⏰ STALE: market ends ${new Date(endsAt).toUTCString()} — skipping sports tweet`);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    return true; // on error, don't block the tweet
+  }
 }
 
 // ── HOT BETS FILE WRITER ─────────────────────────────────────────────
@@ -353,6 +392,13 @@ function buildTelegramAlert(t, type = 'bet') {
   const pnlStr       = pnl && pnl > 0 ? ` (up ${fmtUSD(pnl)})` : '';
   const title        = (t.title || 'Unknown Market').slice(0, 80);
 
+  // default: bet
+  const isPremium = arguments[2] === true;
+  const eventSlug = t.eventSlug || (t.slug ? t.slug.replace(/-f5-.*|-moneyline.*|-spread.*|-total.*|-nrfi.*|-yrfi.*/, '') : null);
+  const polyLink  = eventSlug
+    ? `https://polymarket.com/event/${eventSlug}?via=manpreet-singh-brar`
+    : `https://polymarket.com?via=manpreet-singh-brar`;
+
   if (type === 'exit') {
     return [
       `🚨 <b>Whale Exit — ${t.whaleName}${pnlStr}</b>`,
@@ -362,7 +408,9 @@ function buildTelegramAlert(t, type = 'bet') {
       `📊 <i>${title}</i>`,
       ``,
       `⚠️ If you copied this bet — watch your position.`,
-      `🐋 <a href="https://whaletrack.app">whaletrack.app</a>`,
+      isPremium
+        ? `🌐 <a href="https://whaletrack.app">whaletrack.app</a>`
+        : `🐋 <a href="https://whaletrack.app/premium">Get every alert → whaletrack.app/premium</a>`,
     ].join('\n');
   }
 
@@ -374,11 +422,24 @@ function buildTelegramAlert(t, type = 'bet') {
       ``,
       `📊 <i>${title}</i>`,
       ``,
-      `🐋 <a href="https://whaletrack.app">Copy their next bet → whaletrack.app</a>`,
+      isPremium
+        ? `🌐 <a href="https://whaletrack.app">whaletrack.app</a>`
+        : `🐋 <a href="https://whaletrack.app/premium">Get every alert → whaletrack.app/premium</a>`,
+    ].join('\n');
+  }
+  // bet alert
+  if (isPremium) {
+    return [
+      `⚡ <b>Whale Alert — ${t.whaleName}${pnlStr}</b>`,
+      ``,
+      `${outcomeEmoji} <b>${t.outcome}</b> ${fmtUSD(t.usdcSize)} @ ${price}¢`,
+      ``,
+      `📊 <i>${title}</i>`,
+      ``,
+      `🌐 <a href="https://whaletrack.app">whaletrack.app</a>`,
     ].join('\n');
   }
 
-  // default: bet
   return [
     `⚡ <b>Whale Alert — ${t.whaleName}${pnlStr}</b>`,
     ``,
@@ -386,17 +447,17 @@ function buildTelegramAlert(t, type = 'bet') {
     ``,
     `📊 <i>${title}</i>`,
     ``,
-    `🐋 <a href="https://whaletrack.app">Copy this bet → whaletrack.app</a>`,
-    `⏱ <i>Twitter alert in 10 min — you're early 🐋</i>`,
+    `🐋 <a href="https://whaletrack.app/premium">Get every alert → whaletrack.app/premium</a>`,
   ].join('\n');
 }
 
 async function sendTelegramAlerts(t, type = 'bet') {
   if (!BOT_TOKEN) return;
-  const msg = buildTelegramAlert(t, type);
+  const premiumMsg = buildTelegramAlert(t, type, true);   // no upsell CTA
+  const adminMsg   = buildTelegramAlert(t, type, false);  // with CTA
   const sends = [];
-  if (PREMIUM_CHANNEL_ID) sends.push(sendTelegram(PREMIUM_CHANNEL_ID, msg));
-  if (ADMIN_CHAT_ID)      sends.push(sendTelegram(ADMIN_CHAT_ID, msg));
+  if (PREMIUM_CHANNEL_ID) sends.push(sendTelegram(PREMIUM_CHANNEL_ID, premiumMsg));
+  if (ADMIN_CHAT_ID)      sends.push(sendTelegram(ADMIN_CHAT_ID, adminMsg));
   await Promise.allSettled(sends);
   console.log(`  📱 Telegram sent → channel${ADMIN_CHAT_ID ? ' + admin' : ''}`);
 }
@@ -574,16 +635,6 @@ async function tweetBet(t, label = 'Bet') {
   saveSeen();
   saveLastTweetTime(); // reserves the cooldown window right now
 
-  // 1. Save to hot bets feed + Telegram FIRST
-  saveHotBet(t);
-  await sendTelegramAlerts(t, 'bet');
-
-  // 2. Wait before going public on Twitter
-  if (TELEGRAM_DELAY_MS > 0) {
-    console.log(`  ⏳ Holding 10min for Telegram subscribers before Twitter...`);
-    await new Promise(r => setTimeout(r, TELEGRAM_DELAY_MS));
-  }
-
   const obContext = getOrderBookContext(t.slug, t.outcome, t.price);
   const text      = buildTweet(t, obContext);
 
@@ -612,8 +663,6 @@ async function tweetWin(w) {
   saveSeen();
   saveLastTweetTime();
 
-  await sendTelegramAlerts(w, 'win');
-  if (TELEGRAM_DELAY_MS > 0) await new Promise(r => setTimeout(r, TELEGRAM_DELAY_MS));
   const text = buildWinTweet(w);
 
   // Win card — use WHALE category (no outcome/price for wins)
@@ -927,10 +976,11 @@ function buildTweet(t, obContext) {
     lines.push(shortOb);
   }
 
-  // Referral link + CTA — always fits because both URLs count as 23 chars each
   lines.push(``);
   lines.push(`Copy this bet → ${refLink}`);
-  lines.push(`⚡ whaletrack.app/premium | ${allTags}`);
+  lines.push(`🔔 Every whale move hits Telegram instantly`);
+  lines.push(`📱 Instant alerts → whaletrack.app/premium`);
+  lines.push(`${allTags}`);
 
   const text = lines.join('\n');
   // Safety check — log a warning if somehow still over limit
@@ -962,7 +1012,9 @@ function buildExitTweet(t) {
     `⚠️ Watch your position if you copied this!`,
     ``,
     `Track next bet → ${refLink}`,
-    `⚡ whaletrack.app/premium | ${allTags}`,
+    `🔔 Every whale move hits Telegram instantly`,
+    `📱 Instant alerts → whaletrack.app/premium`,
+    `${allTags}`,
   ].join('\n');
 }
 
@@ -984,7 +1036,9 @@ function buildWinTweet(t) {
     `📊 ${title}`,
     ``,
     `Copy their next bet → ${refLink}`,
-    `⚡ whaletrack.app/premium | ${allTags}`,
+    `🔔 Every whale move hits Telegram instantly`,
+    `📱 Instant alerts → whaletrack.app/premium`,
+    `${allTags}`,
   ].join('\n');
 }
 
@@ -1078,7 +1132,7 @@ async function checkAndTweet() {
       }
     }
 
-    bigTrades.sort((a, b) => b.timestamp - a.timestamp);
+    bigTrades.sort((a, b) => b.usdcSize - a.usdcSize); // biggest trade first (curated mode)
 
     // ── WEBHOOKS: fire immediately, no cooldown, before Twitter/Telegram ──
     await fireWebhooks(bigTrades);
@@ -1092,6 +1146,39 @@ async function checkAndTweet() {
       return true;
     });
     const toTweet = deduped.slice(0, 3); // max 3 per cycle to avoid rate limits
+
+    // ── TELEGRAM: fire instantly for ALL new trades — no window restriction ──
+    for (const t of toTweet) {
+      const tgKey = `tg-${t.key}`;
+      if (!seenTrades.has(tgKey)) {
+        const fresh = await isMarketFresh(t.slug);
+        if (!fresh) {
+          console.log(`  ⏭️ Telegram: skipping stale sports bet: ${t.title?.slice(0, 50)}`);
+          continue;
+        }
+        seenTrades.add(tgKey);
+        saveHotBet(t);
+        await sendTelegramAlerts(t, 'bet');
+        console.log(`  📱 Telegram bet: ${t.whaleName} ${fmtUSD(t.usdcSize)}`);
+      }
+    }
+    for (const ex of bigExits) {
+      const tgKey = `tg-${ex.key}`;
+      if (!seenTrades.has(tgKey)) {
+        seenTrades.add(tgKey);
+        await sendTelegramAlerts(ex, 'exit');
+        console.log(`  📱 Telegram exit: ${ex.whaleName} ${fmtUSD(ex.usdcSize)}`);
+      }
+    }
+    for (const w of bigWins) {
+      const tgKey = `tg-${w.key}`;
+      if (!seenTrades.has(tgKey)) {
+        seenTrades.add(tgKey);
+        await sendTelegramAlerts(w, 'win');
+        console.log(`  📱 Telegram win: ${w.whaleName} ${fmtUSD(w.usdcSize)}`);
+      }
+    }
+    saveSeen();
 
     // Cycle: bet → exit → win → bet → exit → win ...
     const lastCycle = getLastCycleType();
@@ -1115,8 +1202,6 @@ async function checkAndTweet() {
           seenTrades.add(ex.key);
           saveSeen();
           saveLastTweetTime();
-          await sendTelegramAlerts(ex, 'exit');
-          if (TELEGRAM_DELAY_MS > 0) await new Promise(r => setTimeout(r, TELEGRAM_DELAY_MS));
           const text    = buildExitTweet(ex);
           const mediaId = await getCardMediaId({ title: ex.title, outcome: 'No', amount: fmtUSD(ex.usdcSize), price: ex.price, whaleName: ex.whaleName });
           console.log(`  → Exit Tweet${mediaId ? ' 🖼️' : ''}: ${ex.whaleName} exited ${fmtUSD(ex.usdcSize)} | ${text.length} chars`);
@@ -1155,13 +1240,18 @@ async function checkAndTweet() {
         }
       }
     } else {
-      // BET cycle — tweet 1 bet (with card)
-      const t = toTweet[0];
-      if (t) {
-        try { await tweetBet(t); }
+      // BET cycle — tweet 1 bet (with card), skip stale sports markets
+      let picked = null;
+      for (const t of toTweet) {
+        const fresh = await isMarketFresh(t.slug);
+        if (fresh) { picked = t; break; }
+        console.log(`  ⏭️ Skipping stale sports bet: ${t.title?.slice(0, 50)}`);
+      }
+      if (picked) {
+        try { await tweetBet(picked); }
         catch (e) { console.error(`  ❌ Failed: ${e.message}`); }
       } else {
-        console.log(`  No new ${fmtUSD(TWEET_MIN)}+ trades found.`);
+        console.log(`  No fresh ${fmtUSD(TWEET_MIN)}+ trades found.`);
       }
     }
   } catch (e) {
@@ -1227,7 +1317,7 @@ async function checkFedAnnouncement() {
         ``,
         `Catch the next whale move before it happens 👇`,
         ``,
-        `⚡ Get alerts 10min early → whaletrack.app/premium`,
+        `⚡ Real-time whale alerts → whaletrack.app/premium`,
         `📋 Track live → whaletrack.app/politics | #Fed #FOMC #Polymarket`,
       ].join('\n');
     } else {
@@ -1238,7 +1328,7 @@ async function checkFedAnnouncement() {
         ``,
         `Catch the next whale move before it happens 👇`,
         ``,
-        `⚡ Get alerts 10min early → whaletrack.app/premium`,
+        `⚡ Real-time whale alerts → whaletrack.app/premium`,
         `📋 Track live → whaletrack.app/politics | #Fed #FOMC #Polymarket`,
       ].join('\n');
     }
@@ -1270,6 +1360,8 @@ async function checkDailyRecap() {
   const now = new Date();
   if (now.getUTCHours() < DAILY_RECAP_HOUR_UTC) return;   // too early
   if (isDailyRecapSentToday()) return;                     // already sent today
+  // ── Must be within a tweet window AND cooldown must have elapsed ──
+  if (!canTweetNow()) return;
 
   // Load hot bets from last 24h
   let bets = [];
@@ -1315,6 +1407,7 @@ async function checkDailyRecap() {
     const tweetId = result?.data?.id;
     markDailyRecapSent();
     incrementDailyCount();
+    saveLastTweetTime();  // lock cooldown so other tweet types don't double-fire
     console.log(`[DailyRecap] ✅ https://twitter.com/i/web/status/${tweetId}`);
   } catch (e) {
     console.error(`[DailyRecap] Failed: ${e.message}`);
@@ -1352,6 +1445,9 @@ async function checkTrendingWhaleAlert() {
   const now = Date.now();
   if (now - trendingLastCheck < TRENDING_INTERVAL_MS) return;
   trendingLastCheck = now;
+
+  // ── Must be within a tweet window AND cooldown must have elapsed ──
+  if (!canTweetNow()) return;
 
   const today = new Date().toISOString().slice(0, 10);
   const data = loadTrendingData();
@@ -1407,8 +1503,9 @@ async function checkTrendingWhaleAlert() {
       `${bet.whaleName}: ${fmtUSD(bet.usdcSize)} ${outcome}${price}`,
       ``,
       `Copy this bet → ${refLink}`,
-      `📱 t.me/WhaleTrackPolybot | ⚡ whaletrack.app/premium`,
-      hashtags,
+    `🔔 Every whale move hits Telegram instantly`,
+    `📱 Instant alerts → whaletrack.app/premium`,
+    hashtags,
     ].join('\n');
 
     // Check char count using twitterLen (URLs = 23 chars on Twitter)
