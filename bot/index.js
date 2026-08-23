@@ -20,6 +20,7 @@ const WIN_RATE_MIN       = parseInt(process.env.WIN_RATE_MIN    || '55');     //
 const DATA_DIR           = process.env.DATA_DIR || path.join(__dirname, '../data');
 const SUBS_FILE          = path.join(DATA_DIR, 'subscriptions.json');
 const PREMIUM_SUBS_FILE  = path.join(DATA_DIR, 'premium_subs.json');
+const USER_PREFS_FILE    = path.join(DATA_DIR, 'user_prefs.json');
 
 // ── KNOWN WHALE NAMES ───────────────────────────────────────────────────────
 const KNOWN_NAMES = {
@@ -57,8 +58,9 @@ function saveJson(file, data) {
   try { fs.writeFileSync(file, JSON.stringify(data, null, 2)); } catch (e) {}
 }
 
-let subs        = loadJson(SUBS_FILE, {});        // { chatId: [address, ...] }
-let premiumSubs = loadJson(PREMIUM_SUBS_FILE, []); // [chatId, ...] — manually managed
+let subs        = loadJson(SUBS_FILE, {});          // { chatId: [address, ...] }
+let premiumSubs = loadJson(PREMIUM_SUBS_FILE, []);  // [chatId, ...] — manually managed
+let userPrefs   = loadJson(USER_PREFS_FILE, {});    // { chatId: { minBet: 10000 } }
 
 // ── HTTP HELPERS ─────────────────────────────────────────────────────────────
 function fetchJson(url, timeoutMs = 35000) {
@@ -404,8 +406,9 @@ async function handleCommand(chatId, text) {
         `<b>⚡ Premium ($9/month):</b>`,
         `• Win rate + track record on every alert`,
         `• 10+ min faster than Twitter`,
-        `• Affiliate copy-bet link in every alert`,
         `• Only high-confidence whale alerts (${WIN_RATE_MIN}%+ win rate)`,
+        `/setminbet — filter alerts by minimum bet size`,
+        `/myprefs — view your current settings`,
         ``,
         `/premium — upgrade info`,
         ``,
@@ -629,6 +632,58 @@ async function handleCommand(chatId, text) {
         return w ? `• <b>${w.name}</b>` : `• <code>${a.slice(0, 10)}…</code>`;
       });
       await send(chatId, `📬 <b>Your Subscriptions (${addrs.length})</b>\n\n${names.join('\n')}\n\nUse /unwatch &lt;name&gt; to remove`);
+      break;
+    }
+
+    case 'setminbet': {
+      if (!isPremium) {
+        await send(chatId, `🔒 This is a <b>Premium</b> feature.\n\nUpgrade for $9/month → /premium`);
+        break;
+      }
+      const amount = parseInt(args.replace(/[^0-9]/g, ''));
+      if (!args || isNaN(amount) || amount < 1000) {
+        await send(chatId, [
+          `⚙️ <b>Set Minimum Bet Filter</b>`,
+          ``,
+          `Usage: /setminbet &lt;amount&gt;`,
+          `Example: /setminbet 25000`,
+          ``,
+          `You'll only receive alerts when a whale bets at or above your threshold.`,
+          `Minimum: $1,000`,
+          ``,
+          `Current setting: <b>${fmtUSD(userPrefs[String(chatId)]?.minBet || TRADE_ALERT_MIN)}</b>`,
+        ].join('\n'));
+        break;
+      }
+      const id = String(chatId);
+      if (!userPrefs[id]) userPrefs[id] = {};
+      userPrefs[id].minBet = amount;
+      saveJson(USER_PREFS_FILE, userPrefs);
+      await send(chatId, [
+        `✅ <b>Filter updated!</b>`,
+        ``,
+        `You'll now only receive alerts for whale bets ≥ <b>${fmtUSD(amount)}</b>`,
+        ``,
+        `Change it anytime with /setminbet &lt;amount&gt;`,
+        `Reset to default with /setminbet 10000`,
+      ].join('\n'));
+      break;
+    }
+
+    case 'myprefs': {
+      if (!isPremium) {
+        await send(chatId, `🔒 This is a <b>Premium</b> feature.\n\nUpgrade for $9/month → /premium`);
+        break;
+      }
+      const id   = String(chatId);
+      const prefs = userPrefs[id] || {};
+      await send(chatId, [
+        `⚙️ <b>Your Preferences</b>`,
+        ``,
+        `🔔 Min bet filter: <b>${fmtUSD(prefs.minBet || TRADE_ALERT_MIN)}</b>`,
+        ``,
+        `Change with /setminbet &lt;amount&gt;`,
+      ].join('\n'));
       break;
     }
 

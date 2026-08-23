@@ -48,6 +48,16 @@ let   trendingLastCheck     = 0;
 const BOT_TOKEN          = process.env.BOT_TOKEN          || '';
 const PREMIUM_CHANNEL_ID = process.env.PREMIUM_CHANNEL_ID || '';
 const ADMIN_CHAT_ID      = process.env.ADMIN_CHAT_ID      || '';
+const DATA_DIR           = process.env.DATA_DIR || path.join(__dirname, 'data');
+const PREMIUM_SUBS_FILE  = path.join(DATA_DIR, 'premium_subs.json');
+const USER_PREFS_FILE    = path.join(DATA_DIR, 'user_prefs.json');
+
+function loadPremiumSubs() {
+  try { return JSON.parse(fs.readFileSync(PREMIUM_SUBS_FILE, 'utf8')); } catch (e) { return []; }
+}
+function loadUserPrefs() {
+  try { return JSON.parse(fs.readFileSync(USER_PREFS_FILE, 'utf8')); } catch (e) { return {}; }
+}
 
 // ── WEBHOOK CUSTOMERS ────────────────────────────────────────────────
 // Each customer: { name, url, minSize, markets: ['crypto'|'sports'|'all'] }
@@ -470,18 +480,38 @@ function buildTelegramAlert(t, type = 'bet', isPremium = false, meta = {}) {
 
 async function sendTelegramAlerts(t, type = 'bet') {
   if (!BOT_TOKEN) return;
-  // Fetch win rate for premium alert context (cached 30 min)
+
+  // Fetch win rate once for all premium recipients (cached 30 min)
   let meta = {};
-  if (PREMIUM_CHANNEL_ID && t.proxyWallet) {
+  if (t.proxyWallet) {
     try { meta = await fetchWinRate(t.proxyWallet); } catch (e) {}
   }
-  const premiumMsg = buildTelegramAlert(t, type, true,  meta);  // full context, no upsell
-  const adminMsg   = buildTelegramAlert(t, type, false, {});    // free format + upsell CTA
-  const sends = [];
-  if (PREMIUM_CHANNEL_ID) sends.push(sendTelegram(PREMIUM_CHANNEL_ID, premiumMsg));
-  if (ADMIN_CHAT_ID)      sends.push(sendTelegram(ADMIN_CHAT_ID, adminMsg));
+
+  const tradeSize   = t.usdcSize || 0;
+  const premiumSubs = loadPremiumSubs();
+  const userPrefs   = loadUserPrefs();
+  const sends       = [];
+
+  // ── Individual DMs to each premium sub with their own filter ──
+  for (const chatId of premiumSubs) {
+    const prefs  = userPrefs[String(chatId)] || {};
+    const minBet = prefs.minBet || 10000;  // default $10K
+    if (tradeSize < minBet) {
+      console.log(`  ⏭️  Skipping DM to ${chatId} — $${tradeSize} < their $${minBet} filter`);
+      continue;
+    }
+    const msg = buildTelegramAlert(t, type, true, meta);
+    sends.push(sendTelegram(chatId, msg));
+  }
+
+  // ── Admin always gets it (no filter) ──
+  if (ADMIN_CHAT_ID) {
+    const adminMsg = buildTelegramAlert(t, type, false, {});
+    sends.push(sendTelegram(ADMIN_CHAT_ID, adminMsg));
+  }
+
   await Promise.allSettled(sends);
-  console.log(`  📱 Telegram sent → channel${ADMIN_CHAT_ID ? ' + admin' : ''}`);
+  console.log(`  📱 Telegram sent → ${premiumSubs.length} premium subs (trade: $${tradeSize})`);
 }
 
 // ── OAUTH 1.0a SIGNING ────────────────────────────────────────────────
