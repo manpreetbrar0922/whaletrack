@@ -1486,7 +1486,7 @@ async function checkDailyRecap() {
     ``,
     ...lines,
     ``,
-    `Track smart money → whaletrack.app`,
+    `⚡ Get real-time alerts → whaletrack.app/premium`,
     `#Polymarket #PredictionMarkets`,
   ].join('\n');
 
