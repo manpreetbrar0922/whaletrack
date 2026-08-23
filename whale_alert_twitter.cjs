@@ -492,26 +492,34 @@ async function sendTelegramAlerts(t, type = 'bet') {
   const userPrefs   = loadUserPrefs();
   const sends       = [];
 
-  // ── Individual DMs to each premium sub with their own filter ──
+  // ── Premium channel — broadcast to all channel subscribers (no filter) ──
+  if (PREMIUM_CHANNEL_ID) {
+    const channelMsg = buildTelegramAlert(t, type, true, meta);
+    sends.push(sendTelegram(PREMIUM_CHANNEL_ID, channelMsg));
+  }
+
+  // ── Individual DMs to premium subs who set a custom minBet filter ──
+  // Only send DM if they have a custom filter AND the trade meets it
+  // (avoids double-alerting channel members who haven't set a filter)
   for (const chatId of premiumSubs) {
     const prefs  = userPrefs[String(chatId)] || {};
-    const minBet = prefs.minBet || 10000;  // default $10K
-    if (tradeSize < minBet) {
-      console.log(`  ⏭️  Skipping DM to ${chatId} — $${tradeSize} < their $${minBet} filter`);
+    if (!prefs.minBet) continue;  // no custom filter = they get it from the channel
+    if (tradeSize < prefs.minBet) {
+      console.log(`  ⏭️  Skipping DM to ${chatId} — $${tradeSize} < their $${prefs.minBet} filter`);
       continue;
     }
     const msg = buildTelegramAlert(t, type, true, meta);
     sends.push(sendTelegram(chatId, msg));
   }
 
-  // ── Admin always gets it (no filter) ──
+  // ── Admin always gets it ──
   if (ADMIN_CHAT_ID) {
     const adminMsg = buildTelegramAlert(t, type, false, {});
     sends.push(sendTelegram(ADMIN_CHAT_ID, adminMsg));
   }
 
   await Promise.allSettled(sends);
-  console.log(`  📱 Telegram sent → ${premiumSubs.length} premium subs (trade: $${tradeSize})`);
+  console.log(`  📱 Telegram sent → channel + ${premiumSubs.filter(id => userPrefs[String(id)]?.minBet).length} filtered DMs (trade: $${tradeSize})`);
 }
 
 // ── OAUTH 1.0a SIGNING ────────────────────────────────────────────────
