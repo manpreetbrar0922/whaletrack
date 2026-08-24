@@ -19,8 +19,10 @@ const TRADE_ALERT_MIN    = parseInt(process.env.TRADE_ALERT_MIN || '10000');  //
 const WIN_RATE_MIN       = parseInt(process.env.WIN_RATE_MIN    || '55');     // min win% for premium
 const DATA_DIR           = process.env.DATA_DIR || path.join(__dirname, '../data');
 const SUBS_FILE          = path.join(DATA_DIR, 'subscriptions.json');
-const PREMIUM_SUBS_FILE  = path.join(DATA_DIR, 'premium_subs.json');
+const PREMIUM_SUBS_FILE  = path.join(DATA_DIR, 'premium_subs.json'); // local fallback only
 const USER_PREFS_FILE    = path.join(DATA_DIR, 'user_prefs.json');
+const WHALETRACK_URL     = (process.env.WHALETRACK_URL || 'https://whaletrack.app').replace(/\/$/, '');
+const INTERNAL_SECRET    = process.env.INTERNAL_SECRET || '';
 
 // ── KNOWN WHALE NAMES ───────────────────────────────────────────────────────
 const KNOWN_NAMES = {
@@ -59,8 +61,50 @@ function saveJson(file, data) {
 }
 
 let subs        = loadJson(SUBS_FILE, {});          // { chatId: [address, ...] }
-let premiumSubs = loadJson(PREMIUM_SUBS_FILE, []);  // [chatId, ...] — manually managed
+let premiumSubs = loadJson(PREMIUM_SUBS_FILE, []);  // [chatId, ...] — local fallback
 let userPrefs   = loadJson(USER_PREFS_FILE, {});    // { chatId: { minBet: 10000 } }
+
+// ── SYNC PREMIUM SUBS FROM VERCEL KV ─────────────────────────────────────────
+async function syncPremiumSubs() {
+  if (!WHALETRACK_URL || !INTERNAL_SECRET) return;
+  try {
+    const r    = await fetchJson(`${WHALETRACK_URL}/api/premium-subs?secret=${INTERNAL_SECRET}`, 10000);
+    const ids  = r?.chatIds;
+    if (Array.isArray(ids) && ids.length >= 0) {
+      // Merge KV list with local fallback (keeps manually added ones too)
+      const merged = [...new Set([...ids, ...premiumSubs])];
+      premiumSubs  = merged.map(String);
+      console.log(`[WhaleTrack] Synced ${ids.length} premium subs from KV (${premiumSubs.length} total)`);
+    }
+  } catch (e) {
+    console.warn('[WhaleTrack] Premium sync failed (using local):', e.message);
+  }
+}
+
+// Write a chat ID to Vercel KV via our endpoint
+async function kvAddPremium(chatId, action = 'add') {
+  if (!WHALETRACK_URL || !INTERNAL_SECRET) return false;
+  try {
+    const body = JSON.stringify({ chatId: String(chatId), action, secret: INTERNAL_SECRET });
+    await new Promise((resolve, reject) => {
+      const url  = new URL(`${WHALETRACK_URL}/api/add-premium`);
+      const data = Buffer.from(body);
+      const req  = https.request({
+        hostname: url.hostname,
+        path:     url.pathname,
+        method:   'POST',
+        headers:  { 'Content-Type': 'application/json', 'Content-Length': data.length, 'x-internal-secret': INTERNAL_SECRET },
+      }, res => { res.resume(); resolve(); });
+      req.on('error', reject);
+      req.write(data);
+      req.end();
+    });
+    return true;
+  } catch (e) {
+    console.warn('[WhaleTrack] KV write failed:', e.message);
+    return false;
+  }
+}
 
 // ── HTTP HELPERS ─────────────────────────────────────────────────────────────
 function fetchJson(url, timeoutMs = 35000) {
@@ -369,6 +413,20 @@ async function checkTradeAlerts() {
   }
 }
 
+// ── RATE LIMITER ─────────────────────────────────────────────────────────────
+const rateLimitMap = {}; // { chatId: [timestamps] }
+const RATE_LIMIT   = 5;  // max commands
+const RATE_WINDOW  = 30 * 1000; // per 30 seconds
+
+function isRateLimited(chatId) {
+  const now  = Date.now();
+  const id   = String(chatId);
+  const hits  = (rateLimitMap[id] || []).filter(t => now - t < RATE_WINDOW);
+  hits.push(now);
+  rateLimitMap[id] = hits;
+  return hits.length > RATE_LIMIT;
+}
+
 // ── COMMAND HANDLERS ─────────────────────────────────────────────────────────
 function findWhale(q) {
   q = q.toLowerCase().trim();
@@ -380,14 +438,74 @@ function findWhale(q) {
 }
 
 async function handleCommand(chatId, text) {
-  const parts = text.trim().split(/\s+/);
-  const cmd   = parts[0].replace(/^\//, '').split('@')[0].toLowerCase();
-  const args  = parts.slice(1).join(' ').trim();
-  const isPremium = premiumSubs.includes(String(chatId));
+  const parts     = text.trim().split(/\s+/);
+  const cmd       = parts[0].replace(/^\//, '').split('@')[0].toLowerCase();
+  const args      = parts.slice(1).join(' ').trim();
+  const id        = String(chatId);
+  const isAdmin   = ADMIN_CHAT_ID && id === String(ADMIN_CHAT_ID);
+  const isPremium = premiumSubs.includes(id) || isAdmin;
+
+  // ── /start is open to everyone — shows their chat ID for Stripe checkout ──
+  if (cmd === 'start') {
+    if (isPremium) {
+      // Already premium — show welcome back
+      await send(chatId, [
+        `✅ <b>You already have Premium access!</b>`,
+        ``,
+        `Type /help to see all commands 🐋`,
+      ].join('\n'));
+    } else {
+      await send(chatId, [
+        `🐋 <b>WhaleTrack Bot</b>`,
+        ``,
+        `To get Premium access:`,
+        ``,
+        `1️⃣ Copy your WhaleTrack ID:`,
+        `<code>${chatId}</code>`,
+        ``,
+        `2️⃣ Visit <a href="https://whaletrack.app/premium">whaletrack.app/premium</a>`,
+        ``,
+        `3️⃣ Subscribe and paste your ID in the <b>"WhaleTrack ID"</b> field`,
+        ``,
+        `4️⃣ You'll get instant bot access when payment completes 🎉`,
+        ``,
+        `Questions? DM <b>@manpreetbrar09</b> on Twitter`,
+      ].join('\n'));
+      // Notify admin
+      if (ADMIN_CHAT_ID && !isAdmin) {
+        await send(ADMIN_CHAT_ID, [
+          `👋 <b>New bot contact!</b>`,
+          ``,
+          `Chat ID: <code>${chatId}</code>`,
+          ``,
+          `If Stripe didn't auto-grant: /addpremium ${chatId}`,
+        ].join('\n')).catch(() => {});
+      }
+    }
+    return;
+  }
+
+  // ── Allowlist: only premium subs + admin can use the bot ──
+  if (!isPremium) {
+    await send(chatId, [
+      `🔒 <b>Private Bot</b>`,
+      ``,
+      `This bot is for WhaleTrack Premium subscribers only.`,
+      ``,
+      `To subscribe: <a href="https://whaletrack.app/premium">whaletrack.app/premium</a>`,
+      `Or DM <b>@manpreetbrar09</b> on Twitter`,
+    ].join('\n'));
+    return;
+  }
+
+  // ── Rate limit (skip for admin) ──
+  if (!isAdmin && isRateLimited(chatId)) {
+    await send(chatId, `⏳ Slow down! Max ${RATE_LIMIT} commands per 30 seconds.`);
+    return;
+  }
 
   switch (cmd) {
 
-    case 'start':
     case 'help':
       await send(chatId, [
         `🐋 <b>WhaleTrack Bot</b>`,
@@ -442,8 +560,11 @@ async function handleCommand(chatId, text) {
     case 'whales': {
       if (!cachedWhales.length) { await send(chatId, '⏳ Loading... try again in a moment'); break; }
       const lines = cachedWhales.map((w, i) => {
-        const sign = w.pnl >= 0 ? '+' : '';
-        return `${i + 1}. <b>${w.name}</b> — ${sign}${fmtUSD(w.pnl)} (Rank #${w.rank})`;
+        const pnlStr  = (w.pnl !== null && w.pnl !== undefined && !isNaN(w.pnl))
+          ? `${w.pnl >= 0 ? '+' : ''}${fmtUSD(w.pnl)}`
+          : 'P&L: n/a';
+        const rankStr = (w.rank && w.rank !== 'null') ? `Rank #${w.rank}` : 'unranked';
+        return `${i + 1}. <b>${w.name}</b> — ${pnlStr} (${rankStr})`;
       });
       await send(chatId, [
         `🐋 <b>Tracked Whales</b>`,
@@ -689,17 +810,16 @@ async function handleCommand(chatId, text) {
 
     // ── ADMIN ONLY ─────────────────────────────────────────────────────────
     case 'addpremium': {
-      // Add a user to premium (admin use only — locked to ADMIN_CHAT_ID)
-      if (ADMIN_CHAT_ID && String(chatId) !== String(ADMIN_CHAT_ID)) {
-        await send(chatId, '❌ Unauthorized');
-        break;
-      }
+      if (!isAdmin) { await send(chatId, '❌ Unauthorized'); break; }
       if (!args) { await send(chatId, 'Usage: /addpremium &lt;chatId&gt;'); break; }
       const targetId = String(args.trim());
+      // Add to local list
       if (!premiumSubs.includes(targetId)) {
         premiumSubs.push(targetId);
         saveJson(PREMIUM_SUBS_FILE, premiumSubs);
       }
+      // Add to KV (async, best effort)
+      kvAddPremium(targetId, 'add').catch(() => {});
       await send(chatId, `✅ Added ${targetId} to Premium`);
       await send(targetId, [
         `🎉 <b>You're now a WhaleTrack Premium member!</b>`,
@@ -716,15 +836,19 @@ async function handleCommand(chatId, text) {
     }
 
     case 'removepremium': {
+      if (!isAdmin) { await send(chatId, '❌ Unauthorized'); break; }
       if (!args) { await send(chatId, 'Usage: /removepremium &lt;chatId&gt;'); break; }
       const targetId = String(args.trim());
       const idx = premiumSubs.indexOf(targetId);
       if (idx !== -1) { premiumSubs.splice(idx, 1); saveJson(PREMIUM_SUBS_FILE, premiumSubs); }
+      // Remove from KV too
+      kvAddPremium(targetId, 'remove').catch(() => {});
       await send(chatId, `✅ Removed ${targetId} from Premium`);
       break;
     }
 
     case 'stats': {
+      if (!isAdmin) { await send(chatId, '❌ Unauthorized'); break; }
       await send(chatId, [
         `📊 <b>WhaleTrack Bot Stats</b>`,
         ``,
@@ -775,6 +899,11 @@ console.log(`   Win rate minimum:   ${WIN_RATE_MIN}%`);
 console.log(`   Premium channel:    ${PREMIUM_CHANNEL_ID || 'not set'}`);
 console.log(`   Premium subs:       ${premiumSubs.length}`);
 console.log(`   Refresh interval:   ${POLL_INTERVAL / 1000}s`);
+
+// Sync premium subs from Vercel KV on start + every 5 min
+syncPremiumSubs().then(() => {
+  setInterval(syncPremiumSubs, 5 * 60 * 1000);
+});
 
 refreshWhales().then(() => {
   poll();

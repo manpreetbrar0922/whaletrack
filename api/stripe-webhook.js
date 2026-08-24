@@ -15,6 +15,9 @@ const BOT_TOKEN             = process.env.BOT_TOKEN;
 const PREMIUM_CHANNEL_ID    = process.env.PREMIUM_CHANNEL_ID || '-1004351425636';
 const RESEND_API_KEY        = process.env.RESEND_API_KEY;
 const ADMIN_CHAT_ID         = process.env.ADMIN_CHAT_ID || '7660826549';
+const INTERNAL_SECRET       = process.env.INTERNAL_SECRET;
+const KV_BASE               = process.env.KV_REST_API_URL;
+const KV_TOKEN              = process.env.KV_REST_API_TOKEN;
 
 // Read raw body from request stream (needed for Stripe signature verification)
 function getRawBody(req) {
@@ -119,7 +122,7 @@ async function sendInviteEmail(email, inviteLink, customerName) {
     </div>
   `;
 
-  await fetch('https://api.resend.com/emails', {
+  const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${RESEND_API_KEY}`,
@@ -132,36 +135,54 @@ async function sendInviteEmail(email, inviteLink, customerName) {
       html,
     }),
   });
+
+  if (!r.ok) {
+    const errBody = await r.text().catch(() => '(unreadable)');
+    throw new Error(`Resend ${r.status}: ${errBody}`);
+  }
 }
 
-// ── SUBSCRIBER MAPPING (Vercel KV or fallback) ───────────────────────
-// Stores email → Telegram user ID so we can kick on cancellation
-const KV_BASE = process.env.KV_REST_API_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN;
-
-async function saveTelegramUserId(email, userId) {
-  if (!KV_BASE || !KV_TOKEN) return; // no KV configured — admin kicks manually
+// ── KV HELPERS ────────────────────────────────────────────────────────
+async function kvCmd(cmd) {
+  if (!KV_BASE || !KV_TOKEN) return null;
   try {
-    await fetch(`${KV_BASE}/set/tg:${encodeURIComponent(email)}/${userId}`, {
-      headers: { Authorization: `Bearer ${KV_TOKEN}` },
-    });
-  } catch {}
-}
-
-async function getTelegramUserId(email) {
-  if (!KV_BASE || !KV_TOKEN || !email) return null;
-  try {
-    const r    = await fetch(`${KV_BASE}/get/tg:${encodeURIComponent(email)}`, {
-      headers: { Authorization: `Bearer ${KV_TOKEN}` },
-    });
+    const r    = await fetch(`${KV_BASE}/${cmd}`, { headers: { Authorization: `Bearer ${KV_TOKEN}` } });
     const data = await r.json();
-    return data.result || null;
+    return data.result;
   } catch { return null; }
 }
 
+// Store email → Telegram chat ID mapping (for cancellation kicks)
+async function saveTelegramUserId(email, chatId) {
+  await kvCmd(`set/tg:${encodeURIComponent(email)}/${chatId}`);
+}
+
+async function getTelegramUserId(email) {
+  return await kvCmd(`get/tg:${encodeURIComponent(email)}`);
+}
+
+// Add/remove from premium_subs set (bot reads this)
+async function addPremiumSub(chatId) {
+  await kvCmd(`sadd/premium_subs/${chatId}`);
+}
+
+async function removePremiumSub(chatId) {
+  await kvCmd(`srem/premium_subs/${chatId}`);
+}
+
+// Send a Telegram DM directly to the new subscriber
+async function sendTelegramDM(chatId, text) {
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+  });
+}
+
 // Notify admin on Telegram
-async function notifyAdmin(email, inviteLink) {
-  const msg = `✅ <b>New Premium Subscriber!</b>\n\n📧 ${email}\n🔗 ${inviteLink}\n\n💰 $9/mo — manual kick needed if they cancel`;
+async function notifyAdmin(email, inviteLink, chatId) {
+  const botStatus = chatId ? `✅ Bot access auto-granted (ID: ${chatId})` : `⚠️ No WhaleTrack ID entered — grant manually with /addpremium`;
+  const msg = `✅ <b>New Premium Subscriber!</b>\n\n📧 ${email}\n🔗 ${inviteLink}\n\n${botStatus}\n💰 $9/mo`;
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -196,19 +217,61 @@ export default async function handler(req, res) {
     const email        = session.customer_details?.email || session.customer_email;
     const customerName = session.customer_details?.name || '';
 
+    // Read WhaleTrack ID (Telegram chat ID) from Stripe custom field
+    const customFields = session.custom_fields || [];
+    const chatIdField  = customFields.find(f => f.key === 'whaletrackid');
+    const chatId       = chatIdField?.text?.value?.replace(/[^0-9\-]/g, '') || null;
+
     if (!email) {
       console.error('[stripe-webhook] No email in session');
       return res.status(200).json({ received: true, error: 'No email' });
     }
 
     try {
+      // ── If chat ID provided: grant bot access automatically ──
+      if (chatId) {
+        await addPremiumSub(chatId);
+        await saveTelegramUserId(email, chatId);
+
+        // Send welcome DM directly to their Telegram
+        await sendTelegramDM(chatId, [
+          `🎉 <b>Welcome to WhaleTrack Premium!</b>`,
+          ``,
+          `Your subscription is active. You now have full bot access:`,
+          ``,
+          `⚡ /whales — tracked whales + P&amp;L`,
+          `🎯 /winrate &lt;name&gt; — win rate + track record`,
+          `📊 /positions &lt;name&gt; — open bets right now`,
+          `🔔 /setminbet 25000 — filter alerts by size`,
+          ``,
+          `Alerts will fire directly to this chat when whales bet big 🐋`,
+          ``,
+          `Questions? DM @manpreetbrar09 on Twitter`,
+        ].join('\n'));
+
+        console.log(`[stripe-webhook] Bot access granted to chatId ${chatId} (${email})`);
+      }
+
+      // ── Always create channel invite link + notify admin ──
       const inviteLink = await createInviteLink(customerName, email);
-      await Promise.all([
-        sendInviteEmail(email, inviteLink, customerName),
-        notifyAdmin(email, inviteLink),
-      ]);
-      console.log(`[stripe-webhook] Invite sent to ${email}`);
-      return res.status(200).json({ received: true, email });
+      await notifyAdmin(email, inviteLink, chatId);
+
+      // ── Email the subscriber ──
+      try {
+        await sendInviteEmail(email, inviteLink, customerName);
+        console.log(`[stripe-webhook] Invite emailed to ${email}`);
+      } catch (emailErr) {
+        console.error(`[stripe-webhook] Email failed for ${email}:`, emailErr.message);
+        const fallbackMsg =
+          `⚠️ <b>Email delivery FAILED</b>\n\n📧 ${email}\n❌ ${emailErr.message}\n\nForward invite manually:\n${inviteLink}`;
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: fallbackMsg, parse_mode: 'HTML' }),
+        });
+      }
+
+      return res.status(200).json({ received: true, email, chatId: chatId || 'not provided' });
     } catch (err) {
       console.error('[stripe-webhook] Error:', err.message);
       return res.status(200).json({ received: true, error: err.message });
@@ -235,8 +298,9 @@ export default async function handler(req, res) {
     const telegramUserId = await getTelegramUserId(email);
 
     if (telegramUserId) {
-      await kickMember(telegramUserId);
-      console.log(`[stripe-webhook] Kicked ${email} (tg: ${telegramUserId})`);
+      await kickMember(telegramUserId);           // remove from channel
+      await removePremiumSub(telegramUserId);     // remove bot access
+      console.log(`[stripe-webhook] Kicked + removed bot access for ${email} (tg: ${telegramUserId})`);
     }
 
     await notifyAdminCancellation(email, name, telegramUserId);
