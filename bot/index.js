@@ -809,6 +809,21 @@ async function handleCommand(chatId, text) {
     }
 
     // ── ADMIN ONLY ─────────────────────────────────────────────────────────
+    case 'msg': {
+      if (!isAdmin) { await send(chatId, '❌ Unauthorized'); break; }
+      const spaceIdx  = args.indexOf(' ');
+      if (spaceIdx === -1) { await send(chatId, 'Usage: /msg &lt;chatId&gt; &lt;message&gt;'); break; }
+      const targetId  = args.slice(0, spaceIdx).trim();
+      const message   = args.slice(spaceIdx + 1).trim();
+      if (!targetId || !message) { await send(chatId, 'Usage: /msg &lt;chatId&gt; &lt;message&gt;'); break; }
+      try {
+        await send(targetId, message);
+        await send(chatId, `✅ Message sent to ${targetId}`);
+      } catch (e) {
+        await send(chatId, `❌ Failed to send: ${e.message}`);
+      }
+      break;
+    }
     case 'addpremium': {
       if (!isAdmin) { await send(chatId, '❌ Unauthorized'); break; }
       if (!args) { await send(chatId, 'Usage: /addpremium &lt;chatId&gt;'); break; }
