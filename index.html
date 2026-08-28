@@ -3014,7 +3014,7 @@ setInterval(refreshActivity, 60 * 1000);
           params: [address, typedData],
         });
       } catch (sigErr) {
-        if (sigErr.code === 4001 || sigErr.message?.toLowerCase().includes('rejected')) {
+        if (sigErr.code === 4001 || (sigErr.message && sigErr.message.toLowerCase().includes('rejected'))) {
           // User cancelled MetaMask — go back to form
           wtShowForm();
           return;
@@ -3067,7 +3067,7 @@ setInterval(refreshActivity, 60 * 1000);
 
     } catch(e) {
       document.getElementById('wtTradeLoading').style.display = 'none';
-      const msg = e?.message || '';
+      const msg = (e && e.message) || '';
       if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('user denied')) {
         if (typeof gtag !== 'undefined') gtag('event', 'trade_failed', { slug, outcome, amount, reason: 'user_rejected' });
         wtShowForm(); // silent cancel
