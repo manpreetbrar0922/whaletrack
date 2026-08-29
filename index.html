@@ -1418,6 +1418,230 @@
   </div>
 </div>
 
+<!-- ── COPY TRADE ROI CALCULATOR ─────────────────────────────────────── -->
+<section style="max-width:700px;margin:0 auto 60px;padding:0 16px;">
+  <div style="text-align:center;margin-bottom:28px;">
+    <div style="display:inline-block;background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);color:var(--accent);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;">📊 Free Tool</div>
+    <h2 style="font-size:clamp(1.5rem,4vw,2.2rem);font-weight:800;margin-bottom:10px;">Copy Trade ROI Calculator</h2>
+    <p style="color:var(--text2);font-size:0.95rem;">Pick a whale, enter your amount — see what you'd have made copying their bets.</p>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;">
+
+    <!-- Step 1: Whale -->
+    <div style="margin-bottom:22px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text2);margin-bottom:8px;">Step 1 — Pick a whale</div>
+      <select id="calcWhale" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px 40px 12px 14px;font-size:0.9rem;cursor:pointer;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%238b949e%27 d=%27M6 8L1 3h10z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;outline:none;">
+        <option value="">Select a whale trader…</option>
+        <option value="0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab">🐋 somalianKing</option>
+        <option value="0xd9eee545c64c3f5c3acc088259289677858a89a4">🐋 somalianKing #2</option>
+        <option value="0x09b428f7c2b469786286214aa5c90dd9015f7320">🐋 DEEDDIT</option>
+        <option value="0x7c1ee865a785de4c00ee90ed86a38489fb8bbab3">🐋 CandleHammerDrums</option>
+        <option value="0x640de3430e9a05e1b1fe04b42d651da1abe99a4c">🐋 coldsway</option>
+        <option value="0x224a89dbe0db0d6124b335edabd15b3f877da3d5">🐋 wr0ngw4yb3tt0r</option>
+        <option value="0xe9a6ed2e4d4ee8ce47cd47cac834746dc4cf627b">🐋 Oneger</option>
+        <option value="0x5e9458202b5817a72cf81105ec8a30e6f3705ba1">🐋 pleaseplease123</option>
+        <option value="0xb809a4b78b5eadc71d84be43eda0491eedf72004">🐋 R88N</option>
+        <option value="0x56acab44cfca2e88bb9b3406890aea7bfa0cd77e">🐋 dv-pm</option>
+        <option value="0xb61b2079b95f6b7476fd3203e0274ffb93308a06">🐋 hot2trot</option>
+        <option value="0x50f0a0fc7364d3c10fc4578b9b1d955368335355">🐋 bettguy</option>
+        <option value="0x3dfb153c197d4c19d3b31c1ecd2c7b6860eeabaf">🐋 Sparkling8899</option>
+        <option value="0xc31d0a0d63d760d72a1236d16beaa6a71c854ebe">🐋 FootballFan98</option>
+        <option value="0xe72bb501df5306c75c89383d48a1e81073fbb0a0">🐋 norrisfan</option>
+      </select>
+    </div>
+
+    <!-- Step 2: Amount -->
+    <div style="margin-bottom:22px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text2);margin-bottom:8px;">Step 2 — Starting amount</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="calcPills">
+        <div class="calc-pill" data-amount="100" onclick="selectPill(this,100)" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 18px;font-size:0.88rem;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.18s;user-select:none;">$100</div>
+        <div class="calc-pill active-pill" data-amount="500" onclick="selectPill(this,500)" style="background:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:8px 18px;font-size:0.88rem;font-weight:600;cursor:pointer;color:#0d1117;transition:all 0.18s;user-select:none;">$500</div>
+        <div class="calc-pill" data-amount="1000" onclick="selectPill(this,1000)" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 18px;font-size:0.88rem;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.18s;user-select:none;">$1,000</div>
+        <div class="calc-pill" data-amount="5000" onclick="selectPill(this,5000)" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 18px;font-size:0.88rem;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.18s;user-select:none;">$5,000</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 14px;">
+        <span style="color:var(--text2);font-weight:600;">$</span>
+        <input type="number" id="calcCustom" placeholder="Custom amount" min="1" max="100000"
+          style="background:none;border:none;color:var(--text);font-size:0.9rem;font-weight:600;width:100%;outline:none;"
+          oninput="calcCustomInput(this)"/>
+      </div>
+    </div>
+
+    <!-- Step 3: Period -->
+    <div style="margin-bottom:24px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text2);margin-bottom:8px;">Step 3 — Time period</div>
+      <div style="display:flex;gap:8px;" id="calcPeriods">
+        <div onclick="selectPeriod(this,7)"  style="flex:1;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.88rem;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.18s;user-select:none;">7 days</div>
+        <div onclick="selectPeriod(this,30)" style="flex:1;text-align:center;background:rgba(88,166,255,0.12);border:1px solid var(--accent);border-radius:8px;padding:10px;font-size:0.88rem;font-weight:600;cursor:pointer;color:var(--accent);transition:all 0.18s;user-select:none;">30 days</div>
+        <div onclick="selectPeriod(this,90)" style="flex:1;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:0.88rem;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.18s;user-select:none;">90 days</div>
+      </div>
+    </div>
+
+    <button id="calcGoBtn" onclick="runCalc()" style="width:100%;background:linear-gradient(135deg,#388bfd,#58a6ff);color:white;border:none;border-radius:12px;padding:15px;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.02em;">
+      🐋 Calculate My Returns
+    </button>
+
+    <!-- Results -->
+    <div id="calcResults" style="display:none;margin-top:24px;"></div>
+  </div>
+
+  <p style="text-align:center;font-size:11px;color:var(--text2);margin-top:12px;">Uses real Polymarket trade data. Past performance ≠ future results. Not financial advice.</p>
+</section>
+
+<script>
+(function() {
+  var _calcAmount = 500;
+  var _calcDays   = 30;
+
+  window.selectPill = function(el, amt) {
+    document.querySelectorAll('.calc-pill').forEach(function(p) {
+      p.style.background = 'var(--bg)';
+      p.style.borderColor = 'var(--border)';
+      p.style.color = 'var(--text2)';
+    });
+    el.style.background = 'var(--accent)';
+    el.style.borderColor = 'var(--accent)';
+    el.style.color = '#0d1117';
+    _calcAmount = amt;
+    document.getElementById('calcCustom').value = '';
+  };
+
+  window.calcCustomInput = function(input) {
+    var v = parseInt(input.value);
+    if (v > 0) {
+      document.querySelectorAll('.calc-pill').forEach(function(p) {
+        p.style.background = 'var(--bg)';
+        p.style.borderColor = 'var(--border)';
+        p.style.color = 'var(--text2)';
+      });
+      _calcAmount = v;
+    }
+  };
+
+  window.selectPeriod = function(el, days) {
+    var periods = document.getElementById('calcPeriods').children;
+    for (var i = 0; i < periods.length; i++) {
+      periods[i].style.background = 'var(--bg)';
+      periods[i].style.borderColor = 'var(--border)';
+      periods[i].style.color = 'var(--text2)';
+    }
+    el.style.background = 'rgba(88,166,255,0.12)';
+    el.style.borderColor = 'var(--accent)';
+    el.style.color = 'var(--accent)';
+    _calcDays = days;
+  };
+
+  window.runCalc = async function() {
+    var addr = document.getElementById('calcWhale').value;
+    var custom = parseInt(document.getElementById('calcCustom').value);
+    var amount = (custom > 0 ? custom : _calcAmount) || 500;
+    if (!addr) { alert('Please pick a whale first!'); return; }
+
+    var whaleName = document.getElementById('calcWhale').selectedOptions[0].text.replace('🐋 ', '');
+    var btn = document.getElementById('calcGoBtn');
+    var out = document.getElementById('calcResults');
+    btn.disabled = true;
+    btn.textContent = '⏳ Fetching…';
+    out.style.display = 'block';
+    out.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text2);">Fetching ' + whaleName + '\'s trade history…</div>';
+
+    try {
+      var res = await fetch('https://data-api.polymarket.com/activity?user=' + addr + '&limit=200', { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var trades = await res.json();
+
+      if (!Array.isArray(trades) || trades.length === 0) {
+        out.innerHTML = '<div style="color:var(--red);padding:16px;background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.2);border-radius:10px;text-align:center;">⚠️ No trade data found for this whale.</div>';
+        return;
+      }
+
+      var cutoff = Date.now() / 1000 - _calcDays * 86400;
+      var recent = trades.filter(function(t) { return (t.timestamp || 0) >= cutoff; });
+      var markets = {};
+      recent.forEach(function(t) {
+        var key = (t.slug || t.conditionId || 'u') + '-' + (t.outcome || t.outcomeIndex || '?');
+        if (!markets[key]) markets[key] = { title: t.title || 'Unknown', outcome: t.outcome || '', buys: 0, received: 0 };
+        var usd = parseFloat(t.usdcSize || 0);
+        if (t.side === 'BUY') markets[key].buys += usd;
+        else if (t.side === 'SELL' || t.type === 'REDEEM') markets[key].received += usd;
+      });
+
+      var totalIn = 0, totalOut = 0, wins = 0, losses = 0, tradeList = [];
+      Object.values(markets).forEach(function(m) {
+        if (m.buys < 1) return;
+        totalIn += m.buys;
+        if (m.received < 1) return; // open
+        totalOut += m.received;
+        var pnl = m.received - m.buys;
+        if (pnl >= 0) wins++; else losses++;
+        tradeList.push({ title: m.title, outcome: m.outcome, pnl: pnl });
+      });
+
+      if (totalIn < 1 || wins + losses === 0) {
+        out.innerHTML = '<div style="color:var(--red);padding:16px;background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.2);border-radius:10px;text-align:center;">⚠️ Not enough resolved trades. Try 90 days.</div>';
+        return;
+      }
+
+      var scale  = amount / totalIn;
+      var scaled = totalOut * scale;
+      var pnl    = scaled - amount;
+      var roi    = ((scaled / amount) - 1) * 100;
+      var wr     = Math.round(wins / (wins + losses) * 100);
+      var isPos  = pnl >= 0;
+
+      tradeList.sort(function(a, b) { return Math.abs(b.pnl) - Math.abs(a.pnl); });
+      var top = tradeList.slice(0, 8);
+
+      var fmtBig = function(n) {
+        var a = Math.abs(n);
+        return a >= 1000 ? '$' + (a/1000).toFixed(1) + 'K' : '$' + a.toFixed(0);
+      };
+
+      var rows = top.map(function(t) {
+        var sp = t.pnl * scale;
+        var pos = t.pnl >= 0;
+        return '<div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:11px 14px;border-bottom:1px solid rgba(48,54,61,0.4);align-items:center;">' +
+          '<div>' +
+            '<div style="font-size:0.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (t.title || '').slice(0, 50) + (t.title && t.title.length > 50 ? '…' : '') + '</div>' +
+            '<div style="font-size:0.72rem;color:var(--text2);margin-top:2px;">' + (t.outcome || '') + '</div>' +
+          '</div>' +
+          '<div style="font-size:0.88rem;font-weight:700;color:' + (pos ? 'var(--green)' : 'var(--red)') + ';white-space:nowrap;">' + (pos ? '+' : '-') + '$' + Math.abs(sp).toFixed(0) + '</div>' +
+          '<div style="font-size:0.68rem;font-weight:700;padding:3px 7px;border-radius:4px;background:' + (pos ? 'rgba(63,185,80,0.12)' : 'rgba(248,81,73,0.12)') + ';color:' + (pos ? 'var(--green)' : 'var(--red)') + ';">' + (pos ? '✅ WIN' : '❌ LOSS') + '</div>' +
+        '</div>';
+      }).join('');
+
+      out.innerHTML =
+        '<div style="text-align:center;padding:28px 16px;background:var(--bg);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;">' +
+          '<div style="font-size:0.82rem;color:var(--text2);margin-bottom:10px;">Copying <strong style="color:var(--text);">' + whaleName + '</strong> with <strong style="color:var(--text);">$' + amount.toLocaleString() + '</strong> for <strong style="color:var(--text);">' + _calcDays + ' days</strong></div>' +
+          '<div style="font-size:clamp(2.5rem,8vw,3.8rem);font-weight:800;line-height:1;color:' + (isPos ? 'var(--green)' : 'var(--red)') + ';margin-bottom:8px;">' + fmtBig(amount + pnl) + '</div>' +
+          '<div style="font-size:1.3rem;font-weight:700;color:' + (isPos ? 'var(--green)' : 'var(--red)') + ';margin-bottom:10px;">' + (isPos ? '+' : '') + roi.toFixed(1) + '% ROI</div>' +
+          '<div style="font-size:0.8rem;color:var(--text2);">' + (isPos ? '📈' : '📉') + ' ' + (isPos ? 'Profit' : 'Loss') + ': ' + (isPos ? '+' : '-') + '$' + Math.abs(pnl).toFixed(0) + ' &nbsp;·&nbsp; ' + (wins+losses) + ' closed trades</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">' +
+          '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;"><div style="font-size:1.2rem;font-weight:700;">' + wr + '%</div><div style="font-size:0.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-top:3px;">Win Rate</div></div>' +
+          '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;"><div style="font-size:1rem;font-weight:700;">' + wins + 'W / ' + losses + 'L</div><div style="font-size:0.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-top:3px;">Record</div></div>' +
+          '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;"><div style="font-size:1.2rem;font-weight:700;color:var(--green);">+$' + Math.abs(Math.max(0,...top.filter(function(t){return t.pnl>0}).map(function(t){return t.pnl*scale}))||0).toFixed(0) + '</div><div style="font-size:0.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-top:3px;">Best Trade</div></div>' +
+          '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;"><div style="font-size:1.2rem;font-weight:700;color:var(--red);">-$' + Math.abs(Math.min(0,...top.filter(function(t){return t.pnl<0}).map(function(t){return t.pnl*scale}))||0).toFixed(0) + '</div><div style="font-size:0.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-top:3px;">Worst Trade</div></div>' +
+        '</div>' +
+        (rows ? '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;"><div style="padding:12px 14px;border-bottom:1px solid var(--border);font-size:0.78rem;font-weight:600;color:var(--text2);">📋 Top trades — scaled to $' + amount.toLocaleString() + '</div>' + rows + '</div>' : '') +
+        '<div style="background:linear-gradient(135deg,rgba(88,166,255,0.08),rgba(63,185,80,0.08));border:1px solid rgba(88,166,255,0.25);border-radius:14px;padding:24px;text-align:center;">' +
+          '<div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">⚡ Copy these trades in real time</div>' +
+          '<div style="color:var(--text2);font-size:0.85rem;margin-bottom:16px;">Get instant alerts when whales place their bets — copy them before the market moves.</div>' +
+          '<a href="/premium" style="display:inline-block;background:linear-gradient(135deg,#2ea043,var(--green));color:white;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:700;font-size:0.95rem;">🚀 Get Premium Alerts</a>' +
+          '<div style="font-size:0.75rem;color:var(--text2);margin-top:10px;">From $9.99/month · Cancel anytime</div>' +
+        '</div>';
+
+    } catch(e) {
+      out.innerHTML = '<div style="color:var(--red);padding:16px;background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.2);border-radius:10px;text-align:center;">⚠️ Failed to fetch data. Please try again.</div>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🐋 Calculate My Returns';
+    }
+  };
+})();
+</script>
+
 <footer>
   <p>🐋 WhaleTrack — Smart Money Intelligence for Polymarket</p>
   <p style="margin-top:6px;">Data refreshed every 5 minutes. Not financial advice.</p>
