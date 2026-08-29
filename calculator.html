@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Copy Trade ROI Calculator — What If You Copied a Polymarket Whale? | WhaleTrack</title>
+  <meta name="description" content="Calculate your ROI if you copied a top Polymarket whale trader. See exactly how much money you'd have made copying the best prediction market traders."/>
+  <meta name="keywords" content="polymarket copy trading, polymarket roi calculator, copy whale trades, polymarket returns, whale trading calculator"/>
+  <link rel="canonical" href="https://whaletrack.app/calculator"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐋</text></svg>"/>
+
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://whaletrack.app/calculator"/>
+  <meta property="og:title" content="Copy Trade ROI Calculator — WhaleTrack"/>
+  <meta property="og:description" content="What if you copied a Polymarket whale? Calculate your returns instantly."/>
+  <meta property="og:image" content="https://whaletrack.app/og-image.png"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Copy Trade ROI Calculator — WhaleTrack"/>
+  <meta name="twitter:description" content="What if you copied a Polymarket whale? Calculate your returns instantly."/>
+  <meta name="twitter:image" content="https://whaletrack.app/og-image.png"/>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --green: #3fb950;
+      --red: #f85149;
+      --accent: #58a6ff;
+      --gold: #e3b341;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(13,17,23,0.95);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+    }
+    .nav-logo { font-size: 1.1rem; font-weight: 700; text-decoration: none; color: var(--text); }
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-premium {
+      background: var(--accent);
+      color: #0d1117 !important;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 700 !important;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 60px 20px 40px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(88,166,255,0.1);
+      border: 1px solid rgba(88,166,255,0.3);
+      color: var(--accent);
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #e6edf3 0%, #58a6ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p { color: var(--muted); font-size: 1.05rem; max-width: 480px; margin: 0 auto; line-height: 1.6; }
+
+    /* ── Main layout ── */
+    .calc-wrapper {
+      max-width: 680px;
+      margin: 0 auto 80px;
+      padding: 0 20px;
+    }
+
+    .calc-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .section { margin-bottom: 28px; }
+
+    .step-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── Whale select ── */
+    select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 13px 40px 13px 16px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      transition: border-color 0.2s;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Amount pills ── */
+    .amount-pills { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .pill {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 22px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .pill:hover { border-color: var(--accent); color: var(--text); }
+    .pill.active { background: var(--accent); border-color: var(--accent); color: #0d1117; }
+
+    .amount-custom {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      transition: border-color 0.2s;
+    }
+    .amount-custom:focus-within { border-color: var(--accent); }
+    .amount-custom span { color: var(--muted); font-size: 1rem; font-weight: 600; }
+    .amount-custom input {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 600;
+      width: 100%;
+      outline: none;
+    }
+    .amount-custom input::placeholder { color: var(--muted); font-weight: 400; }
+
+    /* ── Period pills ── */
+    .period-pills { display: flex; gap: 10px; }
+    .period-pill {
+      flex: 1;
+      text-align: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .period-pill:hover { border-color: var(--accent); color: var(--text); }
+    .period-pill.active { background: rgba(88,166,255,0.12); border-color: var(--accent); color: var(--accent); }
+
+    /* ── Calculate button ── */
+    .calc-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #388bfd, #58a6ff);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .calc-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(88,166,255,0.3); }
+    .calc-btn:active { transform: translateY(0); }
+    .calc-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Results ── */
+    .results { margin-top: 28px; display: none; }
+    .results.show { display: block; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 48px 20px; color: var(--muted); }
+    .spinner {
+      display: inline-block;
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      text-align: center;
+      padding: 24px;
+      color: var(--red);
+      background: rgba(248,81,73,0.08);
+      border: 1px solid rgba(248,81,73,0.2);
+      border-radius: 12px;
+      font-size: 0.95rem;
+    }
+
+    /* Result header */
+    .results-header {
+      text-align: center;
+      padding: 36px 24px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .results-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center top, rgba(88,166,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .results-context {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 14px;
+    }
+    .results-context strong { color: var(--text); }
+    .results-amount {
+      font-size: clamp(3rem, 10vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+    .results-amount.positive { color: var(--green); }
+    .results-amount.negative { color: var(--red); }
+    .results-roi {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .results-roi.positive { color: var(--green); }
+    .results-roi.negative { color: var(--red); }
+    .results-subtext { color: var(--muted); font-size: 0.82rem; }
+
+    /* Stats grid */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+    .stat-value { font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; }
+    .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* Trades */
+    .trades-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .trades-title {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .trade-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      padding: 13px 18px;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+      align-items: center;
+    }
+    .trade-row:last-child { border-bottom: none; }
+    .trade-title-text {
+      font-size: 0.83rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .trade-outcome-text { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .trade-pnl {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .trade-pnl.positive { color: var(--green); }
+    .trade-pnl.negative { color: var(--red); }
+    .trade-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .badge-win { background: rgba(63,185,80,0.12); color: var(--green); }
+    .badge-loss { background: rgba(248,81,73,0.12); color: var(--red); }
+
+    /* CTA */
+    .cta-section {
+      background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(63,185,80,0.08));
+      border: 1px solid rgba(88,166,255,0.25);
+      border-radius: 16px;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .cta-section h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    .cta-section p { color: var(--muted); margin-bottom: 22px; font-size: 0.9rem; line-height: 1.6; max-width: 420px; margin-left: auto; margin-right: auto; }
+    .cta-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #2ea043, var(--green));
+      color: white;
+      text-decoration: none;
+      padding: 14px 36px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.2s;
+      margin-bottom: 22px;
+    }
+    .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(63,185,80,0.3); }
+    .cta-fine { font-size: 0.78rem; color: var(--muted); }
+
+    /* Disclaimer */
+    .disclaimer {
+      margin-top: 32px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    @media (max-width: 560px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .calc-card { padding: 20px 16px; }
+      nav { padding: 12px 16px; }
+      .hero { padding: 40px 16px 28px; }
+      .nav-links a:not(.nav-premium) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">🐋 WhaleTrack</a>
+  <div class="nav-links">
+    <a href="/">Live Tracker</a>
+    <a href="/hot-bets">Hot Bets</a>
+    <a href="/premium" class="nav-premium">⚡ Premium</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">📊 Free Tool</div>
+  <h1>Copy Trade<br>ROI Calculator</h1>
+  <p>Pick a Polymarket whale, enter your amount, and see exactly how much you'd have made copying their bets.</p>
+</div>
+
+<div class="calc-wrapper">
+  <div class="calc-card">
+
+    <!-- Step 1 -->
+    <div class="section">
+      <div class="step-label">Step 1 — Pick a whale</div>
+      <select id="whaleSelect">
+        <option value="">Select a whale trader…</option>
+        <option value="0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab">🐋 somalianKing</option>
+        <option value="0xd9eee545c64c3f5c3acc088259289677858a89a4">🐋 somalianKing #2</option>
+        <option value="0x09b428f7c2b469786286214aa5c90dd9015f7320">🐋 DEEDDIT</option>
+        <option value="0x7c1ee865a785de4c00ee90ed86a38489fb8bbab3">🐋 CandleHammerDrums</option>
+        <option value="0x640de3430e9a05e1b1fe04b42d651da1abe99a4c">🐋 coldsway</option>
+        <option value="0x224a89dbe0db0d6124b335edabd15b3f877da3d5">🐋 wr0ngw4yb3tt0r</option>
+        <option value="0xe9a6ed2e4d4ee8ce47cd47cac834746dc4cf627b">🐋 Oneger</option>
+        <option value="0x5e9458202b5817a72cf81105ec8a30e6f3705ba1">🐋 pleaseplease123</option>
+        <option value="0xb809a4b78b5eadc71d84be43eda0491eedf72004">🐋 R88N</option>
+        <option value="0x56acab44cfca2e88bb9b3406890aea7bfa0cd77e">🐋 dv-pm</option>
+        <option value="0xb61b2079b95f6b7476fd3203e0274ffb93308a06">🐋 hot2trot</option>
+        <option value="0x50f0a0fc7364d3c10fc4578b9b1d955368335355">🐋 bettguy</option>
+        <option value="0x3dfb153c197d4c19d3b31c1ecd2c7b6860eeabaf">🐋 Sparkling8899</option>
+        <option value="0xc31d0a0d63d760d72a1236d16beaa6a71c854ebe">🐋 FootballFan98</option>
+        <option value="0xe72bb501df5306c75c89383d48a1e81073fbb0a0">🐋 norrisfan</option>
+      </select>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="section">
+      <div class="step-label">Step 2 — Your starting amount</div>
+      <div class="amount-pills">
+        <div class="pill" data-amount="100">$100</div>
+        <div class="pill active" data-amount="500">$500</div>
+        <div class="pill" data-amount="1000">$1,000</div>
+        <div class="pill" data-amount="5000">$5,000</div>
+      </div>
+      <div class="amount-custom">
+        <span>$</span>
+        <input type="number" id="customAmount" placeholder="Custom amount" min="1" max="100000"/>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="section">
+      <div class="step-label">Step 3 — Time period</div>
+      <div class="period-pills">
+        <div class="period-pill" data-days="7">7 days</div>
+        <div class="period-pill active" data-days="30">30 days</div>
+        <div class="period-pill" data-days="90">90 days</div>
+      </div>
+    </div>
+
+    <button class="calc-btn" id="calcBtn" onclick="calculate()">
+      🐋 Calculate My Returns
+    </button>
+
+    <!-- Results injected here -->
+    <div class="results" id="results"></div>
+
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ This calculator uses real historical trade data from Polymarket. Past performance does not guarantee future results. This is not financial advice.
+  </div>
+</div>
+
+<script>
+  // ── State ─────────────────────────────────────────────────────────────
+  let selectedAmount = 500;
+  let selectedDays   = 30;
+
+  // ── Amount pills ──────────────────────────────────────────────────────
+  document.querySelectorAll('.pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      selectedAmount = parseInt(pill.dataset.amount);
+      document.getElementById('customAmount').value = '';
+    });
+  });
+
+  document.getElementById('customAmount').addEventListener('input', e => {
+    const val = parseInt(e.target.value);
+    if (val > 0) {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      selectedAmount = val;
+    }
+  });
+
+  // ── Period pills ──────────────────────────────────────────────────────
+  document.querySelectorAll('.period-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.period-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      selectedDays = parseInt(pill.dataset.days);
+    });
+  });
+
+  // ── Fetch whale activity ──────────────────────────────────────────────
+  async function fetchActivity(address) {
+    const res = await fetch(
+      `https://data-api.polymarket.com/activity?user=${address}&limit=200`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    if (!res.ok) throw new Error('API error ' + res.status);
+    return res.json();
+  }
+
+  // ── ROI calculation ───────────────────────────────────────────────────
+  function calculateROI(trades, userAmount, days) {
+    const cutoff = Date.now() / 1000 - days * 86400;
+    const recent = trades.filter(t => (t.timestamp || 0) >= cutoff);
+
+    // Group by market slug + outcome
+    const markets = {};
+    for (const t of recent) {
+      const key = `${t.slug || t.conditionId || 'unknown'}-${t.outcome || t.outcomeIndex || '?'}`;
+      if (!markets[key]) {
+        markets[key] = {
+          title:    t.title || 'Unknown Market',
+          outcome:  t.outcome || String(t.outcomeIndex ?? ''),
+          buys:     [],
+          sells:    [],
+          redeems:  [],
+        };
+      }
+      const m = markets[key];
+      if (t.type === 'REDEEM') {
+        m.redeems.push(parseFloat(t.usdcSize || 0));
+      } else if (t.side === 'BUY') {
+        m.buys.push(parseFloat(t.usdcSize || 0));
+      } else if (t.side === 'SELL') {
+        m.sells.push(parseFloat(t.usdcSize || 0));
+      }
+    }
+
+    // Calculate per-market P&L
+    let totalInvested = 0;
+    let totalReturned = 0;
+    const tradeResults = [];
+
+    for (const m of Object.values(markets)) {
+      const invested = m.buys.reduce((s, v) => s + v, 0);
+      if (invested < 1) continue; // skip dust
+
+      const received = m.sells.reduce((s, v) => s + v, 0)
+                     + m.redeems.reduce((s, v) => s + v, 0);
+
+      totalInvested += invested;
+
+      if (received < 1) {
+        // Still open — skip from P&L
+        tradeResults.push({ title: m.title, outcome: m.outcome, invested, pnl: 0, status: 'open' });
+      } else {
+        const pnl = received - invested;
+        totalReturned += received;
+        tradeResults.push({ title: m.title, outcome: m.outcome, invested, pnl, status: pnl >= 0 ? 'win' : 'loss' });
+      }
+    }
+
+    const closed = tradeResults.filter(t => t.status !== 'open');
+    if (totalInvested < 1 || closed.length === 0) return null;
+
+    // Scale everything to user's starting amount
+    const scale       = userAmount / totalInvested;
+    const scaledReturn = totalReturned * scale;
+    const finalAmount  = userAmount + (scaledReturn - userAmount);
+    const pnl          = scaledReturn - userAmount;
+    const roi          = ((scaledReturn / userAmount) - 1) * 100;
+
+    const wins      = closed.filter(t => t.pnl >= 0).length;
+    const losses    = closed.filter(t => t.pnl <  0).length;
+    const wr        = closed.length > 0 ? Math.round((wins / closed.length) * 100) : 0;
+
+    const scaledTrades = closed
+      .map(t => ({ ...t, scaledPnL: t.pnl * scale }))
+      .sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl))
+      .slice(0, 12);
+
+    const bestTrade  = Math.max(0, ...scaledTrades.filter(t => t.pnl > 0).map(t => t.scaledPnL));
+    const worstTrade = Math.min(0, ...scaledTrades.filter(t => t.pnl < 0).map(t => t.scaledPnL));
+
+    return { finalAmount, pnl, roi, wins, losses, wr, bestTrade, worstTrade, trades: scaledTrades, closedCount: closed.length };
+  }
+
+  // ── Format helpers ────────────────────────────────────────────────────
+  function fmt(n) {
+    const abs = Math.abs(n);
+    if (abs >= 10000) return (n < 0 ? '-' : '') + '$' + (abs / 1000).toFixed(1) + 'K';
+    if (abs >= 1000)  return (n < 0 ? '-' : '') + '$' + (abs / 1000).toFixed(2) + 'K';
+    return (n < 0 ? '-$' : '+$') + abs.toFixed(0);
+  }
+  function fmtBig(n) {
+    const abs = Math.abs(n);
+    if (abs >= 1000) return '$' + (abs / 1000).toFixed(1) + 'K';
+    return '$' + abs.toFixed(0);
+  }
+
+  // ── Main ──────────────────────────────────────────────────────────────
+  async function calculate() {
+    const addr = document.getElementById('whaleSelect').value;
+    const customVal = parseInt(document.getElementById('customAmount').value);
+    const amount = (customVal > 0 ? customVal : selectedAmount) || 500;
+
+    if (!addr) {
+      alert('Please pick a whale first!');
+      return;
+    }
+
+    const whaleName = document.getElementById('whaleSelect').selectedOptions[0].text.replace('🐋 ', '');
+    const btn = document.getElementById('calcBtn');
+    const resultsEl = document.getElementById('results');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Fetching trade history…';
+    resultsEl.className = 'results show';
+    resultsEl.innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <div>Fetching ${whaleName}'s trade history…</div>
+      </div>`;
+
+    try {
+      const activity = await fetchActivity(addr);
+
+      if (!Array.isArray(activity) || activity.length === 0) {
+        resultsEl.innerHTML = `<div class="error-msg">⚠️ No trade data found. This whale may be inactive.</div>`;
+        return;
+      }
+
+      const result = calculateROI(activity, amount, selectedDays);
+
+      if (!result) {
+        resultsEl.innerHTML = `<div class="error-msg">⚠️ Not enough resolved trades in this period.<br>Try selecting a longer time window (90 days).</div>`;
+        return;
+      }
+
+      const isPos = result.pnl >= 0;
+
+      const tradeRows = result.trades.map(t => {
+        const pos = t.pnl >= 0;
+        const pnlStr = (pos ? '+$' : '-$') + Math.abs(t.scaledPnL).toFixed(0);
+        return `
+          <div class="trade-row">
+            <div>
+              <div class="trade-title-text">${(t.title || 'Unknown').slice(0, 52)}${(t.title || '').length > 52 ? '…' : ''}</div>
+              <div class="trade-outcome-text">${t.outcome || ''}</div>
+            </div>
+            <div class="trade-pnl ${pos ? 'positive' : 'negative'}">${pnlStr}</div>
+            <div class="trade-badge ${pos ? 'badge-win' : 'badge-loss'}">${pos ? '✅ WIN' : '❌ LOSS'}</div>
+          </div>`;
+      }).join('');
+
+      resultsEl.innerHTML = `
+        <div>
+          <!-- Big result -->
+          <div class="results-header">
+            <div class="results-context">
+              Copying <strong>${whaleName}</strong> with <strong>$${amount.toLocaleString()}</strong> for <strong>${selectedDays} days</strong>:
+            </div>
+            <div class="results-amount ${isPos ? 'positive' : 'negative'}">${fmtBig(result.finalAmount)}</div>
+            <div class="results-roi ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}${result.roi.toFixed(1)}% ROI</div>
+            <div class="results-subtext">
+              ${isPos ? '📈 Profit' : '📉 Loss'}: ${isPos ? '+' : '-'}$${Math.abs(result.pnl).toFixed(0)}
+              &nbsp;·&nbsp; ${result.closedCount} closed trades
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-value">${result.wr}%</div>
+              <div class="stat-label">Win Rate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${result.wins}W / ${result.losses}L</div>
+              <div class="stat-label">Record</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" style="color:var(--green)">+$${Math.abs(result.bestTrade).toFixed(0)}</div>
+              <div class="stat-label">Best Trade</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" style="color:var(--red)">-$${Math.abs(result.worstTrade).toFixed(0)}</div>
+              <div class="stat-label">Worst Trade</div>
+            </div>
+          </div>
+
+          <!-- Trade list -->
+          ${tradeRows ? `
+          <div class="trades-section">
+            <div class="trades-title">📋 Trade breakdown — scaled to your $${amount.toLocaleString()}</div>
+            ${tradeRows}
+          </div>` : ''}
+
+          <!-- CTA -->
+          <div class="cta-section">
+            <h3>⚡ Copy these trades in real time</h3>
+            <p>
+              This is based on past data. With WhaleTrack Premium, you get an alert the moment whales place their bets — so you can copy them instantly, not days later.
+            </p>
+            <a href="/premium" class="cta-btn">🚀 Start Copying Whales Now</a>
+            <div class="cta-fine">From $9.99/month · Cancel anytime · 11 active members</div>
+          </div>
+        </div>`;
+
+    } catch (err) {
+      resultsEl.innerHTML = `<div class="error-msg">⚠️ Failed to fetch data. Check your connection and try again.</div>`;
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🐋 Calculate My Returns';
+    }
+  }
+</script>
+
+</body>
+</html>

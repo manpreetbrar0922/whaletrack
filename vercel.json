@@ -4,6 +4,7 @@
     "api/trade-params.js": { "regions": ["iad1"] }
   },
   "rewrites": [
+    { "source": "/calculator",               "destination": "/calculator.html"             },
     { "source": "/go",                       "destination": "/go.html"                       },
     { "source": "/polymarket-whale-tracker", "destination": "/polymarket-whale-tracker.html" },
     { "source": "/polymarket-leaderboard",   "destination": "/polymarket-leaderboard.html"   },
