@@ -1617,6 +1617,12 @@
           '<div style="font-size:clamp(2.5rem,8vw,3.8rem);font-weight:800;line-height:1;color:' + (isPos ? 'var(--green)' : 'var(--red)') + ';margin-bottom:8px;">' + fmtBig(amount + pnl) + '</div>' +
           '<div style="font-size:1.3rem;font-weight:700;color:' + (isPos ? 'var(--green)' : 'var(--red)') + ';margin-bottom:10px;">' + (isPos ? '+' : '') + roi.toFixed(1) + '% ROI</div>' +
           '<div style="font-size:0.8rem;color:var(--text2);">' + (isPos ? '📈' : '📉') + ' ' + (isPos ? 'Profit' : 'Loss') + ': ' + (isPos ? '+' : '-') + '$' + Math.abs(pnl).toFixed(0) + ' &nbsp;·&nbsp; ' + (wins+losses) + ' closed trades</div>' +
+          '<div style="margin-top:16px;">' +
+            '<a href="' + (function() {
+              var txt = 'I just calculated my returns copying ' + whaleName + ' on Polymarket 🐋\n\n$' + amount.toLocaleString() + ' → ' + fmtBig(amount + pnl) + ' (' + (isPos ? '+' : '') + roi.toFixed(1) + '% ROI) in ' + _calcDays + ' days\n\nTry it yourself 👇\nwhaletrack.app\n\n#Polymarket #CopyTrading';
+              return 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(txt);
+            })() + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#1d9bf0;color:white;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:700;font-size:0.88rem;">🐦 Share on X</a>' +
+          '</div>' +
         '</div>' +
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">' +
           '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;"><div style="font-size:1.2rem;font-weight:700;">' + wr + '%</div><div style="font-size:0.68rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-top:3px;">Win Rate</div></div>' +

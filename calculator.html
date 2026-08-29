@@ -681,6 +681,13 @@
               ${isPos ? '📈 Profit' : '📉 Loss'}: ${isPos ? '+' : '-'}$${Math.abs(result.pnl).toFixed(0)}
               &nbsp;·&nbsp; ${result.closedCount} closed trades
             </div>
+            <div style="margin-top:16px;">
+              <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just calculated my returns copying ${whaleName} on Polymarket 🐋\n\n$${amount.toLocaleString()} → ${fmtBig(result.finalAmount)} (${isPos ? '+' : ''}${result.roi.toFixed(1)}% ROI) in ${selectedDays} days\n\nTry it yourself 👇\nwhaletrack.app\n\n#Polymarket #CopyTrading`)}"
+                target="_blank" rel="noopener"
+                style="display:inline-flex;align-items:center;gap:8px;background:#1d9bf0;color:white;text-decoration:none;padding:10px 24px;border-radius:10px;font-weight:700;font-size:0.9rem;">
+                🐦 Share on X
+              </a>
+            </div>
           </div>
 
           <!-- Stats -->
