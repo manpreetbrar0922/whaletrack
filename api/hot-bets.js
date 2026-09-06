@@ -37,7 +37,7 @@ export default async function handler(req, res) {
   const seen = new Set();
   const whales = [];
 
-  for (const t of (Array.isArray(leaderboard) ? leaderboard : []).slice(0, 30)) {
+  for (const t of (Array.isArray(leaderboard) ? leaderboard : []).slice(0, 50)) {
     const addr = (t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
@@ -99,6 +99,44 @@ export default async function handler(req, res) {
       });
     }
   }
+
+  // Global large-bet scanner — catches ANY wallet betting ≥ $5K (not just tracked whales)
+  try {
+    const globalTrades = await fetch('https://data-api.polymarket.com/trades?limit=500')
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => []);
+
+    const MIN_GLOBAL_USD = 5000; // $5K threshold for unknown wallets
+    for (const t of (Array.isArray(globalTrades) ? globalTrades : [])) {
+      const usdcSize = parseFloat(t.size || 0) * parseFloat(t.price || 0);
+      const ts = t.timestamp || 0;
+
+      if (t.side !== 'BUY') continue;
+      if (usdcSize < MIN_GLOBAL_USD) continue;
+      if (ts < cutoff) continue;
+      if (!t.title || t.title === 'Unknown Market') continue;
+      if ((t.price || 0) <= 0) continue;
+
+      const addr = (t.proxyWallet || '').toLowerCase();
+      // Skip if already covered by whale tracking
+      if (seen.has(addr)) continue;
+
+      const whaleName = sanitizeName(t.name) || sanitizeName(t.pseudonym) || addrShort(t.proxyWallet);
+      let outcome = t.outcome || (t.outcomeIndex === 0 ? 'Yes' : t.outcomeIndex === 1 ? 'No' : '—');
+
+      all.push({
+        id:        `global-${addr}-${ts}-${Math.round(usdcSize)}`,
+        whaleName: whaleName,
+        title:     t.title,
+        outcome:   outcome,
+        usdcSize:  usdcSize,
+        price:     parseFloat(t.price || 0),
+        slug:      t.eventSlug || t.slug || '',
+        timestamp: ts,
+        isNewWhale: true,
+      });
+    }
+  } catch (e) {}
 
   // Deduplicate by id, sort by size descending
   const seen2 = new Set();
