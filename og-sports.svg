@@ -1,0 +1,196 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#070b14;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d1420;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Glow for alert card -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Subtle glow filter for numbers -->
+    <filter id="numglow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Blue ambient glow -->
+    <radialGradient id="blueGlow" cx="70%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#1a6cf7;stop-opacity:0.12" />
+      <stop offset="100%" style="stop-color:#1a6cf7;stop-opacity:0" />
+    </radialGradient>
+
+    <!-- Green ambient glow -->
+    <radialGradient id="greenGlow" cx="30%" cy="80%" r="40%">
+      <stop offset="0%" style="stop-color:#00c853;stop-opacity:0.07" />
+      <stop offset="100%" style="stop-color:#00c853;stop-opacity:0" />
+    </radialGradient>
+
+    <!-- Card gradient -->
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#111827;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d1520;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Card 2 gradient -->
+    <linearGradient id="cardGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f1e16;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d1520;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Yes bar gradient -->
+    <linearGradient id="yesGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00c853;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00e676;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- No bar gradient -->
+    <linearGradient id="noGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f44336;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ef9a9a;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Top border gradient -->
+    <linearGradient id="topBorder" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1a6cf7;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00c853;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Grid pattern -->
+    <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#ffffff" stroke-width="0.3" opacity="0.04"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+  <rect width="1200" height="630" fill="url(#blueGlow)"/>
+  <rect width="1200" height="630" fill="url(#greenGlow)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Top gradient border -->
+  <rect width="1200" height="3" fill="url(#topBorder)"/>
+
+  <!-- ── LEFT PANEL ─────────────────────────────────────────── -->
+
+  <!-- LIVE badge -->
+  <rect x="52" y="52" width="72" height="26" rx="13" fill="#f44336" opacity="0.15" stroke="#f44336" stroke-width="1"/>
+  <circle cx="68" cy="65" r="4" fill="#f44336">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <text x="80" y="70" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#f44336" letter-spacing="1">LIVE</text>
+
+  <!-- WhaleTrack wordmark -->
+  <text x="52" y="160" font-family="Arial Black, Arial, sans-serif" font-size="58" font-weight="900" fill="#ffffff" letter-spacing="-2">Whale</text>
+  <text x="52" y="222" font-family="Arial Black, Arial, sans-serif" font-size="58" font-weight="900" fill="#1a6cf7" letter-spacing="-2">Track</text>
+
+  <!-- Tagline -->
+  <text x="52" y="268" font-family="Arial, sans-serif" font-size="19" fill="#6b7280" letter-spacing="0">Sports Whale Intelligence</text>
+
+  <!-- Divider line -->
+  <line x1="52" y1="295" x2="340" y2="295" stroke="#1f2937" stroke-width="1"/>
+
+  <!-- Feature bullets -->
+  <!-- Bullet 1 -->
+  <circle cx="62" cy="327" r="4" fill="#1a6cf7"/>
+  <text x="78" y="333" font-family="Arial, sans-serif" font-size="17" fill="#9ca3af">$10K+ bet alerts — instant</text>
+
+  <!-- Bullet 2 -->
+  <circle cx="62" cy="363" r="4" fill="#00c853"/>
+  <text x="78" y="369" font-family="Arial, sans-serif" font-size="17" fill="#9ca3af">See YES &amp; NO sides live</text>
+
+  <!-- Bullet 3 -->
+  <circle cx="62" cy="399" r="4" fill="#7c3aed"/>
+  <text x="78" y="405" font-family="Arial, sans-serif" font-size="17" fill="#9ca3af">NFL · NBA · Soccer · UFC</text>
+
+  <!-- Bullet 4 -->
+  <circle cx="62" cy="435" r="4" fill="#f59e0b"/>
+  <text x="78" y="441" font-family="Arial, sans-serif" font-size="17" fill="#9ca3af">Telegram alerts on premium</text>
+
+  <!-- URL pill -->
+  <rect x="52" y="530" width="230" height="44" rx="22" fill="#111827" stroke="#1f2937" stroke-width="1"/>
+  <text x="167" y="557" font-family="Arial, sans-serif" font-size="18" fill="#1a6cf7" text-anchor="middle" font-weight="600">whaletrack.app</text>
+
+  <!-- ── VERTICAL DIVIDER ───────────────────────────────────── -->
+  <line x1="395" y1="40" x2="395" y2="590" stroke="#1f2937" stroke-width="1"/>
+
+  <!-- ── RIGHT PANEL — WHALE BET CARDS ──────────────────────── -->
+
+  <!-- Section label -->
+  <text x="425" y="72" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#4b5563" letter-spacing="2">RECENT WHALE BETS</text>
+
+  <!-- ── CARD 1 — Big NFL bet ──────────────────────────────── -->
+  <rect x="425" y="90" width="740" height="148" rx="12" fill="url(#cardGrad)" stroke="#1a6cf7" stroke-width="1" opacity="0.95"/>
+  <!-- Left accent bar -->
+  <rect x="425" y="90" width="4" height="148" rx="2" fill="#1a6cf7"/>
+
+  <!-- Whale name + size -->
+  <text x="446" y="124" font-family="Arial, sans-serif" font-size="13" fill="#4b5563" font-weight="600" letter-spacing="1">🐋  WHALE ALERT</text>
+  <text x="1130" y="124" font-family="Arial Black, Arial, sans-serif" font-size="26" font-weight="900" fill="#ffffff" text-anchor="end" filter="url(#numglow)">$73K</text>
+
+  <!-- Market title -->
+  <text x="446" y="155" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#e5e7eb">Chiefs to win Super Bowl 2027?</text>
+
+  <!-- Outcome chip -->
+  <rect x="446" y="166" width="50" height="22" rx="11" fill="#00c853" opacity="0.15" stroke="#00c853" stroke-width="1"/>
+  <text x="471" y="182" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#00c853" text-anchor="middle">YES</text>
+
+  <!-- Price -->
+  <text x="508" y="182" font-family="Arial, sans-serif" font-size="13" fill="#6b7280">at 67¢</text>
+
+  <!-- Trader -->
+  <text x="446" y="210" font-family="Arial, sans-serif" font-size="13" fill="#4b5563">HomeRunHazard</text>
+  <text x="1130" y="210" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="end">2 mins ago</text>
+
+  <!-- YES/NO bar -->
+  <rect x="446" y="220" width="700" height="6" rx="3" fill="#1f2937"/>
+  <rect x="446" y="220" width="469" height="6" rx="3" fill="url(#yesGrad)"/>
+  <text x="446" y="238" font-family="Arial, sans-serif" font-size="11" fill="#00c853">YES 67%</text>
+  <text x="1146" y="238" font-family="Arial, sans-serif" font-size="11" fill="#6b7280" text-anchor="end">NO 33%</text>
+
+  <!-- ── CARD 2 — Counter bet (NO side) ───────────────────── -->
+  <rect x="425" y="256" width="740" height="148" rx="12" fill="url(#cardGrad)" stroke="#1f2937" stroke-width="1" opacity="0.95"/>
+  <!-- Left accent bar -->
+  <rect x="425" y="256" width="4" height="148" rx="2" fill="#f44336"/>
+
+  <text x="446" y="290" font-family="Arial, sans-serif" font-size="13" fill="#4b5563" font-weight="600" letter-spacing="1">🐋  COUNTER BET</text>
+  <text x="1130" y="290" font-family="Arial Black, Arial, sans-serif" font-size="26" font-weight="900" fill="#ffffff" text-anchor="end">$41K</text>
+
+  <text x="446" y="321" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#e5e7eb">Chiefs to win Super Bowl 2027?</text>
+
+  <!-- NO chip -->
+  <rect x="446" y="332" width="48" height="22" rx="11" fill="#f44336" opacity="0.15" stroke="#f44336" stroke-width="1"/>
+  <text x="470" y="348" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#f44336" text-anchor="middle">NO</text>
+
+  <text x="506" y="348" font-family="Arial, sans-serif" font-size="13" fill="#6b7280">at 33¢</text>
+
+  <text x="446" y="376" font-family="Arial, sans-serif" font-size="13" fill="#4b5563">Weaseloftheweek</text>
+  <text x="1130" y="376" font-family="Arial, sans-serif" font-size="12" fill="#374151" text-anchor="end">5 mins ago</text>
+
+  <!-- YES/NO bar -->
+  <rect x="446" y="386" width="700" height="6" rx="3" fill="#1f2937"/>
+  <rect x="446" y="386" width="469" height="6" rx="3" fill="url(#yesGrad)"/>
+  <text x="446" y="404" font-family="Arial, sans-serif" font-size="11" fill="#00c853">YES 67%</text>
+  <text x="1146" y="404" font-family="Arial, sans-serif" font-size="11" fill="#6b7280" text-anchor="end">NO 33%</text>
+
+  <!-- ── CARD 3 — smaller bet ──────────────────────────────── -->
+  <rect x="425" y="422" width="740" height="100" rx="12" fill="url(#cardGrad)" stroke="#1f2937" stroke-width="1" opacity="0.80"/>
+  <rect x="425" y="422" width="4" height="100" rx="2" fill="#7c3aed"/>
+
+  <text x="446" y="452" font-family="Arial, sans-serif" font-size="13" fill="#4b5563" font-weight="600" letter-spacing="1">🐋  WHALE ALERT</text>
+  <text x="1130" y="452" font-family="Arial Black, Arial, sans-serif" font-size="22" font-weight="900" fill="#9ca3af" text-anchor="end">$28K</text>
+
+  <text x="446" y="479" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#d1d5db">Eagles to make playoffs 2026?</text>
+
+  <rect x="446" y="490" width="50" height="20" rx="10" fill="#00c853" opacity="0.15" stroke="#00c853" stroke-width="1"/>
+  <text x="471" y="504" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#00c853" text-anchor="middle">YES</text>
+  <text x="508" y="504" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">at 71¢ · 12 mins ago</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="620" width="1200" height="10" fill="url(#topBorder)" opacity="0.6"/>
+</svg>
