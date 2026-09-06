@@ -102,11 +102,11 @@ export default async function handler(req, res) {
 
   // Global large-bet scanner — catches ANY wallet betting ≥ $5K (not just tracked whales)
   try {
-    const globalTrades = await fetch('https://data-api.polymarket.com/trades?limit=500')
+    const globalTrades = await fetch('https://data-api.polymarket.com/trades?limit=200')
       .then(r => r.ok ? r.json() : [])
       .catch(() => []);
 
-    const MIN_GLOBAL_USD = 5000; // $5K threshold for unknown wallets
+    const MIN_GLOBAL_USD = 10000; // $10K threshold for unknown wallets (higher bar to keep quality)
     for (const t of (Array.isArray(globalTrades) ? globalTrades : [])) {
       const usdcSize = parseFloat(t.size || 0) * parseFloat(t.price || 0);
       const ts = t.timestamp || 0;
