@@ -13,6 +13,7 @@ if (!BOT_TOKEN) { console.error('❌ BOT_TOKEN env var required'); process.exit(
 const PREMIUM_CHANNEL_ID = process.env.PREMIUM_CHANNEL_ID || ''; // Telegram channel ID for premium alerts
 const ADMIN_CHAT_ID      = process.env.ADMIN_CHAT_ID || '';     // Your personal Telegram chat ID (admin only)
 const AFFILIATE_TAG      = process.env.AFFILIATE_TAG || 'manpreet-singh-brar';
+const FOREGATE_URL       = 'https://go.foregate.com/HCNO2vT'; // 80% commission affiliate
 const POLL_INTERVAL      = parseInt(process.env.POLL_INTERVAL   || '300000'); // 5 min
 const PNL_THRESHOLD      = parseInt(process.env.PNL_THRESHOLD   || '1000');   // $1K P&L change alert
 const TRADE_ALERT_MIN    = parseInt(process.env.TRADE_ALERT_MIN || '10000');  // $10K trade alert
@@ -425,6 +426,7 @@ function buildPremiumAlert(t, whale, wr, sideInfo = null, opposingWhales = []) {
     wrLine,
     ``,
     `🎯 <a href="${link}">Copy this bet on Polymarket →</a>`,
+    `🔥 <a href="${FOREGATE_URL}">Also on ForeGate — zero trading fees →</a>`,
     ``,
   ].filter(line => line !== '').join('\n');
 }
@@ -455,6 +457,7 @@ function buildWinAlert(t, whale, wr) {
     wrLine,
     ``,
     `🎯 <a href="${link}">See the market →</a>`,
+    `🔥 <a href="${FOREGATE_URL}">Also trade on ForeGate — zero fees →</a>`,
     ``,
   ].join('\n');
 }
@@ -494,6 +497,7 @@ function buildExitAlert(t, whale, wr, isLoss = false) {
     wrLine,
     ``,
     `🎯 <a href="${link}">See the market →</a>`,
+    `🔥 <a href="${FOREGATE_URL}">Also trade on ForeGate — zero fees →</a>`,
     ``,
   ].join('\n');
 }
