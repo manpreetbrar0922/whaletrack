@@ -27,7 +27,7 @@ const POLL_INTERVAL       = parseInt(process.env.POLL_INTERVAL     || '60000'); 
 const DAILY_LIMIT         = parseInt(process.env.DAILY_LIMIT       || '50');     // max tweets/day
 const SKIP_CARDS          = process.env.SKIP_CARDS === 'true';                   // set true on free API tier (no media upload)
 const COOLDOWN_MS         = 6 * 60 * 60 * 1000;                                   // 6 hours between tweets (curated mode)
-const TWEET_WINDOWS_UTC  = [9, 18];                                               // fire at 9am UTC and 6pm UTC only
+const TWEET_WINDOWS_UTC  = [];                                                    // PAUSED — manual posting only (re-enable by setting to [9, 18])
 const TWEET_WINDOW_MIN   = 59;                                                    // window stays open for 59 min after the hour
 const SPORTS_COOLDOWN_MS  =  3 * 60 * 1000;                                      // 3 min for sports (fast markets)
 const TELEGRAM_DELAY_MS   = parseInt(process.env.TELEGRAM_DELAY_MS || '600000'); // 10 min Telegram → Twitter gap
@@ -299,7 +299,8 @@ function canTweetNow(title = '') {
     const now     = new Date();
     const utcHour = now.getUTCHours();
     const nextH   = TWEET_WINDOWS_UTC.find(h => h > utcHour) || TWEET_WINDOWS_UTC[0];
-    console.log(`  🕐 Outside tweet window — next window at ${nextH}:00 UTC`);
+    const windowMsg = nextH != null ? `next window at ${nextH}:00 UTC` : 'Twitter paused — manual posting only';
+    console.log(`  🕐 Outside tweet window — ${windowMsg}`);
     return false;
   }
   const elapsed  = Date.now() - getLastTweetTime();
@@ -394,7 +395,7 @@ function sendTelegram(chatId, text) {
   });
 }
 
-function buildTelegramAlert(t, type = 'bet', isPremium = false, meta = {}) {
+function buildTelegramAlert(t, type = 'bet', isPremium = false, meta = {}, opposition = null) {
   const outcomeEmoji = t.outcome === 'Yes' ? '🟢' : t.outcome === 'No' ? '🔴' : '⚪';
   const price        = Math.round((t.price || 0) * 100);
   const addrKey      = (t.proxyWallet || '').toLowerCase();
@@ -463,6 +464,9 @@ function buildTelegramAlert(t, type = 'bet', isPremium = false, meta = {}) {
       ``,
     ];
     if (wrLine) lines.push(wrLine, ``);
+    // ── Opposition context — always show something in premium ──
+    const oppLine = (opposition && opposition.message) ? opposition.message : `⚔️ Opposite side: checking...`;
+    lines.push(oppLine, ``);
     lines.push(`🌐 <a href="https://whaletrack.app">whaletrack.app</a>`);
     return lines.join('\n');
   }
@@ -481,11 +485,25 @@ function buildTelegramAlert(t, type = 'bet', isPremium = false, meta = {}) {
 async function sendTelegramAlerts(t, type = 'bet') {
   if (!BOT_TOKEN) return;
 
-  // Fetch win rate once for all premium recipients (cached 30 min)
+  // Fetch win rate + opposition context in parallel (both cached)
   let meta = {};
-  if (t.proxyWallet) {
-    try { meta = await fetchWinRate(t.proxyWallet); } catch (e) {}
-  }
+  let opposition = null;
+  await Promise.allSettled([
+    (async () => {
+      if (t.proxyWallet) {
+        try { meta = await fetchWinRate(t.proxyWallet); } catch (e) {}
+      }
+    })(),
+    (async () => {
+      if (type === 'bet' && t.slug) {
+        try { opposition = await fetchOppositionContext(t.slug, t.outcome, t.price); } catch (e) {}
+        if (opposition) {
+          const tag = opposition.type === 'contested' ? '⚠️  CONTESTED' : '✅ CLEAN';
+          console.log(`  ${tag}: ${opposition.message.split('\n')[0]}`);
+        }
+      }
+    })(),
+  ]);
 
   const tradeSize   = t.usdcSize || 0;
   const premiumSubs = loadPremiumSubs();
@@ -494,7 +512,7 @@ async function sendTelegramAlerts(t, type = 'bet') {
 
   // ── Premium channel — broadcast to all channel subscribers (no filter) ──
   if (PREMIUM_CHANNEL_ID) {
-    const channelMsg = buildTelegramAlert(t, type, true, meta);
+    const channelMsg = buildTelegramAlert(t, type, true, meta, opposition);
     sends.push(sendTelegram(PREMIUM_CHANNEL_ID, channelMsg));
   }
 
@@ -508,13 +526,13 @@ async function sendTelegramAlerts(t, type = 'bet') {
       console.log(`  ⏭️  Skipping DM to ${chatId} — $${tradeSize} < their $${prefs.minBet} filter`);
       continue;
     }
-    const msg = buildTelegramAlert(t, type, true, meta);
+    const msg = buildTelegramAlert(t, type, true, meta, opposition);
     sends.push(sendTelegram(chatId, msg));
   }
 
   // ── Admin always gets it ──
   if (ADMIN_CHAT_ID) {
-    const adminMsg = buildTelegramAlert(t, type, false, {});
+    const adminMsg = buildTelegramAlert(t, type, true, meta, opposition);
     sends.push(sendTelegram(ADMIN_CHAT_ID, adminMsg));
   }
 
@@ -775,6 +793,84 @@ async function fetchWhaleAddresses() {
     return [...new Set(addrs)];
   } catch (e) {
     return Object.keys(KNOWN_NAMES);
+  }
+}
+
+// ── OPPOSITION CONTEXT FETCHER ───────────────────────────────────────
+// Checks if there's a significant whale on the opposite side of a bet
+const oppositionCache = {}; // slug → { result, cachedAt }
+
+async function fetchOppositionContext(slug, outcome, alertPrice) {
+  const FALLBACK = { type: 'unknown', message: `⚔️ Opposite side: data unavailable` };
+  if (!slug) return FALLBACK;
+  const now    = Date.now();
+  const cacheKey = `${slug}-${outcome}`;
+  const cached = oppositionCache[cacheKey];
+  if (cached && now - cached.cachedAt < 5 * 60 * 1000) return cached.result; // 5 min cache
+
+  try {
+    // 1. Get market conditionId + outcomes list
+    const markets = await fetchJson(
+      `https://gamma-api.polymarket.com/markets?slug=${encodeURIComponent(slug)}&limit=1`
+    );
+    const market = Array.isArray(markets) ? markets[0] : (markets && !Array.isArray(markets) && markets.markets ? markets.markets[0] : null);
+    if (!market || !market.conditionId) return FALLBACK;
+
+    const conditionId  = market.conditionId;
+    let outcomesList;
+    try { outcomesList = JSON.parse(market.outcomes || '["Yes","No"]'); } catch (e) { outcomesList = ['Yes', 'No']; }
+
+    // 2. Find which side the alert is on, and which is opposite
+    const alertIdx    = outcomesList.findIndex(o => o.toLowerCase() === outcome.toLowerCase());
+    const oppositeIdx = alertIdx === -1 ? 1 : (alertIdx === 0 ? 1 : 0);
+    const oppositeOutcome = outcomesList[oppositeIdx] || (alertIdx === 0 ? 'No' : 'Yes');
+    const oppositePrice   = Math.max(0.01, 1 - (alertPrice || 0.5));
+
+    // 3. Fetch top holders for both sides in one call
+    let holdersData = await fetchJson(
+      `https://data-api.polymarket.com/v1/holders?market=${conditionId}&limit=10`
+    );
+    // Handle both array and wrapped object responses
+    if (holdersData && !Array.isArray(holdersData)) {
+      holdersData = holdersData.data || holdersData.holders || holdersData.results || [];
+    }
+    if (!Array.isArray(holdersData)) return FALLBACK;
+
+    // 4. Collect holders on the opposite side
+    const oppHolders = [];
+    for (const tokenGroup of holdersData) {
+      // Support both grouped format {token, holders:[]} and flat format {outcomeIndex, amount}
+      const list = tokenGroup.holders ? tokenGroup.holders : [tokenGroup];
+      for (const h of list) {
+        if (h.outcomeIndex === oppositeIdx) oppHolders.push(h);
+      }
+    }
+    oppHolders.sort((a, b) => b.amount - a.amount);
+
+    // 5. Find first holder with significant value ($10K+ equivalent)
+    const MIN_OPP_VALUE = 10000;
+    const significant = oppHolders.find(h => h.amount * oppositePrice >= MIN_OPP_VALUE);
+
+    let result;
+    if (!significant) {
+      result = { type: 'clean', oppositeOutcome, message: `✅ No big whale on the ${oppositeOutcome} side` };
+    } else {
+      const name    = significant.name || significant.pseudonym || 'Unknown';
+      const valUSD  = significant.amount * oppositePrice;
+      const valFmt  = valUSD >= 1000 ? `~$${Math.round(valUSD / 1000)}K` : `~$${Math.round(valUSD)}`;
+      result = {
+        type: 'contested',
+        oppositeOutcome,
+        oppositionName: name,
+        oppositionValue: valUSD,
+        message: `⚔️ Opposite whale: ${name} — ${valFmt} on ${oppositeOutcome}`,
+      };
+    }
+
+    oppositionCache[cacheKey] = { result, cachedAt: now };
+    return result;
+  } catch (e) {
+    return FALLBACK; // never block alert on error
   }
 }
 
@@ -1236,37 +1332,37 @@ async function checkAndTweet() {
     });
     const toTweet = deduped.slice(0, 3); // max 3 per cycle to avoid rate limits
 
-    // ── TELEGRAM: fire instantly for ALL new trades — no window restriction ──
-    for (const t of toTweet) {
-      const tgKey = `tg-${t.key}`;
-      if (!seenTrades.has(tgKey)) {
-        const fresh = await isMarketFresh(t.slug);
-        if (!fresh) {
-          console.log(`  ⏭️ Telegram: skipping stale sports bet: ${t.title?.slice(0, 50)}`);
-          continue;
-        }
-        seenTrades.add(tgKey);
-        saveHotBet(t);
-        await sendTelegramAlerts(t, 'bet');
-        console.log(`  📱 Telegram bet: ${t.whaleName} ${fmtUSD(t.usdcSize)}`);
-      }
-    }
-    for (const ex of bigExits) {
-      const tgKey = `tg-${ex.key}`;
-      if (!seenTrades.has(tgKey)) {
-        seenTrades.add(tgKey);
-        await sendTelegramAlerts(ex, 'exit');
-        console.log(`  📱 Telegram exit: ${ex.whaleName} ${fmtUSD(ex.usdcSize)}`);
-      }
-    }
-    for (const w of bigWins) {
-      const tgKey = `tg-${w.key}`;
-      if (!seenTrades.has(tgKey)) {
-        seenTrades.add(tgKey);
-        await sendTelegramAlerts(w, 'win');
-        console.log(`  📱 Telegram win: ${w.whaleName} ${fmtUSD(w.usdcSize)}`);
-      }
-    }
+    // ── TELEGRAM: DISABLED — handled exclusively by index.js (premium format) ──
+    // for (const t of toTweet) {
+    //   const tgKey = `tg-${t.key}`;
+    //   if (!seenTrades.has(tgKey)) {
+    //     const fresh = await isMarketFresh(t.slug);
+    //     if (!fresh) {
+    //       console.log(`  ⏭️ Telegram: skipping stale sports bet: ${t.title?.slice(0, 50)}`);
+    //       continue;
+    //     }
+    //     seenTrades.add(tgKey);
+    //     saveHotBet(t);
+    //     await sendTelegramAlerts(t, 'bet');
+    //     console.log(`  📱 Telegram bet: ${t.whaleName} ${fmtUSD(t.usdcSize)}`);
+    //   }
+    // }
+    // for (const ex of bigExits) {
+    //   const tgKey = `tg-${ex.key}`;
+    //   if (!seenTrades.has(tgKey)) {
+    //     seenTrades.add(tgKey);
+    //     await sendTelegramAlerts(ex, 'exit');
+    //     console.log(`  📱 Telegram exit: ${ex.whaleName} ${fmtUSD(ex.usdcSize)}`);
+    //   }
+    // }
+    // for (const w of bigWins) {
+    //   const tgKey = `tg-${w.key}`;
+    //   if (!seenTrades.has(tgKey)) {
+    //     seenTrades.add(tgKey);
+    //     await sendTelegramAlerts(w, 'win');
+    //     console.log(`  📱 Telegram win: ${w.whaleName} ${fmtUSD(w.usdcSize)}`);
+    //   }
+    // }
     saveSeen();
 
     // Cycle: bet → exit → win → bet → exit → win ...

@@ -1784,6 +1784,19 @@ function setAffiliateLinks(url) {
 }
 setAffiliateLinks(AFFILIATE_URL);
 
+// ── Affiliate click tracking → fires GA4 event on every Polymarket link click ──
+document.querySelectorAll('[data-affiliate]').forEach(el => {
+  el.addEventListener('click', function() {
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'polymarket_click', {
+        event_category: 'affiliate',
+        event_label: this.textContent?.trim() || 'link',
+        link_url: this.href,
+      });
+    }
+  });
+});
+
 // ===== THEME =====
 function toggleTheme() {
   const html = document.documentElement;
