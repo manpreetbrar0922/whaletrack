@@ -963,6 +963,7 @@
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
     <button class="wt-connect-btn" id="wtConnectBtn" onclick="openConnectModal()" title="Connect your Polymarket wallet to copy whale bets">🔌 Connect</button>
     <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade →</a>
+    <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" class="nav-trade-btn" style="background:rgba(0,210,140,0.12);color:#00d28c;border:1px solid rgba(0,210,140,0.3);" data-affiliate="foregate" title="ForeGate — zero trading fees">ForeGate →</a>
     <a href="https://accounts.binance.com/register?ref=BINANCE_REF_CODE" target="_blank" rel="noopener sponsored" class="nav-trade-btn" style="background:rgba(247,147,26,0.15);color:#f7931a;border:1px solid rgba(247,147,26,0.3);" data-exchange="binance">Binance →</a>
     <a href="https://www.okx.com/join/OKXCODE" target="_blank" rel="noopener sponsored" class="nav-trade-btn" style="background:rgba(88,166,255,0.1);color:#58a6ff;border:1px solid rgba(88,166,255,0.25);" data-exchange="okx">OKX →</a>
   </div>
@@ -970,9 +971,10 @@
 
 <!-- NEW USER BANNER -->
 <div id="newUserBanner" style="background:linear-gradient(90deg,rgba(88,166,255,0.12),rgba(63,185,80,0.08));border-bottom:1px solid rgba(88,166,255,0.2);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-  <span style="font-size:13px;color:#8b949e;">👋 <strong style="color:#e6edf3;">New to Polymarket?</strong> Create a free account and copy your first whale bet in 2 minutes.</span>
+  <span style="font-size:13px;color:#8b949e;">👋 <strong style="color:#e6edf3;">New to prediction markets?</strong> Copy your first whale bet in 2 minutes — free on Polymarket or zero-fee on ForeGate.</span>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="background:#58a6ff;color:#fff;font-size:12px;font-weight:700;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;">Get Started Free →</a>
+    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="background:#58a6ff;color:#fff;font-size:12px;font-weight:700;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;" data-affiliate>Polymarket Free →</a>
+    <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" style="background:#00d28c;color:#0d1117;font-size:12px;font-weight:700;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;" data-affiliate="foregate">ForeGate 0% Fees →</a>
     <button onclick="document.getElementById('newUserBanner').style.display='none';localStorage.setItem('wt_nb','1')" style="background:none;border:none;color:#8b949e;font-size:18px;cursor:pointer;line-height:1;padding:0 4px;">×</button>
   </div>
 </div>
@@ -1161,7 +1163,8 @@
         </div>
         <div style="padding-top:14px;border-top:1px solid #21262d;text-align:center;font-size:12px;color:#484f58">
           Need MetaMask? <a href="https://metamask.io" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Download here →</a>
-          &nbsp;·&nbsp; No Polymarket account? <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Sign up free →</a>
+          &nbsp;·&nbsp; No Polymarket account? <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none" data-affiliate>Sign up free →</a>
+          &nbsp;·&nbsp; Prefer zero fees? <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" style="color:#00d28c;text-decoration:none" data-affiliate="foregate">Try ForeGate →</a>
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid #21262d">
             <a id="wtDirectPolyLink" href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#8b949e;text-decoration:none;font-size:11px" data-affiliate>
               Skip — place bet directly on Polymarket →
@@ -1778,20 +1781,23 @@ function marketUrl(slug) {
 
 // Update all affiliate links at once
 function setAffiliateLinks(url) {
+  // Only update elements with data-affiliate="" (Polymarket) — skip data-affiliate="foregate" etc.
   document.querySelectorAll('[data-affiliate]').forEach(el => {
-    el.href = url;
+    if (!el.dataset.affiliate) el.href = url;
   });
 }
 setAffiliateLinks(AFFILIATE_URL);
 
-// ── Affiliate click tracking → fires GA4 event on every Polymarket link click ──
+// ── Affiliate click tracking → fires GA4 event on every affiliate link click ──
 document.querySelectorAll('[data-affiliate]').forEach(el => {
   el.addEventListener('click', function() {
     if (typeof gtag !== 'undefined') {
-      gtag('event', 'polymarket_click', {
+      const partner = this.dataset.affiliate || 'polymarket';
+      gtag('event', partner === 'foregate' ? 'foregate_click' : 'polymarket_click', {
         event_category: 'affiliate',
         event_label: this.textContent?.trim() || 'link',
         link_url: this.href,
+        partner: partner,
       });
     }
   });
@@ -2014,7 +2020,8 @@ function renderLiveFeed(activity) {
             data-price="${t.price}"
             data-title="${(t.title||'').replace(/"/g,'&quot;')}"
             onclick="openTradeModal(this.dataset)">🎯 Copy This Bet →</button>
-          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#3fb950;text-decoration:none;text-align:center;display:block;margin-top:5px;font-weight:600;" data-affiliate>✨ New? Get started free →</a>
+          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#3fb950;text-decoration:none;text-align:center;display:block;margin-top:5px;font-weight:600;" data-affiliate>✨ New? Polymarket free →</a>
+          <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" style="font-size:10px;color:#00d28c;text-decoration:none;text-align:center;display:block;margin-top:2px;font-weight:600;" data-affiliate="foregate">⚡ ForeGate — zero fees →</a>
         </div>
       </div>
     `;
@@ -2251,7 +2258,8 @@ function renderActivity(items) {
             data-price="${t.price || 0}"
             data-title="${(t.title || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
             onclick="openTradeModal(this.dataset)">Copy Bet →</button>
-          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#484f58;text-decoration:none;text-align:right;display:block;" data-affiliate>No account? Sign up →</a>
+          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#484f58;text-decoration:none;text-align:right;display:block;" data-affiliate>No account? Polymarket →</a>
+          <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" style="font-size:10px;color:#00d28c;text-decoration:none;text-align:right;display:block;margin-top:2px;" data-affiliate="foregate">⚡ ForeGate 0% fees →</a>
         </div>
       </div>
     `;
@@ -2740,8 +2748,9 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
       </tbody>
     </table>
     <div class="modal-footer">
-      <span class="modal-footer-note">See something you like? Copy this whale's bet on Polymarket.</span>
+      <span class="modal-footer-note">See something you like? Copy this whale's bet.</span>
       <a href="${AFFILIATE_URL}" target="_blank" rel="noopener" class="trade-btn" data-affiliate>Trade on Polymarket →</a>
+      <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" class="trade-btn" style="background:rgba(0,210,140,0.15);color:#00d28c;border:1px solid rgba(0,210,140,0.35);" data-affiliate="foregate">⚡ ForeGate — 0% fees →</a>
     </div>
   `;
 }
