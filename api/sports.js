@@ -98,7 +98,7 @@ export default async function handler(req, res) {
       for (const p of positions) {
         const title = p.title || p.market || '';
         if (!isSports(title)) continue;
-        const slug = p.conditionId || p.marketSlug || p.slug || '';
+        const slug = p.condition_id || p.conditionId || p.slug || p.marketSlug || p.slug || '';
         const key  = slug || title;
         if (!key) continue;
 
@@ -107,7 +107,7 @@ export default async function handler(req, res) {
         }
         // Skip resolved/redeemable positions — market has already settled
         if (p.redeemable === true) continue;
-        const value   = parseFloat(p.currentValue || p.value || 0);
+        const value   = parseFloat(p.current_value || p.value || 0);
         if (value <= 0) continue;
         const outcome = (p.outcome || '').toLowerCase() === 'yes' ? 'Yes' : 'No';
         marketMap[key].bets.push({ whale: whale.name, outcome, value });

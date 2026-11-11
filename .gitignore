@@ -9,3 +9,4 @@ twitter_cycle.json
 tweet_queue.json
 *.log
 .DS_Store
+.env*

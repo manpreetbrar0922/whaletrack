@@ -100,7 +100,7 @@ function reliabilityGrade(wr, trades) {
 async function fetchWhaleData() {
   let leaderboard = [];
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=20');
+    const r = await fetch('https://data-api.polymarket.com/v2/leaderboard?limit=20');
     if (r.ok) leaderboard = await r.json();
   } catch {}
 
@@ -108,13 +108,13 @@ async function fetchWhaleData() {
   const whales = [];
 
   for (const t of leaderboard.slice(0, 8)) {
-    const addr = (t.proxyWallet || '').toLowerCase();
+    const addr = (t.user_id || t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
-    const rawName = (t.userName || t.xUsername || '').replace(/ - \d{3,}$/, '').trim();
+    const rawName = (t.user_name || t.userName || t.x_username || t.xUsername || '').replace(/ - \d{3,}$/, '').trim();
     whales.push({
-      name:    KNOWN_NAMES[addr] || (rawName && !rawName.startsWith('0x') ? rawName : addrShort(t.proxyWallet)),
-      address: t.proxyWallet || addr,
+      name:    KNOWN_NAMES[addr] || (rawName && !rawName.startsWith('0x') ? rawName : addrShort(t.user_id || t.proxyWallet)),
+      address: t.user_id || t.proxyWallet || addr,
       pnl:     Math.round(parseFloat(t.pnl || 0)),
       rank:    t.rank || '—',
     });
@@ -123,13 +123,13 @@ async function fetchWhaleData() {
   // Fetch win rate + trades for each
   const stats = await Promise.all(whales.map(async w => {
     try {
-      const r = await fetch(`https://data-api.polymarket.com/v2/positions?user=${w.address}&limit=100&sortBy=CURRENT&sortDirection=DESC`);
+      const r = await fetch(`https://data-api.polymarket.com/v2/positions?user=${w.address}&limit=100&sortBy=current_value&sortDirection=DESC`);
       if (!r.ok) return { wr: '—', trades: 0 };
       const pos = await r.json();
       if (!Array.isArray(pos) || !pos.length) return { wr: '—', trades: 0 };
       const withInv = pos.filter(p => parseFloat(p.totalBought || 0) > 0);
       const won  = withInv.filter(p => p.redeemable === true).length;
-      const lost = withInv.filter(p => p.currentValue === 0 && p.redeemable === false).length;
+      const lost = withInv.filter(p => p.current_value === 0 && p.redeemable === false).length;
       const total = won + lost;
       return { wr: total >= 3 ? Math.round((won / total) * 100) : '—', trades: withInv.length };
     } catch { return { wr: '—', trades: 0 }; }
@@ -142,16 +142,16 @@ async function fetchWhaleData() {
 async function fetchTopActivity() {
   try {
     // Get top whales to query
-    const lb = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=10');
+    const lb = await fetch('https://data-api.polymarket.com/v2/leaderboard?limit=10');
     if (!lb.ok) return [];
     const leaderboard = await lb.json();
-    const addrs = leaderboard.slice(0, 8).map(t => t.proxyWallet).filter(Boolean);
+    const addrs = leaderboard.slice(0, 8).map(t => t.user_id || t.proxyWallet).filter(Boolean);
 
     const cutoff = Date.now() / 1000 - 86400; // last 24h
 
     const allTrades = (await Promise.all(addrs.map(async addr => {
       try {
-        const r = await fetch(`https://data-api.polymarket.com/activity?user=${addr}&limit=20`);
+        const r = await fetch(`https://data-api.polymarket.com/v2/activity?user=${addr}&limit=20`);
         if (!r.ok) return [];
         const data = await r.json();
         return (Array.isArray(data) ? data : [])
@@ -168,14 +168,14 @@ async function fetchTopActivity() {
 // ── Fetch market consensus (markets where 2+ whales agree) ───────────────────
 async function fetchConsensus() {
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=20');
+    const r = await fetch('https://data-api.polymarket.com/v2/leaderboard?limit=20');
     if (!r.ok) return [];
     const lb = await r.json();
     const top10 = lb.slice(0, 10);
 
     const marketMap = {};
     await Promise.all(top10.map(async t => {
-      const addr = t.proxyWallet || '';
+      const addr = t.user_id || t.proxyWallet || '';
       try {
         const r2 = await fetch(`https://data-api.polymarket.com/v2/positions?user=${addr}&sizeThreshold=5&limit=50`);
         if (!r2.ok) return;
@@ -183,12 +183,12 @@ async function fetchConsensus() {
         for (const p of (Array.isArray(pos) ? pos : [])) {
           const px = parseFloat(p.price || p.curPrice || 0);
           if (px < 0.03 || px > 0.97) continue;
-          if (parseFloat(p.currentValue || 0) < 500) continue;
-          const key = p.conditionId || p.title || '';
+          if (parseFloat(p.current_value || 0) < 500) continue;
+          const key = p.condition_id || p.conditionId || p.title || '';
           if (!key) continue;
           if (!marketMap[key]) marketMap[key] = { title: p.title || p.market || key, yes: 0, no: 0, total: 0 };
           const outcome = (p.outcome || '').toLowerCase();
-          const val = parseFloat(p.currentValue || 0);
+          const val = parseFloat(p.current_value || 0);
           if (outcome === 'yes') marketMap[key].yes += val;
           else                   marketMap[key].no  += val;
           marketMap[key].total += val;

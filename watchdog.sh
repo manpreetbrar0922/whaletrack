@@ -66,7 +66,7 @@ fi
 if ! pgrep -f "node.*bot/index.js" > /dev/null; then
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] ⚠️ Telegram bot DOWN — restarting..."
   bash /Users/manpreetbrar/whaletrack/start_telegram_bot.sh >> /Users/manpreetbrar/whaletrack/watchdog.log 2>&1
-  sleep 3
+  sleep 8
   if pgrep -f "node.*bot/index.js" > /dev/null; then
     send_alert "✅ WhaleTrack: Telegram bot restarted automatically"
     echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] ✅ Telegram bot restarted"

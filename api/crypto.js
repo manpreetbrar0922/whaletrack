@@ -82,16 +82,16 @@ export default async function handler(req, res) {
           const title = p.title || p.market || p.question || '';
           return isCrypto(title)
             && p.redeemable === false
-            && parseFloat(p.currentValue || 0) > 50;
+            && parseFloat(p.current_value || 0) > 50;
         })
         .map(p => ({
           whaleName: whale.name,
           whaleAddr: whale.address,
           title: p.title || p.market || p.question || 'Unknown',
           outcome: p.outcome || p.side || '?',
-          value: Math.round(parseFloat(p.currentValue || 0)),
-          slug: p.eventSlug || p.slug || p.conditionId || null,
-          conditionId: p.conditionId || null,
+          value: Math.round(parseFloat(p.current_value || 0)),
+          slug: p.event_slug || p.eventSlug || p.slug || p.condition_id || p.conditionId || null,
+          conditionId: p.condition_id || p.conditionId || null,
         }));
     } catch (e) { return []; }
   }));

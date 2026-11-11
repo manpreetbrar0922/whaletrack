@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   try {
     const r = await fetch(
-      `https://data-api.polymarket.com/v2/positions?user=${address}&sizeThreshold=.01&limit=50&sortBy=CURRENT&sortDirection=DESC`
+      `https://data-api.polymarket.com/v2/positions?user=${address}&sizeThreshold=.01&limit=50&sortBy=current_value&sortDirection=DESC`
     );
     if (!r.ok) {
       res.status(200).json([]);

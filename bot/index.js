@@ -161,53 +161,118 @@ function timeAgo(ts) {
 
 function addrShort(a) { return a ? a.slice(0, 6) + '…' + a.slice(-4) : ''; }
 
+// ── DEAD SLUG FILTER ─────────────────────────────────────────────────────────
+const DEAD_SLUGS_FILE = path.join(__dirname, '../dead_slugs.json');
+let deadSlugs = new Set();
+function loadDeadSlugs() {
+  try {
+    const list = JSON.parse(fs.readFileSync(DEAD_SLUGS_FILE, 'utf8'));
+    deadSlugs = new Set(Array.isArray(list) ? list : []);
+  } catch { deadSlugs = new Set(); }
+}
+loadDeadSlugs();
+setInterval(loadDeadSlugs, 10 * 60 * 1000); // reload every 10 min
+
+// Quick live check: returns false if the slug 404s on Polymarket's gamma API
+const slugCheckCache = new Map(); // cache results for 30 min
+async function isSlugLive(slug) {
+  if (!slug) return false;
+  if (deadSlugs.has(slug)) return false;
+  if (slugCheckCache.has(slug)) return slugCheckCache.get(slug);
+  try {
+    const data = await fetchJson(`https://gamma-api.polymarket.com/markets?slug=${encodeURIComponent(slug)}&limit=1`);
+    const markets = Array.isArray(data) ? data : (data?.markets || []);
+    const live = markets.length > 0 && markets[0].active !== false;
+    slugCheckCache.set(slug, live);
+    if (!live) deadSlugs.add(slug); // cache locally too
+    setTimeout(() => slugCheckCache.delete(slug), 30 * 60 * 1000);
+    return live;
+  } catch { return true; } // on error assume live (don't break alert)
+}
+
 function polymarketLink(slug) {
   const base = slug ? `https://polymarket.com/event/${slug}` : 'https://polymarket.com';
   return `${base}?via=${AFFILIATE_TAG}`;
 }
 
+// Safe link: returns null if slug is dead (caller shows no link or fallback)
+async function safePolymarketLink(slug) {
+  if (!slug) return null;
+  const live = await isSlugLive(slug);
+  return live ? polymarketLink(slug) : null;
+}
+
 // ── POLYMARKET API ───────────────────────────────────────────────────────────
+async function fetchWhaleStats(address) {
+  // Fetch individual user stats for whales not in the top-200 leaderboard
+  try {
+    const data = await fetchJson(`https://data-api.polymarket.com/v2/leaderboard?user=${address}`);
+    const d = data?.data || data;
+    if (!d || !d.user_id) return null;
+    // Use volume rank if PnL rank is too high to be meaningful (>500)
+    const rankPnl = d.rank_pnl || null;
+    const rankVol = d.rank_volume || null;
+    const rank = (rankPnl && rankPnl <= 500) ? rankPnl : (rankVol && rankVol <= 500 ? rankVol : null);
+    return {
+      pnl:    Math.round(parseFloat(d.pnl || 0)),
+      volume: parseFloat(d.volume || 0),
+      rank,
+    };
+  } catch { return null; }
+}
+
 async function fetchWhales() {
   try {
-    // Fetch top 200 so KNOWN_NAMES whales ranked outside top 15 still get stats
+    // API uses user_id (not proxyWallet), user_name (not userName), volume (not vol)
     const data = await fetchJson('https://data-api.polymarket.com/v2/leaderboard?limit=200');
     const lb   = Array.isArray(data) ? data : (data?.data || []);
     const seen = new Set();
     const whales = [];
 
-    // Build a lookup map for fast address → leaderboard entry matching
+    // Build a lookup map: user_id (wallet address) → leaderboard entry
     const lbMap = new Map();
     lb.forEach(t => {
-      if (t.proxyWallet) lbMap.set(t.proxyWallet.toLowerCase(), t);
+      if (t.user_id) lbMap.set(t.user_id.toLowerCase(), t);
     });
 
     // First: top 15 from leaderboard (dynamic whales)
     for (const t of lb.slice(0, 15)) {
-      const addr = (t.proxyWallet || '').toLowerCase();
+      const addr = (t.user_id || '').toLowerCase();
       if (!addr || seen.has(addr)) continue;
       seen.add(addr);
       whales.push({
-        name:    KNOWN_NAMES[addr] || t.userName || t.xUsername || addrShort(t.proxyWallet),
-        address: t.proxyWallet || '',
+        name:    KNOWN_NAMES[addr] || t.user_name || t.x_username || addrShort(t.user_id),
+        address: t.user_id || '',
         pnl:     Math.round(parseFloat(t.pnl || 0)),
-        volume:  parseFloat(t.vol || 0),
+        volume:  parseFloat(t.volume || 0),
         rank:    t.rank || '—',
       });
     }
 
-    // Then: all KNOWN_NAMES — look them up in the full lb map for real stats
-    for (const [addr, name] of Object.entries(KNOWN_NAMES)) {
-      if (seen.has(addr.toLowerCase())) continue;
+    // Then: all KNOWN_NAMES — look up in lbMap first, fall back to individual fetch
+    const knownEntries = Object.entries(KNOWN_NAMES).filter(([addr]) => !seen.has(addr.toLowerCase()));
+    const knownStats = await Promise.all(
+      knownEntries.map(async ([addr]) => {
+        const e = lbMap.get(addr.toLowerCase());
+        if (e) return { pnl: Math.round(parseFloat(e.pnl || 0)), volume: parseFloat(e.volume || 0), rank: e.rank || null };
+        // Not in top 200 — fetch individually
+        return await fetchWhaleStats(addr);
+      })
+    );
+
+    for (let i = 0; i < knownEntries.length; i++) {
+      const [addr, name] = knownEntries[i];
       seen.add(addr.toLowerCase());
-      const e = lbMap.get(addr.toLowerCase());
+      const s = knownStats[i];
       whales.push({
         name,
         address: addr,
-        pnl:     e ? Math.round(parseFloat(e.pnl || 0)) : null,
-        volume:  parseFloat(e?.vol || 0),
-        rank:    e?.rank || null,
+        pnl:     s?.pnl ?? null,
+        volume:  s?.volume || 0,
+        rank:    s?.rank || null,
       });
     }
+
     return whales;
   } catch (e) { return []; }
 }
@@ -372,7 +437,7 @@ function buildFreeAlert(t) {
   ].join('\n');
 }
 
-function buildPremiumAlert(t, whale, wr, sideInfo = null, opposingWhales = []) {
+function buildPremiumAlert(t, whale, wr, sideInfo = null, opposingWhales = [], liveLink = null) {
   const outcomeDisplay = t.outcome && t.outcome !== '—' ? t.outcome : 'Position';
   const outcomeEmoji = t.outcome === 'Yes' ? '🟢' : t.outcome === 'No' ? '🔴' : '⚪';
   const oppEmoji     = t.outcome === 'Yes' ? '🔴' : '🟢'; // opposite colour
@@ -383,7 +448,7 @@ function buildPremiumAlert(t, whale, wr, sideInfo = null, opposingWhales = []) {
   const safePnl      = (whale.pnl !== null && whale.pnl !== undefined && !isNaN(whale.pnl)) ? whale.pnl : null;
   const pnlSign      = (safePnl || 0) >= 0 ? '+' : '';
   const pnlStr       = safePnl !== null ? `${pnlSign}${fmtUSD(safePnl)}` : 'n/a';
-  const link         = polymarketLink(t.slug);
+  const link         = liveLink || polymarketLink(t.slug);
 
   const wrLine = wr.rate !== null && wr.total >= 3
     ? `• Win rate: <b>${wr.rate}%</b> (${wr.total} resolved trades)`
@@ -425,20 +490,22 @@ function buildPremiumAlert(t, whale, wr, sideInfo = null, opposingWhales = []) {
     `• Total P&amp;L: <b>${pnlStr}</b>`,
     wrLine,
     ``,
-    `🎯 <a href="${link}">Copy this bet on Polymarket →</a>`,
+    liveLink
+      ? `🎯 <a href="${liveLink}">Copy this bet on Polymarket →</a>`
+      : `🎯 <a href="https://polymarket.com?via=${AFFILIATE_TAG}">View on Polymarket →</a>`,
     `🔥 <a href="${FOREGATE_URL}">Also on ForeGate — zero trading fees →</a>`,
     ``,
   ].filter(line => line !== '').join('\n');
 }
 
 // ── WIN ALERT (whale redeemed / collected winnings after market resolved) ────
-function buildWinAlert(t, whale, wr) {
+function buildWinAlert(t, whale, wr, liveLink = null) {
   const rankValid = whale.rank && whale.rank !== 'null' && whale.rank !== '—' && !isNaN(Number(whale.rank));
   const rankStr   = rankValid ? `#${whale.rank} on Polymarket` : 'unranked';
   const safePnl   = (whale.pnl !== null && whale.pnl !== undefined && !isNaN(whale.pnl)) ? whale.pnl : null;
   const pnlSign   = (safePnl || 0) >= 0 ? '+' : '';
   const pnlStr    = safePnl !== null ? `${pnlSign}${fmtUSD(safePnl)}` : 'n/a';
-  const link      = polymarketLink(t.slug);
+  const link      = liveLink || polymarketLink(t.slug);
   const wrLine    = wr.rate !== null && wr.total >= 3
     ? `• Win rate: <b>${wr.rate}%</b> (${wr.total} resolved trades)`
     : `• Win rate: <b>tracking</b> (not enough resolved trades yet)`;
@@ -465,7 +532,7 @@ function buildWinAlert(t, whale, wr) {
 
 // ── EXIT / LOSS ALERT (whale manually sold position before resolution) ────────
 // isLoss = sold at very low price (< 15¢) → they're cutting a losing position
-function buildExitAlert(t, whale, wr, isLoss = false) {
+function buildExitAlert(t, whale, wr, isLoss = false, liveLink = null) {
   const outcomeEmoji   = t.outcome === 'Yes' ? '🟢' : t.outcome === 'No' ? '🔴' : '⚪';
   const outcomeDisplay = t.outcome && t.outcome !== '—' ? t.outcome : 'Position';
   const rankValid = whale.rank && whale.rank !== 'null' && whale.rank !== '—' && !isNaN(Number(whale.rank));
@@ -473,7 +540,7 @@ function buildExitAlert(t, whale, wr, isLoss = false) {
   const safePnl   = (whale.pnl !== null && whale.pnl !== undefined && !isNaN(whale.pnl)) ? whale.pnl : null;
   const pnlSign   = (safePnl || 0) >= 0 ? '+' : '';
   const pnlStr    = safePnl !== null ? `${pnlSign}${fmtUSD(safePnl)}` : 'n/a';
-  const link      = polymarketLink(t.slug);
+  const link      = liveLink || polymarketLink(t.slug);
   const wrLine    = wr.rate !== null && wr.total >= 3
     ? `• Win rate: <b>${wr.rate}%</b> (${wr.total} resolved trades)`
     : `• Win rate: <b>tracking</b> (not enough resolved trades yet)`;
@@ -562,12 +629,13 @@ async function checkTradeAlerts() {
       if (!whale) continue;
 
       if (PREMIUM_CHANNEL_ID || premiumSubs.length) {
-        const [wr, sideInfo] = await Promise.all([
+        const [wr, sideInfo, liveLink] = await Promise.all([
           fetchWinRate(t.address),
           getMarketSideInfo(t.address, t.slug, t.outcome),
+          safePolymarketLink(t.slug),
         ]);
         const opposingWhales = findOpposingWhales(activity, t);
-        const premiumMsg = buildPremiumAlert(t, whale, wr, sideInfo, opposingWhales);
+        const premiumMsg = buildPremiumAlert(t, whale, wr, sideInfo, opposingWhales, liveLink);
         if (PREMIUM_CHANNEL_ID) send(PREMIUM_CHANNEL_ID, premiumMsg, { disable_web_page_preview: false }).catch(() => {});
         for (const chatId of premiumSubs) send(chatId, premiumMsg, { disable_web_page_preview: false }).catch(() => {});
       }
@@ -595,8 +663,8 @@ async function checkTradeAlerts() {
       const whale = cachedWhales.find(w => w.address.toLowerCase() === t.address.toLowerCase());
       if (!whale) continue;
 
-      const wr = await fetchWinRate(t.address);
-      const winMsg = buildWinAlert(t, whale, wr);
+      const [wr, liveLink] = await Promise.all([fetchWinRate(t.address), safePolymarketLink(t.slug)]);
+      const winMsg = buildWinAlert(t, whale, wr, liveLink);
       if (PREMIUM_CHANNEL_ID) send(PREMIUM_CHANNEL_ID, winMsg).catch(() => {});
       for (const chatId of premiumSubs) send(chatId, winMsg).catch(() => {});
     }
@@ -618,8 +686,8 @@ async function checkTradeAlerts() {
       const whale = cachedWhales.find(w => w.address.toLowerCase() === t.address.toLowerCase());
       if (!whale) continue;
 
-      const wr = await fetchWinRate(t.address);
-      const exitMsg = buildExitAlert(t, whale, wr, isLoss);
+      const [wr, liveLink] = await Promise.all([fetchWinRate(t.address), safePolymarketLink(t.slug)]);
+      const exitMsg = buildExitAlert(t, whale, wr, isLoss, liveLink);
       if (PREMIUM_CHANNEL_ID) send(PREMIUM_CHANNEL_ID, exitMsg).catch(() => {});
       for (const chatId of premiumSubs) send(chatId, exitMsg).catch(() => {});
     }

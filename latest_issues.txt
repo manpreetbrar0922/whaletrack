@@ -1,0 +1,21 @@
+=== ISSUES FOUND Tue Nov 10 20:00:06 CST 2026 ===
+  ❌ Polymarket leaderboard API unreachable
+  ⚠️  2 issue(s) found — review above.
+  ❌ /api/activity returned 0 trades
+  ❌ Polymarket leaderboard API unreachable
+  ⚠️  2 issue(s) found — review above.
+  ❌ /api/activity returned 0 trades
+  ❌ Polymarket leaderboard API unreachable
+  ⚠️  2 issue(s) found — review above.
+  ❌ /api/activity returned 0 trades
+  ❌ Polymarket leaderboard API unreachable
+  ⚠️  2 issue(s) found — review above.
+  ❌ /api/activity returned 0 trades
+  ❌ Polymarket leaderboard API unreachable
+  ⚠️  2 issue(s) found — review above.
+  ❌ /api/activity returned 0 trades
+  ❌ Polymarket leaderboard API unreachable
+  ⚠️  2 issue(s) found — review above.
+  ❌ /api/activity returned 0 trades
+  ❌ Polymarket leaderboard API unreachable
+  ⚠️  2 issue(s) found — review above.
