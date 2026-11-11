@@ -10,3 +10,9 @@ tweet_queue.json
 *.log
 .DS_Store
 .env*
+
+# Generated output files
+video_output/
+*.mp3
+*.mp4
+latest_issues.txt
