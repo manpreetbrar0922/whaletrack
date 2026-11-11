@@ -351,10 +351,18 @@ async function refreshData() {
     body.innerHTML = '<div class="lb-skeleton"></div><div class="lb-skeleton"></div><div class="lb-skeleton"></div><div class="lb-skeleton"></div><div class="lb-skeleton"></div>';
   }
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
-    const data = await r.json();
+    const r = await fetch('https://data-api.polymarket.com/v2/leaderboard?limit=50');
+    const json = await r.json();
+    const data = json.data || json;
     if (!Array.isArray(data) || !data.length) throw new Error('empty');
-    allData = data;
+    // Normalize v2 field names to match rendering code
+    allData = data.map(t => ({
+      ...t,
+      proxyWallet: (t.user_id || t.proxyWallet || '').toLowerCase(),
+      userName: t.user_name || t.userName || '',
+      pnl: t.pnl || 0,
+      vol: t.volume || t.vol || 0,
+    }));
     lastFetch = Date.now();
     showCount = 20;
     renderRows();

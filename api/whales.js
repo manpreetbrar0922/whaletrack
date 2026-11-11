@@ -21,68 +21,69 @@ export default async function handler(req, res) {
   async function fetchWalletStats(address) {
     try {
       const r = await fetch(
-        `https://data-api.polymarket.com/positions?user=${address}&limit=100&sortBy=CURRENT&sortDirection=DESC`
+        `https://data-api.polymarket.com/v2/positions?user=${address}&limit=500&sizeThreshold=0&sortBy=current_value&sortDirection=DESC`
       );
       if (!r.ok) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null };
-      const positions = await r.json();
-      if (!Array.isArray(positions) || !positions.length) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null, inactive: true };
+      const body = await r.json();
+      const positions = Array.isArray(body) ? body : (body.data || []);
+      if (!positions.length) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null, inactive: true };
 
-      // Skip wallets whose most recent position has an endDate before 2024 — these are
+      // Skip wallets whose most recent position has an end_date before 2024 — these are
       // ancient/inactive traders (e.g. 2021 Polymarket era) not worth showing to users
       const mostRecent = positions[0];
-      const endDate = mostRecent?.endDate || '';
+      const endDate = mostRecent?.end_date || '';
       const endYear = endDate ? parseInt(endDate.slice(0, 4)) : 9999;
       if (endYear < 2024) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null, inactive: true };
 
-      // Won = redeemable (market resolved in their favour, shares worth $1)
-      // Lost = currentValue=0 AND not redeemable (market resolved against them)
-      const withInvestment = positions.filter(p => parseFloat(p.totalBought || 0) > 0);
-      const won  = withInvestment.filter(p => p.redeemable === true).length;
-      const lost = withInvestment.filter(p => p.currentValue === 0 && p.redeemable === false).length;
+      // Won = redeemable AND current_value > 0 (in v2, lost positions also have redeemable:true but value=0)
+      // Lost = current_value=0 (market resolved against them, worth nothing)
+      const withInvestment = positions.filter(p => parseFloat(p.entry_cost_usdc || p.total_cost_usdc || 0) > 0);
+      const won  = withInvestment.filter(p => p.redeemable === true && parseFloat(p.current_value || 0) > 0).length;
+      const lost = withInvestment.filter(p => parseFloat(p.current_value || 0) === 0 && parseFloat(p.current_price || 0) === 0).length;
       const total = won + lost;
 
       const winRate = total >= 3 ? Math.round((won / total) * 100) : '—';
 
-      // Top open bet = biggest currentValue position that's still active
+      // Top open bet = biggest current_value position that's still active
       // Price filter (0.03–0.97) excludes resolved markets: lost positions sit at ~0¢,
       // won/redeemable sit at ~100¢ — only truly open markets land in this range
       const open = positions.filter(p => {
         if (p.redeemable !== false) return false;
-        if (parseFloat(p.currentValue || 0) <= 1) return false;
-        const px = parseFloat(p.price || p.curPrice || p.currentPrice || 0);
+        if (parseFloat(p.current_value || 0) <= 1) return false;
+        const px = parseFloat(p.current_price || 0);
         return px > 0.03 && px < 0.97;
       });
       let topBet = null;
       if (open.length) {
-        const top = open[0]; // already sorted by CURRENT DESC
+        const top = open[0]; // already sorted by current_value DESC
         topBet = {
-          title:   top.title || top.market || top.question || null,
-          outcome: top.outcome || top.side || null,
-          value:   Math.round(parseFloat(top.currentValue || 0)),
-          // eventSlug works on polymarket.com/event/ — market-level slug gives 404
-          slug:    top.eventSlug || top.slug || top.conditionId || null,
-          price:   parseFloat(top.price || top.curPrice || top.currentPrice || 0),
+          title:   top.title || null,
+          outcome: top.outcome || null,
+          value:   Math.round(parseFloat(top.current_value || 0)),
+          // event_slug works on polymarket.com/event/ — market-level slug gives 404
+          slug:    top.event_slug || top.slug || top.condition_id || null,
+          price:   parseFloat(top.current_price || 0),
         };
       }
 
-      // True P&L: sum profit from redeemable (won) positions not yet cashed out
+      // True P&L: sum profit from won positions not yet cashed out (value > 0)
       const pendingRedeems = Math.round(
         withInvestment
-          .filter(p => p.redeemable === true)
+          .filter(p => p.redeemable === true && parseFloat(p.current_value || 0) > 0)
           .reduce((sum, p) => {
-            const val  = parseFloat(p.currentValue || p.cashPayout || 0);
-            const cost = parseFloat(p.totalBought || 0);
+            const val  = parseFloat(p.current_value || 0);
+            const cost = parseFloat(p.entry_cost_usdc || p.total_cost_usdc || 0);
             return sum + Math.max(0, val - cost);
           }, 0)
       );
 
       // Realized % = won (locked-in) value vs open (still riding) value
       const realizedValue = withInvestment
-        .filter(p => p.redeemable === true)
-        .reduce((sum, p) => sum + parseFloat(p.currentValue || p.cashPayout || 0), 0);
+        .filter(p => p.redeemable === true && parseFloat(p.current_value || 0) > 0)
+        .reduce((sum, p) => sum + parseFloat(p.current_value || 0), 0);
       const openValue = withInvestment
-        .filter(p => p.redeemable === false && parseFloat(p.currentValue || 0) > 1)
-        .reduce((sum, p) => sum + parseFloat(p.currentValue || 0), 0);
+        .filter(p => p.redeemable === false && parseFloat(p.current_value || 0) > 1)
+        .reduce((sum, p) => sum + parseFloat(p.current_value || 0), 0);
       const totalValue = realizedValue + openValue;
       const realizedPct = totalValue > 0 ? Math.round((realizedValue / totalValue) * 100) : null;
 
@@ -94,9 +95,10 @@ export default async function handler(req, res) {
 
   let leaderboard = [];
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
+    const r = await fetch('https://data-api.polymarket.com/v2/leaderboard?limit=50');
     if (r.ok) {
-      leaderboard = await r.json();
+      const body = await r.json();
+      leaderboard = Array.isArray(body) ? body : (body.data || []);
     }
   } catch (e) {}
 
@@ -105,20 +107,20 @@ export default async function handler(req, res) {
 
   // Top leaderboard traders
   for (const t of leaderboard.slice(0, 30)) {
-    const addr = (t.proxyWallet || '').toLowerCase();
+    const addr = (t.user_id || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
-    const rawName = (t.userName || t.xUsername || '').replace(/ - \d{3,}$/, '').trim();
+    const rawName = (t.user_name || t.x_username || '').replace(/ - \d{3,}$/, '').trim();
     // Reject hex addresses / conditionIds used as display names
     const cleanName = (rawName && !/^0x[0-9a-fA-F]{8}/i.test(rawName) && rawName.length <= 42) ? rawName : null;
     const displayName = knownNames[addr]
       || cleanName
-      || addrShort(t.proxyWallet);
+      || addrShort(t.user_id);
     whaleBase.push({
       name:    displayName,
-      address: t.proxyWallet || '',
+      address: t.user_id || '',
       pnl:     Math.round(parseFloat(t.pnl || 0)),
-      volume:  parseFloat(t.vol || 0),
+      volume:  parseFloat(t.volume || 0),
       rank:    t.rank || '—',
     });
   }
@@ -127,13 +129,13 @@ export default async function handler(req, res) {
   for (const [addr, name] of Object.entries(knownNames)) {
     if (seen.has(addr.toLowerCase())) continue;
     const e = leaderboard.find(t =>
-      (t.proxyWallet || '').toLowerCase() === addr.toLowerCase()
+      (t.user_id || '').toLowerCase() === addr.toLowerCase()
     );
     whaleBase.push({
       name,
       address: addr,
       pnl:     e ? Math.round(parseFloat(e.pnl || 0)) : null,  // null = not on leaderboard, show — not $0
-      volume:  parseFloat(e?.vol || 0),
+      volume:  parseFloat(e?.volume || 0),
       rank:    e?.rank || '—',
     });
   }

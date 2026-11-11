@@ -963,7 +963,7 @@
     <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">↻ Refresh</button>
     <button class="wt-connect-btn" id="wtConnectBtn" onclick="openConnectModal()" title="Connect your Polymarket wallet to copy whale bets">🔌 Connect</button>
     <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-trade-btn" data-affiliate>Trade →</a>
-    <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" class="nav-trade-btn" style="background:rgba(0,210,140,0.12);color:#00d28c;border:1px solid rgba(0,210,140,0.3);" data-affiliate="foregate" title="ForeGate — zero trading fees">ForeGate →</a>
+    <a href="https://www.foregate.com/en/event/88880004?market=cycle&refCode=HCNO2vT" target="_blank" rel="noopener sponsored" class="nav-trade-btn" style="background:rgba(0,210,140,0.12);color:#00d28c;border:1px solid rgba(0,210,140,0.3);" data-affiliate="foregate" title="ForeGate — zero trading fees">ForeGate 0% — Ends Nov 15 →</a>
   </div>
 </nav>
 
@@ -972,7 +972,7 @@
   <span style="font-size:13px;color:#8b949e;">👋 <strong style="color:#e6edf3;">New to prediction markets?</strong> Copy your first whale bet in 2 minutes — free on Polymarket or zero-fee on ForeGate.</span>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
     <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="background:#58a6ff;color:#fff;font-size:12px;font-weight:700;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;" data-affiliate>Polymarket Free →</a>
-    <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" style="background:#00d28c;color:#0d1117;font-size:12px;font-weight:700;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;" data-affiliate="foregate">ForeGate 0% Fees →</a>
+    <a href="https://www.foregate.com/en/event/88880004?market=cycle&refCode=HCNO2vT" target="_blank" rel="noopener sponsored" style="background:#00d28c;color:#0d1117;font-size:12px;font-weight:700;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;" data-affiliate="foregate">⚡ ForeGate 0% Fees — Ends Nov 15 →</a>
     <button onclick="document.getElementById('newUserBanner').style.display='none';localStorage.setItem('wt_nb','1')" style="background:none;border:none;color:#8b949e;font-size:18px;cursor:pointer;line-height:1;padding:0 4px;">×</button>
   </div>
 </div>
@@ -1162,7 +1162,7 @@
         <div style="padding-top:14px;border-top:1px solid #21262d;text-align:center;font-size:12px;color:#484f58">
           Need MetaMask? <a href="https://metamask.io" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none">Download here →</a>
           &nbsp;·&nbsp; No Polymarket account? <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#58a6ff;text-decoration:none" data-affiliate>Sign up free →</a>
-          &nbsp;·&nbsp; Prefer zero fees? <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" style="color:#00d28c;text-decoration:none" data-affiliate="foregate">Try ForeGate →</a>
+          &nbsp;·&nbsp; Prefer zero fees? <a href="https://www.foregate.com/en/event/88880004?market=cycle&refCode=HCNO2vT" target="_blank" rel="noopener sponsored" style="color:#00d28c;text-decoration:none" data-affiliate="foregate">Try ForeGate — 0% until Nov 15 →</a>
           <div style="margin-top:10px;padding-top:10px;border-top:1px solid #21262d">
             <a id="wtDirectPolyLink" href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="color:#8b949e;text-decoration:none;font-size:11px" data-affiliate>
               Skip — place bet directly on Polymarket →
@@ -1548,9 +1548,10 @@
     out.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text2);">Fetching ' + whaleName + '\'s trade history…</div>';
 
     try {
-      var res = await fetch('https://data-api.polymarket.com/activity?user=' + addr + '&limit=200', { headers: { 'Accept': 'application/json' } });
+      var res = await fetch('https://data-api.polymarket.com/v2/activity?user=' + addr + '&limit=200', { headers: { 'Accept': 'application/json' } });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      var trades = await res.json();
+      var json = await res.json();
+      var trades = Array.isArray(json) ? json : (json.data || []);
 
       if (!Array.isArray(trades) || trades.length === 0) {
         out.innerHTML = '<div style="color:var(--red);padding:16px;background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.2);border-radius:10px;text-align:center;">⚠️ No trade data found for this whale.</div>';
@@ -1661,17 +1662,13 @@
          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
         🎯 Polymarket →
       </a>
-      <a href="https://accounts.binance.com/register?ref=BINANCE_REF_CODE" target="_blank" rel="noopener sponsored" data-exchange="binance"
-         style="display:inline-block;background:rgba(247,147,26,0.15);border:1px solid rgba(247,147,26,0.3);color:#f7931a;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none;transition:opacity 0.2s;"
+      <a href="https://www.foregate.com/en/event/88880004?market=cycle&refCode=HCNO2vT" target="_blank" rel="noopener sponsored" data-affiliate="foregate"
+         style="display:inline-block;background:rgba(0,210,140,0.12);border:1px solid rgba(0,210,140,0.3);color:#00d28c;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none;transition:opacity 0.2s;"
          onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
-        🟡 Binance →
-      </a>
-      <a href="https://www.okx.com/join/OKXCODE" target="_blank" rel="noopener sponsored" data-exchange="okx"
-         style="display:inline-block;background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.25);color:#58a6ff;font-size:13px;font-weight:700;padding:9px 20px;border-radius:8px;text-decoration:none;transition:opacity 0.2s;"
-         onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
-        🔵 OKX →
+        ⚡ ForeGate — 0% Fees (Ends Nov 15) →
       </a>
     </div>
+    <p style="margin-top:14px;font-size:11px;color:var(--text2);">* Affiliate links — we earn a small commission at no extra cost to you. This helps keep WhaleTrack free.</p>
   </div>
 </footer>
 
@@ -1833,14 +1830,14 @@ function addrShort(addr) { return addr ? addr.slice(0,6) + '…' + addr.slice(-4
 
 // Whale profile page mapping
 const WHALE_PROFILES = {
-  'somalianking': '/whale-somalianking',
-  'somalianKing': '/whale-somalianking',
-  'bettguy':      '/whale-bettguy',
-  'candlehammerdrums': '/whale-candlehammerdrums',
-  'CandleHammerDrums': '/whale-candlehammerdrums',
-  'coldsway':     '/whale-coldsway',
-  'deeddit':      '/whale-deeddit',
-  'DEEDDIT':      '/whale-deeddit',
+  'somalianking': '/whale/somalianking',
+  'somalianKing': '/whale/somalianking',
+  'bettguy':      '/whale/bettguy',
+  'candlehammerdrums': '/whale/candlehammerdrums',
+  'CandleHammerDrums': '/whale/candlehammerdrums',
+  'coldsway':     '/whale/coldsway',
+  'deeddit':      '/whale/deeddit',
+  'DEEDDIT':      '/whale/deeddit',
 };
 function whaleProfileUrl(name) {
   if (!name) return null;
@@ -2018,8 +2015,8 @@ function renderLiveFeed(activity) {
             data-price="${t.price}"
             data-title="${(t.title||'').replace(/"/g,'&quot;')}"
             onclick="openTradeModal(this.dataset)">🎯 Copy This Bet →</button>
-          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#3fb950;text-decoration:none;text-align:center;display:block;margin-top:5px;font-weight:600;" data-affiliate>✨ New? Polymarket free →</a>
-          <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" style="font-size:10px;color:#00d28c;text-decoration:none;text-align:center;display:block;margin-top:2px;font-weight:600;" data-affiliate="foregate">⚡ ForeGate — zero fees →</a>
+          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#3fb950;text-decoration:none;text-align:center;display:block;margin-top:5px;font-weight:600;" data-affiliate>✨ Trade on Polymarket →</a>
+          <a href="https://www.foregate.com/en/event/88880004?market=cycle&refCode=HCNO2vT" target="_blank" rel="noopener sponsored" style="font-size:10px;color:#00d28c;text-decoration:none;text-align:center;display:block;margin-top:2px;font-weight:400;" data-affiliate="foregate">or 0% fees on ForeGate* (ends Nov 15) →</a>
         </div>
       </div>
     `;
@@ -2256,8 +2253,8 @@ function renderActivity(items) {
             data-price="${t.price || 0}"
             data-title="${(t.title || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"
             onclick="openTradeModal(this.dataset)">Copy Bet →</button>
-          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#484f58;text-decoration:none;text-align:right;display:block;" data-affiliate>No account? Polymarket →</a>
-          <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" style="font-size:10px;color:#00d28c;text-decoration:none;text-align:right;display:block;margin-top:2px;" data-affiliate="foregate">⚡ ForeGate 0% fees →</a>
+          <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" style="font-size:10px;color:#484f58;text-decoration:none;text-align:right;display:block;" data-affiliate>Trade on Polymarket →</a>
+          <a href="https://www.foregate.com/en/event/88880004?market=cycle&refCode=HCNO2vT" target="_blank" rel="noopener sponsored" style="font-size:10px;color:#00d28c;text-decoration:none;text-align:right;display:block;margin-top:2px;font-weight:400;" data-affiliate="foregate">or 0% fees on ForeGate* (ends Nov 15) →</a>
         </div>
       </div>
     `;
@@ -2296,7 +2293,7 @@ function renderWhales(whales) {
     const trades = w.trades !== '—' ? (w.trades || 0) : 0;
     let reliGrade, reliColor, reliBg, reliDesc;
     if (wr === '—' || trades < 5) {
-      reliGrade = 'NEW'; reliColor = 'var(--text2)'; reliBg = 'var(--bg3)'; reliDesc = 'Too few trades to score';
+      reliGrade = trades > 0 ? 'NEW' : '—'; reliColor = 'var(--text2)'; reliBg = 'var(--bg3)'; reliDesc = trades > 0 ? 'Too few trades to score' : 'Loading...';
     } else if (wr >= 70 && trades >= 20) {
       reliGrade = 'A+'; reliColor = '#00ff88'; reliBg = 'rgba(0,255,136,0.15)'; reliDesc = 'Elite — highly reliable';
     } else if (wr >= 65 && trades >= 10) {
@@ -2748,7 +2745,7 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
     <div class="modal-footer">
       <span class="modal-footer-note">See something you like? Copy this whale's bet.</span>
       <a href="${AFFILIATE_URL}" target="_blank" rel="noopener" class="trade-btn" data-affiliate>Trade on Polymarket →</a>
-      <a href="https://go.foregate.com/HCNO2vT" target="_blank" rel="noopener sponsored" class="trade-btn" style="background:rgba(0,210,140,0.15);color:#00d28c;border:1px solid rgba(0,210,140,0.35);" data-affiliate="foregate">⚡ ForeGate — 0% fees →</a>
+      <a href="https://www.foregate.com/en/event/88880004?market=cycle&refCode=HCNO2vT" target="_blank" rel="noopener sponsored" style="font-size:11px;color:#00d28c;text-decoration:none;font-weight:400;" data-affiliate="foregate">or 0% fees on ForeGate* (ends Nov 15) →</a>
     </div>
   `;
 }

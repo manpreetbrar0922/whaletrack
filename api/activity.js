@@ -15,15 +15,16 @@ export default async function handler(req, res) {
 
   try {
     // Get top whale addresses from leaderboard
-    const lbRes = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
-    const leaderboard = lbRes.ok ? await lbRes.json() : [];
+    const lbRes = await fetch('https://data-api.polymarket.com/v2/leaderboard?limit=50');
+    const lbJson = lbRes.ok ? await lbRes.json() : {};
+    const leaderboard = Array.isArray(lbJson) ? lbJson : (lbJson.data || []);
 
     const addresses = [];
     const seen = new Set();
 
-    for (const t of (Array.isArray(leaderboard) ? leaderboard : []).slice(0, 30)) {
-      const addr = (t.proxyWallet || '').toLowerCase();
-      if (addr && !seen.has(addr)) { seen.add(addr); addresses.push(t.proxyWallet); }
+    for (const t of leaderboard.slice(0, 30)) {
+      const addr = (t.user_id || t.proxyWallet || '').toLowerCase();
+      if (addr && !seen.has(addr)) { seen.add(addr); addresses.push(t.user_id || t.proxyWallet); }
     }
     for (const addr of Object.keys(KNOWN_NAMES)) {
       if (!seen.has(addr.toLowerCase())) { seen.add(addr.toLowerCase()); addresses.push(addr); }
@@ -32,8 +33,9 @@ export default async function handler(req, res) {
     // Fetch recent activity for each whale in parallel
     const results = await Promise.allSettled(
       addresses.map(addr =>
-        fetch(`https://data-api.polymarket.com/activity?user=${addr}&limit=20`)
-          .then(r => r.ok ? r.json() : [])
+        fetch(`https://data-api.polymarket.com/v2/activity?user=${addr}&limit=20`)
+          .then(r => r.ok ? r.json() : {})
+          .then(j => Array.isArray(j) ? j : (j.data || []))
           .catch(() => [])
       )
     );
@@ -43,11 +45,13 @@ export default async function handler(req, res) {
     for (const r of results) {
       if (r.status !== 'fulfilled') continue;
       for (const t of (Array.isArray(r.value) ? r.value : [])) {
-        const addr = (t.proxyWallet || '').toLowerCase();
-        // Derive outcome if missing: outcomeIndex 0 = Yes, 1 = No for binary markets
+        // v2 API uses snake_case; fall back to camelCase for forward compat
+        const addr = (t.proxy_wallet || t.proxyWallet || '').toLowerCase();
+        // Derive outcome if missing: outcome_index 0 = Yes, 1 = No for binary markets
         let outcome = t.outcome || '';
-        if (!outcome && t.outcomeIndex !== undefined && t.outcomeIndex !== null) {
-          outcome = t.outcomeIndex === 0 ? 'Yes' : t.outcomeIndex === 1 ? 'No' : '';
+        const outcomeIndex = t.outcome_index ?? t.outcomeIndex;
+        if (!outcome && outcomeIndex !== undefined && outcomeIndex !== null) {
+          outcome = outcomeIndex === 0 ? 'Yes' : outcomeIndex === 1 ? 'No' : '';
         }
         if (!outcome) outcome = '—';
 
@@ -55,14 +59,14 @@ export default async function handler(req, res) {
         const safeName = (rawName && !/^0x[0-9a-fA-F]{8}/i.test(rawName) && rawName.length <= 42) ? rawName : null;
         all.push({
           whale:     KNOWN_NAMES[addr] || safeName || addr.slice(0,6) + '…' + addr.slice(-4),
-          address:   t.proxyWallet || '',
+          address:   t.proxy_wallet || t.proxyWallet || '',
           side:      t.side || 'BUY',
           outcome,
-          usdcSize:  Math.round(parseFloat(t.usdcSize || 0)),
+          usdcSize:  Math.round(parseFloat(t.usdc_size || t.usdcSize || 0)),
           size:      parseFloat(t.size || 0),
           price:     parseFloat(t.price || 0),
           title:     t.title || 'Unknown Market',
-          slug:      t.eventSlug || t.slug || '',  // eventSlug works on polymarket.com/event/, market slug gives 404
+          slug:      t.event_slug || t.eventSlug || t.slug || '',
           timestamp: t.timestamp || 0,
         });
       }
