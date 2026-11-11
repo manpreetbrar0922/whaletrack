@@ -30,19 +30,19 @@ export default async function handler(req, res) {
   // Build whale list
   let leaderboard = [];
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
-    if (r.ok) leaderboard = await r.json();
+    const r = await fetch('https://data-api.polymarket.com/v2/leaderboard?limit=50');
+    if (r.ok) { const j = await r.json(); leaderboard = Array.isArray(j) ? j : (j.data || []); }
   } catch (e) {}
 
   const seen = new Set();
   const whales = [];
 
   for (const t of (Array.isArray(leaderboard) ? leaderboard : []).slice(0, 50)) {
-    const addr = (t.proxyWallet || '').toLowerCase();
+    const addr = (t.user_id || t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
     whales.push({
-      address: t.proxyWallet || addr,
+      address: t.user_id || t.proxyWallet || addr,
       name: KNOWN_NAMES[addr] || sanitizeName(t.userName) || sanitizeName(t.xUsername) || addrShort(t.proxyWallet),
     });
   }
@@ -60,9 +60,9 @@ export default async function handler(req, res) {
   // Fetch recent activity for all whales in parallel
   const results = await Promise.allSettled(
     whales.map(whale =>
-      fetch(`https://data-api.polymarket.com/activity?user=${whale.address}&limit=50`)
-        .then(r => r.ok ? r.json() : [])
-        .then(trades => (Array.isArray(trades) ? trades : []).map(t => ({ ...t, _whale: whale })))
+      fetch(`https://data-api.polymarket.com/v2/activity?user=${whale.address}&limit=50`)
+        .then(r => r.ok ? r.json() : {})
+        .then(j => (Array.isArray(j) ? j : (j.data || [])).map(t => ({ ...t, _whale: whale })))
         .catch(() => [])
     )
   );
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
         outcome = t.outcomeIndex === 0 ? 'Yes' : t.outcomeIndex === 1 ? 'No' : '';
       }
 
-      const addr = (t.proxyWallet || '').toLowerCase();
+      const addr = (t.user_id || t.proxyWallet || '').toLowerCase();
       all.push({
         id:        `${t._whale.name}-${ts}-${Math.round(size)}`,
         whaleName: t._whale.name,
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
       if (!t.title || t.title === 'Unknown Market') continue;
       if ((t.price || 0) <= 0) continue;
 
-      const addr = (t.proxyWallet || '').toLowerCase();
+      const addr = (t.user_id || t.proxyWallet || '').toLowerCase();
       // Skip if already covered by whale tracking
       if (seen.has(addr)) continue;
 

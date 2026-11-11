@@ -123,7 +123,7 @@ async function fetchWhaleData() {
   // Fetch win rate + trades for each
   const stats = await Promise.all(whales.map(async w => {
     try {
-      const r = await fetch(`https://data-api.polymarket.com/positions?user=${w.address}&limit=100&sortBy=CURRENT&sortDirection=DESC`);
+      const r = await fetch(`https://data-api.polymarket.com/v2/positions?user=${w.address}&limit=100&sortBy=CURRENT&sortDirection=DESC`);
       if (!r.ok) return { wr: '—', trades: 0 };
       const pos = await r.json();
       if (!Array.isArray(pos) || !pos.length) return { wr: '—', trades: 0 };
@@ -177,7 +177,7 @@ async function fetchConsensus() {
     await Promise.all(top10.map(async t => {
       const addr = t.proxyWallet || '';
       try {
-        const r2 = await fetch(`https://data-api.polymarket.com/positions?user=${addr}&sizeThreshold=5&limit=50`);
+        const r2 = await fetch(`https://data-api.polymarket.com/v2/positions?user=${addr}&sizeThreshold=5&limit=50`);
         if (!r2.ok) return;
         const pos = await r2.json();
         for (const p of (Array.isArray(pos) ? pos : [])) {

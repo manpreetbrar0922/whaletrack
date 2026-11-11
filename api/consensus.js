@@ -24,19 +24,19 @@ export default async function handler(req, res) {
   // Build whale list
   let leaderboard = [];
   try {
-    const r = await fetch('https://data-api.polymarket.com/v1/leaderboard?limit=50');
-    if (r.ok) leaderboard = await r.json();
+    const r = await fetch('https://data-api.polymarket.com/v2/leaderboard?limit=50');
+    if (r.ok) { const j = await r.json(); leaderboard = Array.isArray(j) ? j : (j.data || []); }
   } catch (e) {}
 
   const seen = new Set();
   const whales = [];
 
   for (const t of leaderboard.slice(0, 30)) {
-    const addr = (t.proxyWallet || '').toLowerCase();
+    const addr = (t.user_id || t.proxyWallet || '').toLowerCase();
     if (!addr || seen.has(addr)) continue;
     seen.add(addr);
     whales.push({
-      address: t.proxyWallet || addr,
+      address: t.user_id || t.proxyWallet || addr,
       name: knownNames[addr] || sanitizeName(t.userName) || sanitizeName(t.xUsername) || addrShort(t.proxyWallet),
     });
   }
@@ -50,11 +50,12 @@ export default async function handler(req, res) {
   const allResults = await Promise.all(whales.map(async whale => {
     try {
       const r = await fetch(
-        `https://data-api.polymarket.com/positions?user=${whale.address}&limit=50&sortBy=CURRENT&sortDirection=DESC`
+        `https://data-api.polymarket.com/v2/positions?user=${whale.address}&limit=50&sortBy=CURRENT&sortDirection=DESC`
       );
       if (!r.ok) return [];
-      const positions = await r.json();
-      if (!Array.isArray(positions)) return [];
+      const body = await r.json();
+      const positions = Array.isArray(body) ? body : (body.data || []);
+      if (!positions.length) return [];
 
       return positions
         .filter(p => p.redeemable === false && parseFloat(p.currentValue || 0) > 100)
