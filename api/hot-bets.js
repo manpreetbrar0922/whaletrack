@@ -2,7 +2,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('Cache-Control', 's-maxage=15, stale-while-revalidate=30');
 
   const MIN_SIZE_USD = 2000;  // $2K minimum bet to show
   const MAX_AGE_SEC  = 24 * 3600; // last 24 hours

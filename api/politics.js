@@ -2,7 +2,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
 
   // Safe substring matches (won't produce false positives)
   const POLITICS_PARTIAL = [

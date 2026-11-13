@@ -2,7 +2,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
 
   const CL_TERMS = [
     'champions league', 'ucl', 'cl winner', 'cl 2026', 'cl 2027',

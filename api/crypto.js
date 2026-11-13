@@ -2,7 +2,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
 
   // Terms that need whole-word matching (avoid false positives like eth→Ethiopia, sol→dissolution)
   const CRYPTO_EXACT = ['btc', 'eth', 'sol', 'xrp', 'ada', 'bnb', 'doge', 'avax', 'matic', 'link', 'nft', 'defi'];

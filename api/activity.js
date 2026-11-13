@@ -2,7 +2,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('Cache-Control', 's-maxage=15, stale-while-revalidate=30');
 
   const KNOWN_NAMES = {
     '0x91e8a6edec03e7a81c88621123ebd041cb5ef1ab': 'somalianKing',
