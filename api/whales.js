@@ -57,12 +57,13 @@ export default async function handler(req, res) {
       if (open.length) {
         const top = open[0]; // already sorted by current_value DESC
         topBet = {
-          title:   top.title || null,
-          outcome: top.outcome || null,
-          value:   Math.round(parseFloat(top.current_value || 0)),
+          title:     top.title || null,
+          outcome:   top.outcome || null,
+          value:     Math.round(parseFloat(top.current_value || 0)),
           // event_slug works on polymarket.com/event/ — market-level slug gives 404
-          slug:    top.event_slug || top.slug || top.condition_id || null,
-          price:   parseFloat(top.current_price || 0),
+          slug:      top.event_slug || top.slug || top.condition_id || null,
+          price:     parseFloat(top.current_price || 0),
+          enteredAt: top.first_entry_at || top.last_event_at || null,
         };
       }
 
