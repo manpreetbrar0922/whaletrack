@@ -20,17 +20,38 @@ export default async function handler(req, res) {
   // Fetch win rate, trade count, and top open position
   async function fetchWalletStats(address) {
     try {
-      const r = await fetch(
-        `https://data-api.polymarket.com/v2/positions?user=${address}&limit=500&sizeThreshold=0&sortBy=current_value&sortDirection=DESC`
-      );
-      if (!r.ok) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null };
-      const body = await r.json();
-      const positions = Array.isArray(body) ? body : (body.data || []);
+      const BASE = `https://data-api.polymarket.com/v2/positions?user=${address}&limit=500&sizeThreshold=0`;
+
+      // Two parallel fetches:
+      //   1. sorted by current_value DESC → catches big open bets (for topBet)
+      //   2. sorted by end_date DESC      → catches recently resolved positions (for WR)
+      // Merging both gives a full picture for whales with 1000+ positions where
+      // a single value-sorted fetch misses all the zero-value resolved losses.
+      const [r1, r2] = await Promise.all([
+        fetch(`${BASE}&sortBy=current_value&sortDirection=DESC`),
+        fetch(`${BASE}&sortBy=end_date&sortDirection=DESC`),
+      ]);
+
+      const parse = async r => {
+        if (!r.ok) return [];
+        const b = await r.json();
+        return Array.isArray(b) ? b : (b.data || []);
+      };
+      const [p1, p2] = await Promise.all([parse(r1), parse(r2)]);
+
+      // Merge + dedupe by condition_id (unique position key)
+      const seen = new Set();
+      const positions = [];
+      for (const p of [...p1, ...p2]) {
+        const key = p.condition_id || p.market || (p.title + p.outcome);
+        if (!seen.has(key)) { seen.add(key); positions.push(p); }
+      }
+
       if (!positions.length) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null, inactive: true };
 
       // Skip wallets whose most recent position has an end_date before 2024 — these are
       // ancient/inactive traders (e.g. 2021 Polymarket era) not worth showing to users
-      const mostRecent = positions[0];
+      const mostRecent = p1[0] || positions[0];
       const endDate = mostRecent?.end_date || '';
       const endYear = endDate ? parseInt(endDate.slice(0, 4)) : 9999;
       if (endYear < 2024) return { winRate: '—', trades: '—', topBet: null, pendingRedeems: 0, realizedPct: null, inactive: true };
@@ -44,10 +65,11 @@ export default async function handler(req, res) {
 
       const winRate = total >= 3 ? Math.round((won / total) * 100) : '—';
 
-      // Top open bet = biggest current_value position that's still active
+      // Top open bet = biggest current_value position that's still active.
+      // Use p1 (value-sorted) so we always find the highest-value open bet.
       // Price filter (0.03–0.97) excludes resolved markets: lost positions sit at ~0¢,
-      // won/redeemable sit at ~100¢ — only truly open markets land in this range
-      const open = positions.filter(p => {
+      // won/redeemable sit at ~100¢ — only truly open markets land in this range.
+      const open = p1.filter(p => {
         if (p.redeemable !== false) return false;
         if (parseFloat(p.current_value || 0) <= 1) return false;
         const px = parseFloat(p.current_price || 0);
