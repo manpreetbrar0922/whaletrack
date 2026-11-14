@@ -43,7 +43,8 @@ export default async function handler(req, res) {
     seen.add(addr);
     whales.push({
       address: t.user_id || t.proxyWallet || addr,
-      name: KNOWN_NAMES[addr] || sanitizeName(t.userName) || sanitizeName(t.xUsername) || addrShort(t.proxyWallet),
+      // v2 leaderboard returns snake_case: user_name, x_username, user_id
+      name: KNOWN_NAMES[addr] || sanitizeName(t.user_name || t.userName) || sanitizeName(t.x_username || t.xUsername) || addrShort(t.user_id || t.proxyWallet),
     });
   }
 
@@ -71,7 +72,8 @@ export default async function handler(req, res) {
   for (const r of results) {
     if (r.status !== 'fulfilled') continue;
     for (const t of r.value) {
-      const size = parseFloat(t.usdcSize || 0);
+      // v2 activity returns snake_case: usdc_size, outcome_index, proxy_wallet
+      const size = parseFloat(t.usdc_size || t.usdcSize || 0);
       const ts   = t.timestamp || 0;
 
       // Only BUY trades, large enough, within 24h
@@ -82,11 +84,12 @@ export default async function handler(req, res) {
       if (t.price <= 0) continue;
 
       let outcome = t.outcome || '';
-      if (!outcome && t.outcomeIndex !== undefined) {
-        outcome = t.outcomeIndex === 0 ? 'Yes' : t.outcomeIndex === 1 ? 'No' : '';
+      const outcomeIdx = t.outcome_index ?? t.outcomeIndex;
+      if (!outcome && outcomeIdx !== undefined) {
+        outcome = outcomeIdx === 0 ? 'Yes' : outcomeIdx === 1 ? 'No' : '';
       }
 
-      const addr = (t.user_id || t.proxyWallet || '').toLowerCase();
+      const addr = (t.user_id || t.proxy_wallet || t.proxyWallet || '').toLowerCase();
       all.push({
         id:        `${t._whale.name}-${ts}-${Math.round(size)}`,
         whaleName: t._whale.name,
@@ -94,7 +97,7 @@ export default async function handler(req, res) {
         outcome:   outcome || '—',
         usdcSize:  size,
         price:     parseFloat(t.price || 0),
-        slug:      t.eventSlug || t.slug || '',
+        slug:      t.event_slug || t.eventSlug || t.slug || '',
         timestamp: ts,
       });
     }
@@ -131,7 +134,7 @@ export default async function handler(req, res) {
         outcome:   outcome,
         usdcSize:  usdcSize,
         price:     parseFloat(t.price || 0),
-        slug:      t.eventSlug || t.slug || '',
+        slug:      t.event_slug || t.eventSlug || t.slug || '',
         timestamp: ts,
         isNewWhale: true,
       });

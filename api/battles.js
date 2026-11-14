@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     seen.add(addr);
     whales.push({
       address: t.user_id || t.proxyWallet || addr,
-      name: knownNames[addr] || sanitizeName(t.userName) || sanitizeName(t.xUsername) || addrShort(t.proxyWallet),
+      name: knownNames[addr] || sanitizeName(t.user_name || t.userName) || sanitizeName(t.x_username || t.xUsername) || addrShort(t.user_id || t.proxyWallet),
     });
   }
 

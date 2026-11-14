@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     seen.add(addr);
     whales.push({
       address: t.user_id || t.proxyWallet || addr,
-      name: knownNames[addr] || sanitizeName(t.userName) || sanitizeName(t.xUsername) || addrShort(t.proxyWallet),
+      name: knownNames[addr] || sanitizeName(t.user_name || t.userName) || sanitizeName(t.x_username || t.xUsername) || addrShort(t.user_id || t.proxyWallet),
     });
   }
 
@@ -65,6 +65,7 @@ export default async function handler(req, res) {
           title: p.title || p.market || p.question || 'Unknown',
           outcome: p.outcome || p.side || '?',
           value: Math.round(parseFloat(p.current_value || 0)),
+          price: parseFloat(p.current_price || p.avg_price || p.avgPrice || 0),
           slug: p.event_slug || p.eventSlug || p.slug || p.condition_id || p.conditionId || null,
           conditionId: p.condition_id || p.conditionId || null,
         }));
@@ -78,8 +79,10 @@ export default async function handler(req, res) {
   for (const pos of flat) {
     const key = pos.conditionId || pos.slug || pos.title;
     if (!marketMap[key]) {
-      marketMap[key] = { title: pos.title, slug: pos.slug, yes: [], no: [] };
+      marketMap[key] = { title: pos.title, slug: pos.slug, price: pos.price || 0, yes: [], no: [] };
     }
+    // Keep the best price we've seen for this market
+    if (pos.price > 0 && !marketMap[key].price) marketMap[key].price = pos.price;
     if (pos.outcome === 'Yes') {
       marketMap[key].yes.push({ whale: pos.whaleName, value: pos.value });
     } else if (pos.outcome === 'No') {
@@ -118,6 +121,7 @@ export default async function handler(req, res) {
     consensus.push({
       title: m.title,
       slug: m.slug,
+      price: m.price || 0,
       side,
       agreeing,
       opposing,

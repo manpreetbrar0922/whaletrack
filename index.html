@@ -1637,7 +1637,7 @@
           '<div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">⚡ Copy these trades in real time</div>' +
           '<div style="color:var(--text2);font-size:0.85rem;margin-bottom:16px;">Get instant alerts when whales place their bets — copy them before the market moves.</div>' +
           '<a href="/premium" style="display:inline-block;background:linear-gradient(135deg,#2ea043,var(--green));color:white;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:700;font-size:0.95rem;">🚀 Get Premium Alerts</a>' +
-          '<div style="font-size:0.75rem;color:var(--text2);margin-top:10px;">From $9.99/month · Cancel anytime</div>' +
+          '<div style="font-size:0.75rem;color:var(--text2);margin-top:10px;">From $9/month · Cancel anytime</div>' +
         '</div>';
 
     } catch(e) {
@@ -2194,7 +2194,7 @@ function renderBattles(battles) {
 
         <!-- Actions -->
         <div style="display:flex;gap:8px">
-          ${b.slug ? `<button data-slug="${b.slug}" data-outcome="Yes" data-price="0" data-title="${(b.title||'').replace(/"/g,'&quot;')}" onclick="openTradeModal(this.dataset)" style="flex:1;display:block;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--accent);text-align:center;font-weight:600;cursor:pointer">Copy Bet →</button>` : ''}
+          ${b.slug ? `<button data-slug="${b.slug}" data-outcome="${winner}" data-price="0" data-title="${(b.title||'').replace(/"/g,'&quot;')}" onclick="openTradeModal(this.dataset)" style="flex:1;display:block;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--accent);text-align:center;font-weight:600;cursor:pointer">Copy ${winner} →</button>` : ''}
           <a href="https://twitter.com/intent/tweet?text=${tweetText}" target="_blank" rel="noopener" style="display:block;padding:8px 12px;background:#1d9bf0;border-radius:8px;font-size:12px;color:#fff;text-decoration:none;font-weight:700;white-space:nowrap">🐦 Tweet</a>
         </div>
       </div>
@@ -2215,6 +2215,7 @@ function applyActivityFilter() {
 // ===== RENDER ACTIVITY =====
 function timeAgo(ts) {
   const diff = Math.floor(Date.now() / 1000) - ts;
+  if (diff <= 0)    return 'just now';
   if (diff < 60)   return diff + 's ago';
   if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
   if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
@@ -2691,8 +2692,8 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
     return;
   }
 
-  // Sort by current value descending
-  positions.sort((a, b) => parseFloat(b.currentValue || b.size || 0) - parseFloat(a.currentValue || a.size || 0));
+  // Sort by current value descending — handle both snake_case (Polymarket v2) and camelCase
+  positions.sort((a, b) => parseFloat(b.current_value || b.currentValue || b.size || 0) - parseFloat(a.current_value || a.currentValue || a.size || 0));
 
   body.innerHTML = profileHeader + `
     <table class="pos-table">
@@ -2709,27 +2710,29 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
       </thead>
       <tbody>
         ${positions.map(p => {
-          const pnl = parseFloat(p.unrealizedPnl || p.curValue - p.initValue || 0);
+          // Support both snake_case (Polymarket v2 raw) and camelCase (normalized)
+          const size     = parseFloat(p.current_value  || p.currentValue  || p.size || 0);
+          const avgPrice = parseFloat(p.avg_price      || p.avgPrice      || p.averagePrice || p.entry_cost_usdc || 0);
+          const curPrice = parseFloat(p.current_price  || p.currentPrice  || p.curPrice || 0);
+          const cost     = parseFloat(p.entry_cost_usdc || p.total_cost_usdc || p.initValue || 0);
+          const pnl      = size > 0 && cost > 0 ? size - cost : parseFloat(p.unrealizedPnl || 0);
           const pnlColor = pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--text2)';
-          const pnlSign = pnl >= 0 ? '+' : '';
-          const outcome = p.outcome || p.side || '—';
+          const pnlSign  = pnl >= 0 ? '+' : '';
+          const outcome  = p.outcome || p.side || '—';
           const outcomeColor = outcome === 'Yes' ? 'var(--green)' : outcome === 'No' ? 'var(--red)' : 'var(--text2)';
-          const avgPrice = parseFloat(p.avgPrice || p.averagePrice || 0);
-          const curPrice = parseFloat(p.currentPrice || p.curPrice || 0);
-          const size = parseFloat(p.currentValue || p.size || 0);
-          const title = p.title || p.market || p.question || 'Unknown Market';
+          const title    = p.title || p.market || p.question || 'Unknown Market';
+          const slug     = p.event_slug || p.eventSlug || p.slug || p.condition_id || p.conditionId || '';
 
           // Only show Copy Bet for genuinely open positions (redeemable=false, has value)
           // redeemable=true = already cashed out → dead link. Show status badge instead.
           const isOpen = p.redeemable === false && size > 0.5;
-          const isWon  = p.redeemable === true;
-          const isLost = p.redeemable === false && size <= 0.5;
+          const isWon  = p.redeemable === true && size > 0;
           const safeTitle = title.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
           const actionCell = isOpen
             ? `<button class="wt-copy-btn"
-                data-slug="${p.eventSlug || p.slug || p.conditionId}"
+                data-slug="${slug}"
                 data-outcome="${outcome}"
-                data-price="${avgPrice}"
+                data-price="${curPrice || avgPrice}"
                 data-title="${safeTitle}"
                 onclick="openTradeModal(this.dataset)">Copy Bet →</button>`
             : isWon
@@ -3375,7 +3378,7 @@ setInterval(refreshActivity, 60 * 1000);
 </script>
 
 <!-- ── Alert Premium Modal ─────────────────────────────────────────────────── -->
-<div id="alertModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:9999;display:none;align-items:center;justify-content:center;padding:16px">
+<div id="alertModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:16px">
   <div style="background:#161b22;border:1px solid #30363d;border-radius:16px;padding:32px 28px;width:100%;max-width:400px;text-align:center;position:relative;box-shadow:0 24px 64px rgba(0,0,0,0.6);">
     <button onclick="closeAlertModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#8b949e;font-size:20px;cursor:pointer;line-height:1;" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'">✕</button>
 
