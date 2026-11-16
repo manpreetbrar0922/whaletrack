@@ -105,7 +105,7 @@ export default async function handler(req, res) {
 
   // Global large-bet scanner — catches ANY wallet betting ≥ $5K (not just tracked whales)
   try {
-    const globalTrades = await fetch('https://data-api.polymarket.com/trades?limit=200')
+    const globalTrades = await fetch('https://data-api.polymarket.com/v2/trades?limit=200')
       .then(r => r.ok ? r.json() : [])
       .catch(() => []);
 

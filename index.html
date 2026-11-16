@@ -1382,40 +1382,6 @@
 
 <!-- EXCHANGE AFFILIATE STRIP -->
 <div class="container">
-  <div class="exchange-strip">
-    <div class="exchange-strip-title">🐋 Trade where the whales trade crypto perps</div>
-    <div class="exchange-cards">
-
-      <!-- BINANCE -->
-      <a href="https://accounts.binance.com/register?ref=BINANCE_REF_CODE"
-         target="_blank" rel="noopener sponsored"
-         class="exchange-card binance"
-         data-exchange="binance">
-        <div class="exchange-logo">🟡</div>
-        <div class="exchange-info">
-          <div class="exchange-name">Binance</div>
-          <div class="exchange-desc">World's largest exchange · 323M users</div>
-        </div>
-        <div class="exchange-badge badge-binance">Up to 50% fee rebate</div>
-      </a>
-
-      <!-- OKX -->
-      <a href="https://www.okx.com/join/OKXCODE"
-         target="_blank" rel="noopener sponsored"
-         class="exchange-card okx"
-         data-exchange="okx">
-        <div class="exchange-logo">🔵</div>
-        <div class="exchange-info">
-          <div class="exchange-name">OKX</div>
-          <div class="exchange-desc">Regulated in US, EU, UAE · 100+ countries</div>
-        </div>
-        <div class="exchange-badge badge-okx">Spot &amp; Perps trading</div>
-      </a>
-
-    </div>
-    <p style="text-align:center;font-size:11px;color:var(--text2);margin-top:14px;">
-      Whale watching on Polymarket? Level up with crypto perps. Not financial advice.
-    </p>
   </div>
 </div>
 
@@ -1562,9 +1528,9 @@
       var recent = trades.filter(function(t) { return (t.timestamp || 0) >= cutoff; });
       var markets = {};
       recent.forEach(function(t) {
-        var key = (t.slug || t.conditionId || 'u') + '-' + (t.outcome || t.outcomeIndex || '?');
+        var key = (t.slug || t.event_slug || t.conditionId || t.condition_id || 'u') + '-' + (t.outcome || t.outcomeIndex || t.outcome_index || '?');
         if (!markets[key]) markets[key] = { title: t.title || 'Unknown', outcome: t.outcome || '', buys: 0, received: 0 };
-        var usd = parseFloat(t.usdcSize || 0);
+        var usd = parseFloat(t.usdcSize || t.usdc_size || 0);
         if (t.side === 'BUY') markets[key].buys += usd;
         else if (t.side === 'SELL' || t.type === 'REDEEM') markets[key].received += usd;
       });
@@ -2063,6 +2029,7 @@ function renderConsensus(items) {
       usdcSize: top.totalAgreeing,
       title: top.title,
       slug: top.slug,
+      price: top.price || 0,
       timestamp: Math.floor(Date.now()/1000),
     });
   }
@@ -2712,7 +2679,7 @@ function renderPositions(positions, whale, wrColor, pnlClass, pnlSign) {
         ${positions.map(p => {
           // Support both snake_case (Polymarket v2 raw) and camelCase (normalized)
           const size     = parseFloat(p.current_value  || p.currentValue  || p.size || 0);
-          const avgPrice = parseFloat(p.avg_price      || p.avgPrice      || p.averagePrice || p.entry_cost_usdc || 0);
+          const avgPrice = parseFloat(p.avg_price      || p.avgPrice      || p.averagePrice || 0);
           const curPrice = parseFloat(p.current_price  || p.currentPrice  || p.curPrice || 0);
           const cost     = parseFloat(p.entry_cost_usdc || p.total_cost_usdc || p.initValue || 0);
           const pnl      = size > 0 && cost > 0 ? size - cost : parseFloat(p.unrealizedPnl || 0);
@@ -3117,6 +3084,32 @@ setInterval(refreshActivity, 60 * 1000);
     document.getElementById('wtTradeTitle').textContent = wt.title;
     document.getElementById('wtTradePriceLabel').textContent =
       wt.price > 0 ? (wt.price * 100).toFixed(1) + '¢' : '—';
+
+    // If price is unknown, try fetching it from Polymarket
+    if (wt.price <= 0 && wt.slug) {
+      fetch(`https://gamma-api.polymarket.com/events?slug=${encodeURIComponent(wt.slug)}&limit=1`)
+        .then(r => r.ok ? r.json() : [])
+        .then(data => {
+          const ev = Array.isArray(data) ? data[0] : data;
+          const markets = ev && (ev.markets || []);
+          let price = 0;
+          for (const m of markets) {
+            const tokens = m.clobTokenIds ? JSON.parse(m.clobTokenIds) : [];
+            if (wt.outcome === 'No' && tokens.length > 1) {
+              price = parseFloat(m.outcomePrices ? JSON.parse(m.outcomePrices)[1] : 0);
+            } else {
+              price = parseFloat(m.outcomePrices ? JSON.parse(m.outcomePrices)[0] : 0);
+            }
+            if (price > 0) break;
+          }
+          if (price > 0) {
+            wt.price = price;
+            document.getElementById('wtTradePriceLabel').textContent = (price * 100).toFixed(1) + '¢';
+            updatePayout();
+          }
+        })
+        .catch(() => {});
+    }
     const pmLink = document.getElementById('wtPolymarketLink');
     if (pmLink) pmLink.href = wt.slug
       ? `https://polymarket.com/event/${wt.slug}?via=manpreet-singh-brar`
