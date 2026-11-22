@@ -265,47 +265,72 @@ function catEmoji(cat) {
 }
 
 // ── Fetch ──────────────────────────────────────────────────────
+// API caps at 100 per page — fetch 5 pages in parallel to cover ~500 markets
+async function fetchPage(offset) {
+  const r = await fetch(
+    `https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=100&offset=${offset}&order=volume24hr&ascending=false`,
+    { signal: AbortSignal.timeout(12000) }
+  );
+  if (!r.ok) return [];
+  const data = await r.json();
+  return Array.isArray(data) ? data : [];
+}
+
+function enrich(markets) {
+  return markets
+    .filter(m => m.question && m.outcomePrices)
+    .map(m => {
+      let prices = [];
+      try { prices = JSON.parse(m.outcomePrices); } catch {}
+      const yes = prices[0] ? Math.round(parseFloat(prices[0]) * 100) : 0;
+      const cat = detectCategory(m.question);
+      return { ...m, yes, cat };
+    });
+}
+
 async function fetchMarkets() {
   try {
-    const r = await fetch(
-      'https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=300&order=volume24hr&ascending=false',
-      { signal: AbortSignal.timeout(12000) }
-    );
-    if (!r.ok) throw new Error('API error');
-    const data = await r.json();
-    const markets = Array.isArray(data) ? data : [];
-
-    // Enrich with category + Yes price
-    const enriched = markets
-      .filter(m => m.question && m.outcomePrices)
-      .map(m => {
-        let prices = [];
-        try { prices = JSON.parse(m.outcomePrices); } catch {}
-        const yes = prices[0] ? Math.round(parseFloat(prices[0]) * 100) : 0;
-        const cat = detectCategory(m.question);
-        return { ...m, yes, cat };
-      });
-
-    // Sort by 24h volume
-    enriched.sort((a, b) => (b.volume24hr || 0) - (a.volume24hr || 0));
-
-    // Tag top 20% as hot
-    const top = Math.floor(enriched.length * 0.2);
-    enriched.forEach((m, i) => { if (i < top) m.isHot = true; });
-
-    allMarkets = enriched;
-
-    // Update stats
-    const totalVol = enriched.reduce((s, m) => s + (m.volume24hr || 0), 0);
-    document.getElementById('statTotal').textContent = enriched.length.toLocaleString();
-    document.getElementById('statVol').textContent = '$' + formatVol(totalVol);
-    document.getElementById('lastUpdated').style.display = '';
-
+    // Fetch page 1 immediately — render fast
+    const page1 = await fetchPage(0);
+    const e1 = enrich(page1);
+    allMarkets = e1;
+    updateStats();
     applyFilters();
+
+    // Fetch pages 2-5 in parallel then merge
+    const [p2, p3, p4, p5] = await Promise.all([
+      fetchPage(100).catch(() => []),
+      fetchPage(200).catch(() => []),
+      fetchPage(300).catch(() => []),
+      fetchPage(400).catch(() => []),
+    ]);
+
+    const extra = enrich([...p2, ...p3, ...p4, ...p5]);
+
+    // Deduplicate by id
+    const seen = new Set(allMarkets.map(m => m.id));
+    const merged = [...allMarkets, ...extra.filter(m => !seen.has(m.id))];
+
+    // Sort by 24h volume, tag top 20% as hot
+    merged.sort((a, b) => (b.volume24hr || 0) - (a.volume24hr || 0));
+    const top = Math.floor(merged.length * 0.2);
+    merged.forEach((m, i) => { m.isHot = i < top; });
+
+    allMarkets = merged;
+    updateStats();
+    applyFilters();
+
   } catch (e) {
     document.getElementById('grid').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load markets</h3><p>Check your connection and try again</p></div>`;
     console.error(e);
   }
+}
+
+function updateStats() {
+  const totalVol = allMarkets.reduce((s, m) => s + (m.volume24hr || 0), 0);
+  document.getElementById('statTotal').textContent = allMarkets.length.toLocaleString();
+  document.getElementById('statVol').textContent = '$' + formatVol(totalVol);
+  document.getElementById('lastUpdated').style.display = '';
 }
 
 // ── Filters + Sort ─────────────────────────────────────────────
