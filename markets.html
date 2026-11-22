@@ -283,7 +283,8 @@ function enrich(markets) {
     .map(m => {
       let prices = [];
       try { prices = JSON.parse(m.outcomePrices); } catch {}
-      const yes = prices[0] ? Math.round(parseFloat(prices[0]) * 100) : 0;
+      const rawYes = prices[0] ? parseFloat(prices[0]) * 100 : 0;
+      const yes = rawYes < 1 && rawYes > 0 ? parseFloat(rawYes.toFixed(1)) : Math.round(rawYes);
       const cat = detectCategory(m.question);
       return { ...m, yes, cat };
     });
@@ -409,7 +410,7 @@ function loadMore() {
 // ── Card HTML ──────────────────────────────────────────────────
 function renderCard(m) {
   const yes    = m.yes || 0;
-  const no     = 100 - yes;
+  const no     = parseFloat((100 - yes).toFixed(1));
   const vol    = formatVol(m.volume24hr || 0);
   const liq    = formatVol(m.liquidityNum || 0);
   const ends   = formatEnd(m.endDate);
