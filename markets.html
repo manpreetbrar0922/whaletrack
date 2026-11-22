@@ -146,6 +146,7 @@
     .empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text2); }
     .empty-icon { font-size: 48px; margin-bottom: 12px; }
     .empty h3 { font-size: 18px; color: var(--text); margin-bottom: 6px; }
+    .empty-banner { grid-column: 1 / -1; background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.2); border-radius: 10px; padding: 12px 18px; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
 
     /* LOAD MORE */
     .load-more-wrap { max-width: 1100px; margin: 0 auto 40px; padding: 0 20px; text-align: center; }
@@ -371,6 +372,19 @@ function renderPage() {
   document.getElementById('resultCount').textContent = filtered.length.toLocaleString() + ' markets';
 
   if (!slice.length) {
+    // Smart fallback: if user searched something, detect its category and show related markets
+    if (searchQuery && allMarkets.length) {
+      const guessedCat = detectCategory(searchQuery);
+      const related = allMarkets.filter(m => m.cat === guessedCat).slice(0, PAGE_SIZE);
+      if (related.length) {
+        const catName = { crypto: 'Crypto', sports: 'Sports', politics: 'Politics', soccer: 'Soccer', other: 'Other' }[guessedCat] || guessedCat;
+        document.getElementById('resultCount').textContent = `0 exact matches — showing ${related.length} ${catName} markets`;
+        grid.innerHTML = `<div class="empty-banner">No active Polymarket markets for "<strong>${escHtml(searchQuery)}</strong>" right now — here are related ${catName} markets:</div>`
+          + related.map(renderCard).join('');
+        document.getElementById('loadMoreWrap').style.display = 'none';
+        return;
+      }
+    }
     grid.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>No markets found</h3><p>Try a different search or category</p></div>`;
     document.getElementById('loadMoreWrap').style.display = 'none';
     return;
