@@ -23,7 +23,8 @@
     { "source": "/whale/coldsway",         "destination": "/whale-coldsway.html"         },
     { "source": "/wallet",                  "destination": "/wallet.html"                 },
     { "source": "/market-movers",           "destination": "/market-movers.html"          },
-    { "source": "/hot-bets",               "destination": "/hot-bets.html"               }
+    { "source": "/hot-bets",               "destination": "/hot-bets.html"               },
+    { "source": "/markets",               "destination": "/markets.html"               }
   ],
   "crons": [
     { "path": "/api/daily-email",  "schedule": "0 14 * * *" },

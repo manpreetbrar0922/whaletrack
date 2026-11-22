@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Polymarket Markets — Live Odds on Every Prediction Market | WhaleTrack</title>
+  <meta name="description" content="Browse all active Polymarket prediction markets in real time. Live odds on crypto, sports, politics and more. See where smart money is going."/>
+  <meta name="keywords" content="Polymarket markets, prediction market odds, live betting odds, XRP polymarket, crypto prediction, sports betting odds, polymarket browser"/>
+  <link rel="canonical" href="https://whaletrack.app/markets"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐋</text></svg>"/>
+
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://whaletrack.app/markets"/>
+  <meta property="og:title" content="Polymarket Markets — Browse Live Odds on Every Market"/>
+  <meta property="og:description" content="Search and filter all active Polymarket prediction markets. Live odds, volume, and direct bet links."/>
+  <meta property="og:image" content="https://whaletrack.app/og-sports.png?v=3"/>
+
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Polymarket Markets — Live Odds on Every Prediction Market"/>
+  <meta name="twitter:description" content="Browse all active Polymarket markets. Search XRP, NFL, elections — live odds updated in real time."/>
+  <meta name="twitter:image" content="https://whaletrack.app/og-sports.png?v=3"/>
+
+  <style>
+    :root {
+      --bg:    #0d1117;
+      --bg2:   #161b22;
+      --bg3:   #21262d;
+      --border:#30363d;
+      --text:  #e6edf3;
+      --text2: #8b949e;
+      --blue:  #58a6ff;
+      --green: #3fb950;
+      --red:   #f85149;
+      --orange:#ff7043;
+      --gold:  #f0a500;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    /* NAV */
+    nav { background: rgba(13,17,23,0.95); border-bottom: 1px solid var(--border); padding: 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px); }
+    .nav-logo { font-size: 18px; font-weight: 800; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-link { color: var(--text2); text-decoration: none; font-size: 13px; padding: 6px 10px; border-radius: 6px; transition: color 0.2s; }
+    .nav-link:hover, .nav-link.active { color: var(--text); }
+    .nav-btn { background: rgba(88,166,255,0.1); color: var(--blue); border: 1px solid rgba(88,166,255,0.3); border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background 0.2s; }
+    .nav-btn:hover { background: rgba(88,166,255,0.2); }
+    .nav-btn-green { background: rgba(63,185,80,0.1); color: var(--green); border-color: rgba(63,185,80,0.3); }
+    .nav-btn-green:hover { background: rgba(63,185,80,0.2); }
+
+    /* HERO */
+    .hero { padding: 40px 20px 24px; max-width: 1100px; margin: 0 auto; }
+    .hero h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+    .hero p { color: var(--text2); font-size: 15px; margin-bottom: 20px; }
+
+    /* SEARCH */
+    .search-wrap { position: relative; max-width: 480px; }
+    .search-wrap input {
+      width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 11px 16px 11px 42px; color: var(--text); font-size: 15px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--blue); }
+    .search-wrap input::placeholder { color: var(--text2); }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text2); font-size: 16px; pointer-events: none; }
+    .search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text2); font-size: 18px; cursor: pointer; display: none; }
+    .search-clear.visible { display: block; }
+
+    /* STATS ROW */
+    .stats-row { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+    .stat-chip { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: 12px; color: var(--text2); }
+    .stat-chip strong { color: var(--text); }
+
+    /* TABS */
+    .tabs-wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+    .tabs { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 1px; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      background: none; border: none; color: var(--text2); font-size: 13px; font-weight: 600;
+      padding: 10px 16px; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent;
+      transition: color 0.15s; margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    /* SORT ROW */
+    .sort-row { max-width: 1100px; margin: 14px auto 0; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .sort-label { font-size: 12px; color: var(--text2); }
+    .sort-btns { display: flex; gap: 6px; }
+    .sort-btn { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; color: var(--text2); font-size: 12px; padding: 5px 12px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+    .sort-btn.active, .sort-btn:hover { color: var(--text); border-color: var(--blue); }
+
+    /* GRID */
+    .grid { max-width: 1100px; margin: 20px auto 60px; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+    /* CARD */
+    .card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px; display: flex; flex-direction: column; gap: 12px;
+      transition: border-color 0.2s, transform 0.15s;
+      cursor: pointer;
+    }
+    .card:hover { border-color: rgba(88,166,255,0.4); transform: translateY(-1px); }
+
+    .card-top { display: flex; gap: 10px; align-items: flex-start; }
+    .card-img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--bg3); }
+    .card-img-fallback { width: 44px; height: 44px; border-radius: 8px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .card-title { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--text); flex: 1; }
+
+    .card-category { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .cat-crypto   { background: rgba(247,147,26,0.12); color: #f7931a; }
+    .cat-sports   { background: rgba(63,185,80,0.12);  color: var(--green); }
+    .cat-politics { background: rgba(88,166,255,0.12); color: var(--blue); }
+    .cat-hot      { background: rgba(255,112,67,0.12); color: var(--orange); }
+    .cat-other    { background: rgba(139,148,158,0.12); color: var(--text2); }
+
+    /* ODDS BAR */
+    .odds-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .odds-labels { display: flex; justify-content: space-between; font-size: 12px; }
+    .odds-yes { color: var(--green); font-weight: 700; }
+    .odds-no  { color: var(--red); font-weight: 700; }
+    .odds-bar { height: 6px; border-radius: 3px; background: var(--bg3); overflow: hidden; }
+    .odds-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), #2ea043); border-radius: 3px; transition: width 0.4s; }
+
+    /* META */
+    .card-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+    .meta-pill { font-size: 11px; color: var(--text2); background: var(--bg3); border-radius: 6px; padding: 3px 8px; }
+    .meta-pill strong { color: var(--text); }
+
+    /* BET BUTTON */
+    .bet-btn {
+      display: block; text-align: center; background: rgba(88,166,255,0.1); color: var(--blue);
+      border: 1px solid rgba(88,166,255,0.3); border-radius: 8px; padding: 9px;
+      font-size: 13px; font-weight: 700; text-decoration: none; transition: background 0.2s;
+      margin-top: auto;
+    }
+    .bet-btn:hover { background: rgba(88,166,255,0.2); }
+
+    /* SKELETON */
+    .skeleton { background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skel-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .skel-line { height: 14px; border-radius: 4px; }
+
+    /* EMPTY */
+    .empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text2); }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty h3 { font-size: 18px; color: var(--text); margin-bottom: 6px; }
+
+    /* LOAD MORE */
+    .load-more-wrap { max-width: 1100px; margin: 0 auto 40px; padding: 0 20px; text-align: center; }
+    .load-more-btn { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 12px 32px; font-size: 14px; font-weight: 600; cursor: pointer; transition: border-color 0.2s; }
+    .load-more-btn:hover { border-color: var(--blue); }
+
+    /* MOBILE */
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 22px; }
+      .nav-link { display: none; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">🐋 WhaleTrack</a>
+  <div class="nav-right">
+    <a href="/" class="nav-link">Whales</a>
+    <a href="/markets.html" class="nav-link active">Markets</a>
+    <a href="/crypto.html" class="nav-link">Crypto</a>
+    <a href="https://polymarket.com?via=manpreet-singh-brar" target="_blank" rel="noopener" class="nav-btn" data-affiliate>Trade →</a>
+    <a href="https://www.foregate.com/en/event/88880004?market=cycle&refCode=HCNO2vT" target="_blank" rel="noopener" class="nav-btn nav-btn-green" data-affiliate="foregate">ForeGate →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>📊 All Polymarket Markets</h1>
+  <p>Browse live odds on every active prediction market — crypto, sports, politics and more.</p>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search XRP, NFL, Trump, Bitcoin…" autocomplete="off"/>
+    <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+  </div>
+  <div class="stats-row">
+    <div class="stat-chip">📈 <strong id="statTotal">—</strong> active markets</div>
+    <div class="stat-chip">💰 <strong id="statVol">—</strong> 24h volume</div>
+    <div class="stat-chip" id="lastUpdated" style="display:none">🔄 Updated just now</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" data-cat="all">All</button>
+    <button class="tab-btn" data-cat="hot">🔥 Hot</button>
+    <button class="tab-btn" data-cat="crypto">💰 Crypto</button>
+    <button class="tab-btn" data-cat="sports">🏈 Sports</button>
+    <button class="tab-btn" data-cat="politics">🏛️ Politics</button>
+    <button class="tab-btn" data-cat="soccer">⚽ Soccer</button>
+    <button class="tab-btn" data-cat="other">🌍 Other</button>
+  </div>
+</div>
+
+<!-- SORT -->
+<div class="sort-row">
+  <span class="sort-label" id="resultCount">Loading…</span>
+  <div class="sort-btns">
+    <button class="sort-btn active" data-sort="volume24hr">🔥 24h Volume</button>
+    <button class="sort-btn" data-sort="liquidity">💧 Liquidity</button>
+    <button class="sort-btn" data-sort="close">⏰ Closing Soon</button>
+  </div>
+</div>
+
+<!-- GRID -->
+<div class="grid" id="grid">
+  <!-- skeletons -->
+  <div class="skel-card"><div class="skel-line skeleton" style="width:60%"></div><div class="skel-line skeleton" style="width:100%;height:40px"></div><div class="skel-line skeleton" style="width:80%"></div></div>
+  <div class="skel-card"><div class="skel-line skeleton" style="width:50%"></div><div class="skel-line skeleton" style="width:100%;height:40px"></div><div class="skel-line skeleton" style="width:70%"></div></div>
+  <div class="skel-card"><div class="skel-line skeleton" style="width:65%"></div><div class="skel-line skeleton" style="width:100%;height:40px"></div><div class="skel-line skeleton" style="width:85%"></div></div>
+  <div class="skel-card"><div class="skel-line skeleton" style="width:55%"></div><div class="skel-line skeleton" style="width:100%;height:40px"></div><div class="skel-line skeleton" style="width:75%"></div></div>
+  <div class="skel-card"><div class="skel-line skeleton" style="width:70%"></div><div class="skel-line skeleton" style="width:100%;height:40px"></div><div class="skel-line skeleton" style="width:60%"></div></div>
+  <div class="skel-card"><div class="skel-line skeleton" style="width:45%"></div><div class="skel-line skeleton" style="width:100%;height:40px"></div><div class="skel-line skeleton" style="width:80%"></div></div>
+</div>
+
+<!-- LOAD MORE -->
+<div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+  <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">Load more markets</button>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let allMarkets   = [];
+let filtered     = [];
+let activeTab    = 'all';
+let activeSort   = 'volume24hr';
+let searchQuery  = '';
+let page         = 0;
+const PAGE_SIZE  = 30;
+
+// ── Category detection ─────────────────────────────────────────
+const CRYPTO_KEYS   = ['btc','bitcoin','eth','ethereum','xrp','ripple','crypto','solana','sol','doge','dogecoin','bnb','ada','avax','matic','polygon','shib','link','chainlink','usdt','usdc','defi','nft','web3','coinbase','binance','kraken','sec crypto'];
+const SPORTS_KEYS   = ['nfl','nba','nhl','mlb','nfl','ufc','mma','tennis','golf','formula','f1','nascar','boxing','wrestling','ncaa','college','championship','super bowl','world series','stanley cup','nba finals','playoffs','draft'];
+const SOCCER_KEYS   = ['fifa','premier league','la liga','bundesliga','serie a','ligue 1','champions league','ucl','europa','mls','world cup','euro','copa','bundesliga','fa cup','epl','soccer'];
+const POLITICS_KEYS = ['president','election','congress','senate','trump','biden','harris','republican','democrat','vote','supreme court','white house','governor','mayor','legislation','bill','policy','nato','un ','united nations'];
+
+function detectCategory(q) {
+  const low = q.toLowerCase();
+  if (CRYPTO_KEYS.some(k => low.includes(k)))   return 'crypto';
+  if (SOCCER_KEYS.some(k => low.includes(k)))   return 'soccer';
+  if (SPORTS_KEYS.some(k => low.includes(k)))   return 'sports';
+  if (POLITICS_KEYS.some(k => low.includes(k))) return 'politics';
+  return 'other';
+}
+
+function catClass(cat) {
+  return { crypto: 'cat-crypto', sports: 'cat-sports', politics: 'cat-politics', soccer: 'cat-sports', hot: 'cat-hot', other: 'cat-other' }[cat] || 'cat-other';
+}
+function catLabel(cat) {
+  return { crypto: '💰 Crypto', sports: '🏈 Sports', politics: '🏛️ Politics', soccer: '⚽ Soccer', other: '🌍 Other' }[cat] || '🌍 Other';
+}
+function catEmoji(cat) {
+  return { crypto: '💰', sports: '🏈', politics: '🏛️', soccer: '⚽', other: '🌍' }[cat] || '🌍';
+}
+
+// ── Fetch ──────────────────────────────────────────────────────
+async function fetchMarkets() {
+  try {
+    const r = await fetch(
+      'https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=300&order=volume24hr&ascending=false',
+      { signal: AbortSignal.timeout(12000) }
+    );
+    if (!r.ok) throw new Error('API error');
+    const data = await r.json();
+    const markets = Array.isArray(data) ? data : [];
+
+    // Enrich with category + Yes price
+    const enriched = markets
+      .filter(m => m.question && m.outcomePrices)
+      .map(m => {
+        let prices = [];
+        try { prices = JSON.parse(m.outcomePrices); } catch {}
+        const yes = prices[0] ? Math.round(parseFloat(prices[0]) * 100) : 0;
+        const cat = detectCategory(m.question);
+        return { ...m, yes, cat };
+      });
+
+    // Sort by 24h volume
+    enriched.sort((a, b) => (b.volume24hr || 0) - (a.volume24hr || 0));
+
+    // Tag top 20% as hot
+    const top = Math.floor(enriched.length * 0.2);
+    enriched.forEach((m, i) => { if (i < top) m.isHot = true; });
+
+    allMarkets = enriched;
+
+    // Update stats
+    const totalVol = enriched.reduce((s, m) => s + (m.volume24hr || 0), 0);
+    document.getElementById('statTotal').textContent = enriched.length.toLocaleString();
+    document.getElementById('statVol').textContent = '$' + formatVol(totalVol);
+    document.getElementById('lastUpdated').style.display = '';
+
+    applyFilters();
+  } catch (e) {
+    document.getElementById('grid').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load markets</h3><p>Check your connection and try again</p></div>`;
+    console.error(e);
+  }
+}
+
+// ── Filters + Sort ─────────────────────────────────────────────
+function applyFilters() {
+  page = 0;
+  let result = [...allMarkets];
+
+  // Category filter
+  if (activeTab === 'hot') {
+    result = result.filter(m => m.isHot);
+  } else if (activeTab !== 'all') {
+    result = result.filter(m => m.cat === activeTab);
+  }
+
+  // Search
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    result = result.filter(m => m.question.toLowerCase().includes(q));
+  }
+
+  // Sort
+  if (activeSort === 'liquidity') {
+    result.sort((a, b) => (b.liquidityNum || 0) - (a.liquidityNum || 0));
+  } else if (activeSort === 'close') {
+    result.sort((a, b) => new Date(a.endDate || 0) - new Date(b.endDate || 0));
+  } else {
+    result.sort((a, b) => (b.volume24hr || 0) - (a.volume24hr || 0));
+  }
+
+  filtered = result;
+  renderPage();
+}
+
+function renderPage() {
+  const slice = filtered.slice(0, (page + 1) * PAGE_SIZE);
+  const grid  = document.getElementById('grid');
+
+  document.getElementById('resultCount').textContent = filtered.length.toLocaleString() + ' markets';
+
+  if (!slice.length) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>No markets found</h3><p>Try a different search or category</p></div>`;
+    document.getElementById('loadMoreWrap').style.display = 'none';
+    return;
+  }
+
+  grid.innerHTML = slice.map(renderCard).join('');
+
+  const hasMore = filtered.length > slice.length;
+  document.getElementById('loadMoreWrap').style.display = hasMore ? '' : 'none';
+  if (hasMore) document.getElementById('loadMoreBtn').textContent = `Load more (${filtered.length - slice.length} remaining)`;
+}
+
+function loadMore() {
+  page++;
+  renderPage();
+  // scroll hint
+  const grid = document.getElementById('grid');
+  const cards = grid.querySelectorAll('.card');
+  if (cards.length > page * PAGE_SIZE) cards[page * PAGE_SIZE].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Card HTML ──────────────────────────────────────────────────
+function renderCard(m) {
+  const yes    = m.yes || 0;
+  const no     = 100 - yes;
+  const vol    = formatVol(m.volume24hr || 0);
+  const liq    = formatVol(m.liquidityNum || 0);
+  const ends   = formatEnd(m.endDate);
+  const slug   = m.slug || '';
+  const url    = `https://polymarket.com/event/${slug}?via=manpreet-singh-brar`;
+  const catCls = catClass(m.cat);
+  const catLbl = catLabel(m.cat);
+
+  const imgHtml = m.image
+    ? `<img class="card-img" src="${m.image}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const fallback = `<div class="card-img-fallback" style="${m.image ? 'display:none' : ''}">${catEmoji(m.cat)}</div>`;
+
+  return `
+<div class="card" onclick="window.open('${url}','_blank','noopener')">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="card-category ${catCls}">${catLbl}</span>
+    ${m.isHot ? '<span style="font-size:11px;color:var(--orange)">🔥 Hot</span>' : ''}
+  </div>
+  <div class="card-top">
+    ${imgHtml}${fallback}
+    <div class="card-title">${escHtml(m.question)}</div>
+  </div>
+  <div class="odds-wrap">
+    <div class="odds-labels">
+      <span class="odds-yes">Yes ${yes}¢</span>
+      <span class="odds-no">No ${no}¢</span>
+    </div>
+    <div class="odds-bar"><div class="odds-bar-fill" style="width:${yes}%"></div></div>
+  </div>
+  <div class="card-meta">
+    <span class="meta-pill">📊 <strong>$${vol}</strong> 24h vol</span>
+    <span class="meta-pill">💧 <strong>$${liq}</strong> liq</span>
+    ${ends ? `<span class="meta-pill">⏰ ${ends}</span>` : ''}
+  </div>
+  <a class="bet-btn" href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Bet on Polymarket →</a>
+</div>`;
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+function formatVol(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+  return n.toFixed(0);
+}
+
+function formatEnd(dateStr) {
+  if (!dateStr) return '';
+  const diff = new Date(dateStr) - Date.now();
+  const h = Math.floor(diff / 36e5);
+  const d = Math.floor(diff / 864e5);
+  if (diff < 0) return 'Closing';
+  if (h < 24) return `${h}h left`;
+  if (d < 7) return `${d}d left`;
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Events ────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.cat;
+    applyFilters();
+  });
+});
+
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeSort = btn.dataset.sort;
+    applyFilters();
+  });
+});
+
+const searchInput = document.getElementById('searchInput');
+const searchClear = document.getElementById('searchClear');
+
+searchInput.addEventListener('input', () => {
+  searchQuery = searchInput.value.trim();
+  searchClear.classList.toggle('visible', searchQuery.length > 0);
+  applyFilters();
+});
+
+// Pre-fill search from URL param: /markets?q=xrp
+const urlQ = new URLSearchParams(location.search).get('q');
+if (urlQ) {
+  searchInput.value = urlQ;
+  searchQuery = urlQ;
+  searchClear.classList.add('visible');
+}
+
+function clearSearch() {
+  searchInput.value = '';
+  searchQuery = '';
+  searchClear.classList.remove('visible');
+  applyFilters();
+}
+
+// ── Init ───────────────────────────────────────────────────────
+fetchMarkets();
+// Auto-refresh every 2 minutes
+setInterval(fetchMarkets, 120000);
+</script>
+
+</body>
+</html>
